@@ -1,0 +1,51 @@
+# ARK95X Unified Sovereign Stack - Python Dependencies
+# Core Orchestration
+crewai>=0.28.0
+langchain>=0.1.0
+langchain-community>=0.0.10
+langchain-openai>=0.0.5
+langgraph>=0.0.20
+
+# AI Models
+openai>=1.12.0
+ollama>=0.1.6
+
+# Web Framework
+fastapi>=0.109.0
+uvicorn>=0.27.0
+
+# Vector Stores
+qdrant-client>=1.7.0
+lancedb>=0.4.0
+
+# Database
+psycopg2-binary>=2.9.9
+pymongo>=4.6.0
+redis>=5.0.0
+sqlalchemy>=2.0.25
+
+# Browser Automation
+playwright>=1.41.0
+stagehand>=0.1.0
+
+# Search
+searxng>=0.1.0
+beautifulsoup4>=4.12.0
+
+# Trading
+numpy>=1.26.0
+pandas>=2.1.0
+scipy>=1.12.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+httpx>=0.26.0
+rich>=13.7.0
+typer>=0.9.0
+
+# AutoGen
+pyautogen>=0.2.0
+
+# Monitoring
+prometheus-client>=0.20.0
