@@ -1,0 +1,49 @@
+name: ARK95X Sovereign Stack CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify module imports
+        run: |
+          python -c "import core"
+          python -c "import flame"
+          python -c "import intelligence"
+          python -c "import sovereignty"
+          python -c "import trading"
+          python -c "import command"
+          python -c "import consciousness"
+          python -c "import performance"
+          python -c "import protocol"
+          python -c "import infra"
+          python -c "import n8n"
+          python -c "import scaling"
+          python -c "import netx"
+          python -c "import integrations"
+
+      - name: Run main entry point
+        run: python main.py --check
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Docker Compose
+        run: docker compose config
