@@ -1,0 +1,267 @@
+{
+  "name": "ARK95X Deployment Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ark95x-deploy",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-receiver",
+      "name": "Webhook - Deploy Status",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "ark95x-sovereign-deploy"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.deployment.status }}",
+              "operation": "equals",
+              "value2": "success"
+            }
+          ]
+        }
+      },
+      "id": "deployment-status-check",
+      "name": "Check Deployment Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Deployments",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $json.deployment.timestamp }}",
+            "Status": "={{ $json.deployment.status }}",
+            "Commit SHA": "={{ $json.deployment.commit_sha }}",
+            "Branch": "={{ $json.deployment.branch }}",
+            "Author": "={{ $json.deployment.author }}",
+            "Commit Message": "={{ $json.deployment.message }}",
+            "Health Status": "={{ $json.service.health_status }}",
+            "Service URL": "={{ $json.service.service_url }}",
+            "Image Tag": "={{ $json.service.image_tag }}",
+            "Workflow Run": "={{ $json.workflow.run_url }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "log-to-google-sheet",
+      "name": "Log to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [650, 200],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1",
+          "name": "Google Sheets - ARK95X"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ $env.DISCORD_CHANNEL_ID }}",
+          "mode": "id"
+        },
+        "messageType": "embed",
+        "embeds": {
+          "values": [
+            {
+              "color": "={{ $json.deployment.status === 'success' ? 3066993 : 15158332 }}",
+              "timestamp": "={{ $json.deployment.timestamp }}",
+              "title": "ARK95X Deployment {{ $json.deployment.status.toUpperCase() }}",
+              "description": "**Branch:** `{{ $json.deployment.branch }}`\n**Commit:** `{{ $json.deployment.commit_sha.slice(0,7) }}`\n**Author:** {{ $json.deployment.author }}",
+              "fields": {
+                "values": [
+                  {"name": "Health", "value": "{{ $json.service.health_status === 'healthy' ? 'Healthy' : 'Unhealthy' }}", "inline": true},
+                  {"name": "Environment", "value": "production", "inline": true},
+                  {"name": "Workflow Run", "value": "[View]({{ $json.workflow.run_url }})", "inline": true}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "send-discord-notification",
+      "name": "Send Discord Notification",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "credentials": {
+        "discordApi": {"id": "2", "name": "Discord - ARK95X Bot"}
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {"value1": "={{ $json.service.health_status }}", "operation": "equals", "value2": "healthy"}
+          ]
+        }
+      },
+      "id": "check-service-health",
+      "name": "Check Service Health",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {"name": "model", "value": "deepseek-r1:latest"},
+            {"name": "prompt", "value": "ARK95X deployment {{ $json.deployment.commit_sha }} complete. Update context."},
+            {"name": "stream", "value": false}
+          ]
+        },
+        "options": {"timeout": 30000}
+      },
+      "id": "trigger-ollama-refresh",
+      "name": "Trigger Ollama Model Refresh",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 100]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "channelId": {"__rl": true, "value": "={{ $env.DISCORD_CHANNEL_ID }}", "mode": "id"},
+        "messageType": "text",
+        "content": "Ollama DeepSeek R1 context refreshed for deployment {{ $('Webhook - Deploy Status').item.json.deployment.commit_sha.slice(0,7) }}"
+      },
+      "id": "notify-ollama-refresh",
+      "name": "Notify Ollama Refresh",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [1450, 100],
+      "credentials": {
+        "discordApi": {"id": "2", "name": "Discord - ARK95X Bot"}
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "channelId": {"__rl": true, "value": "={{ $env.DISCORD_ALERT_CHANNEL_ID }}", "mode": "id"},
+        "messageType": "embed",
+        "embeds": {
+          "values": [
+            {
+              "color": 16711680,
+              "title": "ARK95X Deployment FAILED",
+              "description": "Branch: `{{ $json.deployment.branch }}` | Commit: `{{ $json.deployment.commit_sha.slice(0,7) }}`\nCheck logs immediately.",
+              "timestamp": "={{ $json.deployment.timestamp }}"
+            }
+          ]
+        }
+      },
+      "id": "send-failure-alert",
+      "name": "Send Failure Alert",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [850, 400],
+      "credentials": {
+        "discordApi": {"id": "2", "name": "Discord - ARK95X Bot"}
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"status\": \"received\", \"deployment_id\": $json.deployment.commit_sha, \"timestamp\": $now.toISO()} }}"
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {"__rl": true, "value": "={{ $env.GOOGLE_SHEET_ID }}", "mode": "id"},
+        "sheetName": {"__rl": true, "value": "Model_Refreshes", "mode": "name"},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toISO() }}",
+            "Model": "deepseek-r1:latest",
+            "Deployment SHA": "={{ $('Webhook - Deploy Status').item.json.deployment.commit_sha }}",
+            "Status": "refreshed"
+          }
+        }
+      },
+      "id": "log-model-refresh",
+      "name": "Log Model Refresh to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [1250, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {"id": "1", "name": "Google Sheets - ARK95X"}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Deploy Status": {
+      "main": [[{"node": "Check Deployment Status", "type": "main", "index": 0}]]
+    },
+    "Check Deployment Status": {
+      "main": [
+        [{"node": "Log to Google Sheet", "type": "main", "index": 0}],
+        [{"node": "Send Failure Alert", "type": "main", "index": 0}]
+      ]
+    },
+    "Log to Google Sheet": {
+      "main": [[{"node": "Send Discord Notification", "type": "main", "index": 0}]]
+    },
+    "Send Discord Notification": {
+      "main": [[{"node": "Check Service Health", "type": "main", "index": 0}]]
+    },
+    "Check Service Health": {
+      "main": [[{"node": "Trigger Ollama Model Refresh", "type": "main", "index": 0}]]
+    },
+    "Trigger Ollama Model Refresh": {
+      "main": [[{"node": "Notify Ollama Refresh", "type": "main", "index": 0}, {"node": "Log Model Refresh to Sheet", "type": "main", "index": 0}]]
+    },
+    "Notify Ollama Refresh": {
+      "main": [[{"node": "Webhook Response", "type": "main", "index": 0}]]
+    },
+    "Send Failure Alert": {
+      "main": [[{"node": "Webhook Response", "type": "main", "index": 0}]]
+    },
+    "Log Model Refresh to Sheet": {
+      "main": [[{"node": "Webhook Response", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {"executionOrder": "v1"},
+  "staticData": null,
+  "tags": [
+    {"id": "1", "name": "ARK95X"},
+    {"id": "2", "name": "Deployment"}
+  ],
+  "pinData": {},
+  "versionId": "1.0.0"
+}
