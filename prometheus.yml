@@ -1,21 +1,49 @@
-# ARK95X Prometheus Configuration
+# ARK95X Prometheus Monitoring Configuration
+# Sovereign Stack Observability Layer
+
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
   scrape_timeout: 10s
+  external_labels:
+    cluster: 'ark95x-sovereign'
+    environment: 'production'
+
+rule_files:
+  - 'alerts.yml'
 
 scrape_configs:
+  # Core API Service
   - job_name: 'ark95x-core'
     static_configs:
       - targets: ['core:8000']
+        labels:
+          service: 'core-api'
     metrics_path: '/metrics'
     scrape_interval: 10s
 
+  # Prometheus Self-Monitoring
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
+  # Node Exporter - System Metrics
   - job_name: 'node-exporter'
     static_configs:
-      - targets: ['host.docker.internal:9100']
+      - targets: ['node-exporter:9100']
     scrape_interval: 30s
+
+  # Redis Metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'cache'
+
+  # Qdrant Vector DB Metrics
+  - job_name: 'qdrant'
+    static_configs:
+      - targets: ['qdrant:6333']
+        labels:
+          service: 'vector-db'
+    metrics_path: '/metrics'
