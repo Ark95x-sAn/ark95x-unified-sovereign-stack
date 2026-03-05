@@ -156,11 +156,11 @@ async def services_status():
         (f"{QDRANT_URL}/health", "qdrant"),
         (f"{N8N_URL}", "n8n"),
     ]
-    results = []
-    for url, name in checks:
-        results.append(await check_service(url, name))
-    return {"services": results, "timestamp": datetime.now(timezone.utc).isoformat()}
-
-if __name__ == "__main__":
+    if __name__ == "__main__":
+    import sys
+    if "--check" in sys.argv:
+        print("ARK95X Sovereign Stack: All modules loaded successfully.")
+        print(f"FastAPI app '{app.title}' v{app.version} ready.")
+        sys.exit(0)
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=APP_PORT, reload=True, log_level="info")
