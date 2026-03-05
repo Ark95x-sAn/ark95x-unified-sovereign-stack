@@ -1,62 +1,196 @@
-version: '3.8'
+version: '3.9'
+
+networks:
+  ark95x-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  mongodb-data:
+  redis-data:
+  qdrant-data:
+  n8n-data:
 
 services:
-  ark95x-core:
-    build: .
+
+  core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ark95x-core
+    restart: unless-stopped
     ports:
       - "8000:8000"
-    env_file: .env
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_PORT=8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - POSTGRES_URL=postgresql://ark95x:${POSTGRES_PASSWORD:-ark95x_pass}@postgres:5432/sovereign
+      - MONGODB_URL=mongodb://mongodb:27017/ark95x
+      - REDIS_URL=redis://redis:6379
+      - QDRANT_URL=http://qdrant:6333
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - N8N_URL=http://n8n:5678
+      - N8N_API_KEY=${N8N_API_KEY:-}
     depends_on:
-      - postgres
-      - redis
-      - qdrant
-      - mongodb
-    volumes:
-      - .:/app
-    command: python main.py
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - ark95x-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
   postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: sovereign
-      POSTGRES_USER: ark95x
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    image: postgres:16-alpine
+    container_name: ark95x-postgres
+    restart: unless-stopped
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: ark95x
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ark95x_pass}
+      POSTGRES_DB: sovereign
     volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - ark95x-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ark95x -d sovereign"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mongodb:
     image: mongo:7
+    container_name: ark95x-mongodb
+    restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
-      - mongodata:/data/db
+      - mongodb-data:/data/db
+    networks:
+      - ark95x-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ark95x-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - ark95x-net
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   qdrant:
     image: qdrant/qdrant:latest
+    container_name: ark95x-qdrant
+    restart: unless-stopped
     ports:
       - "6333:6333"
+      - "6334:6334"
     volumes:
-      - qdrantdata:/qdrant/storage
+      - qdrant-data:/qdrant/storage
+    networks:
+      - ark95x-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   n8n:
     image: n8nio/n8n:latest
+    container_name: ark95x-n8n
+    restart: unless-stopped
     ports:
       - "5678:5678"
-    env_file: .env
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678
+      - GENERIC_TIMEZONE=America/Chicago
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=ark95x
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-ark95x_pass}
+      - N8N_ENCRYPTION_KEY=${N8N_API_KEY:-ark95x_n8n_encryption_key_32ch}
+    volumes:
+      - n8n-data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ark95x-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5678"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   searxng:
     image: searxng/searxng:latest
+    container_name: ark95x-searxng
+    restart: unless-stopped
     ports:
       - "8080:8080"
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8080
+    networks:
+      - ark95x-net
 
-volumes:
-  pgdata:
-  mongodata:
-  qdrantdata:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ark95x-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - ark95x-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ark95x-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-ark95x_admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    depends_on:
+      - prometheus
+    networks:
+      - ark95x-net
