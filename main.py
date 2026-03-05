@@ -109,7 +109,6 @@ async def health():
     for url, name in checks:
         result = await check_service(url, name)
         services[name] = result["status"]
-
     all_healthy = all(s == "healthy" for s in services.values())
     return HealthResponse(
         status="healthy" if all_healthy else "degraded",
@@ -156,7 +155,12 @@ async def services_status():
         (f"{QDRANT_URL}/health", "qdrant"),
         (f"{N8N_URL}", "n8n"),
     ]
-    if __name__ == "__main__":
+    results = []
+    for url, name in checks:
+        results.append(await check_service(url, name))
+    return {"services": results, "timestamp": datetime.now(timezone.utc).isoformat()}
+
+if __name__ == "__main__":
     import sys
     if "--check" in sys.argv:
         print("ARK95X Sovereign Stack: All modules loaded successfully.")
