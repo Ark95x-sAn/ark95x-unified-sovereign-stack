@@ -1,0 +1,41 @@
+# ARK95X Emerald Tablet - reviewdog configuration
+# Multi-language linter orchestration for PR reviews
+runner:
+  pylint:
+    cmd: pylint --output-format=text --score=no --recursive=y .
+    errorformat:
+      - "%f:%l:%c: %m"
+    level: warning
+  flake8:
+    cmd: flake8 --format=default .
+    errorformat:
+      - "%f:%l:%c: %t%n %m"
+    level: warning
+  bandit:
+    cmd: bandit -r . -f custom --msg-template "{relpath}:{line}:0: {severity} {test_id} {msg}"
+    errorformat:
+      - "%f:%l:%c: %m"
+    level: error
+  mypy:
+    cmd: mypy . --ignore-missing-imports --no-error-summary
+    errorformat:
+      - "%f:%l: %trror: %m"
+      - "%f:%l: %tarning: %m"
+    level: warning
+  shellcheck:
+    cmd: find . -name '*.sh' -exec shellcheck -f gcc {} +
+    errorformat:
+      - "%f:%l:%c: %trror: %m"
+      - "%f:%l:%c: %tarning: %m"
+      - "%f:%l:%c: %tote: %m"
+    level: warning
+  yamllint:
+    cmd: yamllint -f parsable .
+    errorformat:
+      - "%f:%l:%c: [%t%*[a-z]] %m"
+    level: warning
+  eslint:
+    cmd: npx eslint --format unix . 2>/dev/null || true
+    errorformat:
+      - "%f:%l:%c: %m"
+    level: warning
