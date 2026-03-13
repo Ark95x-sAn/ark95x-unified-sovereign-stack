@@ -1,0 +1,530 @@
+# =============================================================
+# ARK95X HLM Trinity Stack — Model Registry Configuration
+# 27 AI models across 5 tiers + Obelisk 9R Brain Mapping
+# =============================================================
+
+meta:
+  version: "1.0.0"
+  stack: "ARK95X Unified Sovereign Stack"
+  architecture: "HLM Trinity Stack"
+  description: "Head (reasoning) · Lateral (parallel) · Motor (execution)"
+
+# ----------------------------------------------------------
+# HLM Tier Definitions
+# ----------------------------------------------------------
+hlm_tiers:
+  head:
+    description: "Reasoning and planning models — strategic cognition"
+    models: [claude_pro, chatgpt_pro, grok_xai, perplexity_comet]
+  lateral:
+    description: "Parallel processing models — breadth and speed"
+    models: [ollama_llama3, ollama_deepseek, ollama_mistral, ollama_phi, gpt4all, merlin, monica, searxng]
+  motor:
+    description: "Execution models — action and automation"
+    models: [codex, ollama_codellama, crewai, n8n, copilot, manus, github, docker_conductor]
+
+# ----------------------------------------------------------
+# Obelisk 9R Brain Mapping
+# ----------------------------------------------------------
+obelisk_9r:
+  analysis:
+    description: "Deep analytical reasoning and auditing"
+    primary: [claude_pro]
+    secondary: [chatgpt_pro]
+    preferred_variants:
+      claude_pro: "claude-opus-4-20250514"
+      chatgpt_pro: "gpt-4o"
+  synthesis:
+    description: "Combining information from multiple sources"
+    primary: [chatgpt_pro]
+    secondary: [claude_pro]
+    preferred_variants:
+      claude_pro: "claude-sonnet-4-20250514"
+  strategy:
+    description: "Strategic planning and decision-making"
+    primary: [chatgpt_pro]
+    secondary: [claude_pro]
+    preferred_variants:
+      chatgpt_pro: "o3"
+      claude_pro: "claude-opus-4-20250514"
+  creativity:
+    description: "Creative generation, brainstorming, design"
+    primary: [chatgpt_pro]
+    secondary: [grok_xai]
+  execution:
+    description: "Code generation, deployment, automation"
+    primary: [codex, crewai]
+    secondary: [n8n]
+  memory:
+    description: "Knowledge storage, retrieval, graph operations"
+    primary: [notion]
+    secondary: [github]
+  prediction:
+    description: "Forecasting, research, trend analysis"
+    primary: [perplexity_comet]
+    secondary: [chatgpt_pro, grok_xai]
+    preferred_variants:
+      perplexity_comet: "deep_research"
+      chatgpt_pro: "o3"
+  communication:
+    description: "Writing, drafting, messaging"
+    primary: [chatgpt_pro]
+    secondary: [claude_pro]
+    preferred_variants:
+      claude_pro: "claude-sonnet-4-20250514"
+  integration:
+    description: "System wiring, API connections, orchestration"
+    primary: [claude_pro]
+    secondary: [chatgpt_pro]
+    preferred_variants:
+      claude_pro: "claude-opus-4-20250514"
+      chatgpt_pro: "o3"
+
+# ----------------------------------------------------------
+# Model Registry — 27 Models
+# ----------------------------------------------------------
+models:
+  # --- TIER 1: Primary Command ---
+  perplexity_comet:
+    id: "perplexity_comet"
+    name: "Perplexity Comet"
+    tier: 1
+    tier_name: "Primary Command"
+    hlm_role: "head"
+    endpoint: "https://api.perplexity.ai"
+    modes: ["pro_search", "deep_research", "spaces"]
+    api_key_env: "PERPLEXITY_API_KEY"
+    capabilities: ["research", "search", "citation", "real_time_data"]
+    max_tokens: 8192
+    rate_limit_rpm: 60
+
+  chatgpt_pro:
+    id: "chatgpt_pro"
+    name: "ChatGPT Pro"
+    tier: 1
+    tier_name: "Primary Command"
+    hlm_role: "head"
+    endpoint: "https://api.openai.com/v1"
+    models: ["gpt-4o", "o1", "o3", "gpt-4o-mini"]
+    default_model: "gpt-4o"
+    api_key_env: "OPENAI_API_KEY"
+    capabilities: ["reasoning", "coding", "analysis", "creativity", "strategy"]
+    max_tokens: 128000
+    rate_limit_rpm: 500
+
+  claude_pro:
+    id: "claude_pro"
+    name: "Claude Pro"
+    tier: 1
+    tier_name: "Primary Command"
+    hlm_role: "head"
+    endpoint: "https://api.anthropic.com/v1"
+    models: ["claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-haiku"]
+    default_model: "claude-sonnet-4-20250514"
+    api_key_env: "ANTHROPIC_API_KEY"
+    capabilities: ["analysis", "coding", "integration", "long_context", "safety"]
+    max_tokens: 200000
+    rate_limit_rpm: 300
+
+  codex:
+    id: "codex"
+    name: "OpenAI Codex"
+    tier: 1
+    tier_name: "Primary Command"
+    hlm_role: "motor"
+    endpoint: "https://api.openai.com/v1"
+    models: ["codex"]
+    default_model: "codex"
+    api_key_env: "OPENAI_API_KEY"
+    capabilities: ["code_generation", "code_review", "refactoring", "deployment"]
+    max_tokens: 32000
+    rate_limit_rpm: 200
+
+  grok_xai:
+    id: "grok_xai"
+    name: "Grok (xAI)"
+    tier: 1
+    tier_name: "Primary Command"
+    hlm_role: "head"
+    endpoint: "https://api.x.ai/v1"
+    models: ["grok-3", "grok-3-mini"]
+    default_model: "grok-3"
+    api_key_env: "XAI_API_KEY"
+    capabilities: ["reasoning", "creativity", "real_time_data", "prediction"]
+    max_tokens: 131072
+    rate_limit_rpm: 60
+
+  # --- TIER 2: Local Sovereign ---
+  ollama_llama3:
+    id: "ollama_llama3"
+    name: "Ollama LLaMA 3"
+    tier: 2
+    tier_name: "Local Sovereign"
+    hlm_role: "lateral"
+    endpoint: "http://localhost:11434"
+    models: ["llama3"]
+    default_model: "llama3"
+    api_key_env: null
+    capabilities: ["general", "reasoning", "coding"]
+    max_tokens: 8192
+    rate_limit_rpm: null
+
+  ollama_deepseek:
+    id: "ollama_deepseek"
+    name: "Ollama DeepSeek-R1"
+    tier: 2
+    tier_name: "Local Sovereign"
+    hlm_role: "lateral"
+    endpoint: "http://localhost:11434"
+    models: ["deepseek-r1"]
+    default_model: "deepseek-r1"
+    api_key_env: null
+    capabilities: ["reasoning", "math", "coding", "analysis"]
+    max_tokens: 16384
+    rate_limit_rpm: null
+
+  ollama_codellama:
+    id: "ollama_codellama"
+    name: "Ollama CodeLlama"
+    tier: 2
+    tier_name: "Local Sovereign"
+    hlm_role: "motor"
+    endpoint: "http://localhost:11434"
+    models: ["codellama"]
+    default_model: "codellama"
+    api_key_env: null
+    capabilities: ["code_generation", "code_completion", "debugging"]
+    max_tokens: 16384
+    rate_limit_rpm: null
+
+  ollama_mistral:
+    id: "ollama_mistral"
+    name: "Ollama Mistral"
+    tier: 2
+    tier_name: "Local Sovereign"
+    hlm_role: "lateral"
+    endpoint: "http://localhost:11434"
+    models: ["mistral"]
+    default_model: "mistral"
+    api_key_env: null
+    capabilities: ["general", "reasoning", "fast_inference"]
+    max_tokens: 8192
+    rate_limit_rpm: null
+
+  ollama_phi:
+    id: "ollama_phi"
+    name: "Ollama Phi-3"
+    tier: 2
+    tier_name: "Local Sovereign"
+    hlm_role: "lateral"
+    endpoint: "http://localhost:11434"
+    models: ["phi3"]
+    default_model: "phi3"
+    api_key_env: null
+    capabilities: ["general", "lightweight", "fast_inference"]
+    max_tokens: 4096
+    rate_limit_rpm: null
+
+  gpt4all:
+    id: "gpt4all"
+    name: "GPT4All"
+    tier: 2
+    tier_name: "Local Sovereign"
+    hlm_role: "lateral"
+    endpoint: "http://localhost:4891"
+    models: ["local"]
+    default_model: "local"
+    api_key_env: null
+    capabilities: ["general", "offline", "privacy"]
+    max_tokens: 4096
+    rate_limit_rpm: null
+
+  copilot:
+    id: "copilot"
+    name: "GitHub Copilot"
+    tier: 2
+    tier_name: "Local Sovereign"
+    hlm_role: "motor"
+    endpoint: "system_native"
+    models: ["copilot"]
+    default_model: "copilot"
+    api_key_env: null
+    capabilities: ["code_completion", "inline_suggestions", "chat"]
+    max_tokens: null
+    rate_limit_rpm: null
+
+  # --- TIER 3: Specialized Agents ---
+  crewai:
+    id: "crewai"
+    name: "CrewAI"
+    tier: 3
+    tier_name: "Specialized Agents"
+    hlm_role: "motor"
+    endpoint: "internal"
+    models: ["multi_agent"]
+    default_model: "multi_agent"
+    api_key_env: null
+    capabilities: ["orchestration", "multi_agent", "task_delegation", "autonomous"]
+    max_tokens: null
+    rate_limit_rpm: null
+
+  manus:
+    id: "manus"
+    name: "Manus"
+    tier: 3
+    tier_name: "Specialized Agents"
+    hlm_role: "motor"
+    endpoint: "https://manus.im/api"
+    models: ["autonomous"]
+    default_model: "autonomous"
+    api_key_env: null
+    capabilities: ["web_automation", "autonomous_browsing", "task_execution"]
+    max_tokens: null
+    rate_limit_rpm: 30
+
+  merlin:
+    id: "merlin"
+    name: "Merlin"
+    tier: 3
+    tier_name: "Specialized Agents"
+    hlm_role: "lateral"
+    endpoint: "browser_extension"
+    models: ["summarizer"]
+    default_model: "summarizer"
+    api_key_env: null
+    capabilities: ["page_summarization", "quick_answers", "browser_integration"]
+    max_tokens: null
+    rate_limit_rpm: null
+
+  monica:
+    id: "monica"
+    name: "Monica"
+    tier: 3
+    tier_name: "Specialized Agents"
+    hlm_role: "lateral"
+    endpoint: "browser_extension"
+    models: ["multi_model"]
+    default_model: "multi_model"
+    api_key_env: null
+    capabilities: ["multi_model_chat", "translation", "writing_assist"]
+    max_tokens: null
+    rate_limit_rpm: null
+
+  pieces_os:
+    id: "pieces_os"
+    name: "Pieces OS"
+    tier: 3
+    tier_name: "Specialized Agents"
+    hlm_role: "motor"
+    endpoint: "http://localhost:1000"
+    models: ["snippet_manager"]
+    default_model: "snippet_manager"
+    api_key_env: null
+    capabilities: ["code_snippets", "context_awareness", "workflow_assist"]
+    max_tokens: null
+    rate_limit_rpm: null
+
+  pieces_dash:
+    id: "pieces_dash"
+    name: "Pieces Dashboard"
+    tier: 3
+    tier_name: "Specialized Agents"
+    hlm_role: "motor"
+    endpoint: "http://localhost:1000/dash"
+    models: ["analytics"]
+    default_model: "analytics"
+    api_key_env: null
+    capabilities: ["analytics", "usage_tracking", "productivity_metrics"]
+    max_tokens: null
+    rate_limit_rpm: null
+
+  # --- TIER 4: Platform Intelligence ---
+  notion:
+    id: "notion"
+    name: "Notion"
+    tier: 4
+    tier_name: "Platform Intelligence"
+    hlm_role: "motor"
+    endpoint: "https://api.notion.com/v1"
+    models: ["knowledge_base"]
+    default_model: "knowledge_base"
+    api_key_env: "NOTION_API_KEY"
+    capabilities: ["knowledge_base", "documentation", "project_management"]
+    max_tokens: null
+    rate_limit_rpm: 300
+
+  github:
+    id: "github"
+    name: "GitHub"
+    tier: 4
+    tier_name: "Platform Intelligence"
+    hlm_role: "motor"
+    endpoint: "https://api.github.com"
+    models: ["platform"]
+    default_model: "platform"
+    api_key_env: "GITHUB_TOKEN"
+    capabilities: ["code_hosting", "ci_cd", "issue_tracking", "collaboration"]
+    max_tokens: null
+    rate_limit_rpm: 5000
+
+  pinterest:
+    id: "pinterest"
+    name: "Pinterest"
+    tier: 4
+    tier_name: "Platform Intelligence"
+    hlm_role: "lateral"
+    endpoint: "https://api.pinterest.com/v5"
+    models: ["visual_intel"]
+    default_model: "visual_intel"
+    api_key_env: "PINTEREST_API_KEY"
+    capabilities: ["visual_search", "trend_analysis", "inspiration"]
+    max_tokens: null
+    rate_limit_rpm: 200
+
+  twitter_x:
+    id: "twitter_x"
+    name: "Twitter / X"
+    tier: 4
+    tier_name: "Platform Intelligence"
+    hlm_role: "lateral"
+    endpoint: "https://api.twitter.com/2"
+    models: ["signal_intel"]
+    default_model: "signal_intel"
+    api_key_env: "TWITTER_BEARER_TOKEN"
+    capabilities: ["signal_intelligence", "trend_monitoring", "audience_analysis"]
+    max_tokens: null
+    rate_limit_rpm: 300
+
+  # --- TIER 5: Syndicated Expansion ---
+  perplexity_spaces:
+    id: "perplexity_spaces"
+    name: "Perplexity Spaces"
+    tier: 5
+    tier_name: "Syndicated Expansion"
+    hlm_role: "head"
+    endpoint: "https://api.perplexity.ai"
+    models: ["spaces"]
+    default_model: "spaces"
+    api_key_env: "PERPLEXITY_API_KEY"
+    capabilities: ["collaborative_research", "shared_context", "team_knowledge"]
+    max_tokens: 8192
+    rate_limit_rpm: 60
+
+  n8n:
+    id: "n8n"
+    name: "n8n"
+    tier: 5
+    tier_name: "Syndicated Expansion"
+    hlm_role: "motor"
+    endpoint: "http://localhost:5678"
+    models: ["workflow"]
+    default_model: "workflow"
+    api_key_env: "N8N_API_KEY"
+    capabilities: ["workflow_automation", "webhook", "integration", "scheduling"]
+    max_tokens: null
+    rate_limit_rpm: null
+
+  searxng:
+    id: "searxng"
+    name: "SearXNG"
+    tier: 5
+    tier_name: "Syndicated Expansion"
+    hlm_role: "lateral"
+    endpoint: "http://localhost:8888"
+    models: ["metasearch"]
+    default_model: "metasearch"
+    api_key_env: null
+    capabilities: ["metasearch", "privacy", "aggregation"]
+    max_tokens: null
+    rate_limit_rpm: null
+
+  prometheus_grafana:
+    id: "prometheus_grafana"
+    name: "Prometheus + Grafana"
+    tier: 5
+    tier_name: "Syndicated Expansion"
+    hlm_role: "lateral"
+    endpoint: "http://localhost:9090"
+    secondary_endpoint: "http://localhost:3000"
+    models: ["observability"]
+    default_model: "observability"
+    api_key_env: null
+    capabilities: ["metrics", "alerting", "dashboards", "observability"]
+    max_tokens: null
+    rate_limit_rpm: null
+
+  docker_conductor:
+    id: "docker_conductor"
+    name: "Docker Conductor"
+    tier: 5
+    tier_name: "Syndicated Expansion"
+    hlm_role: "motor"
+    endpoint: "system_native"
+    models: ["orchestration"]
+    default_model: "orchestration"
+    api_key_env: null
+    capabilities: ["container_management", "orchestration", "scaling", "deployment"]
+    max_tokens: null
+    rate_limit_rpm: null
+
+# ----------------------------------------------------------
+# Flame Signature Validation
+# ----------------------------------------------------------
+flame_signatures:
+  allowlist:
+    - "sovereign"
+    - "ark95x"
+    - "flame_primary"
+    - "flame_backup"
+  default_dev: "sovereign"
+
+# ----------------------------------------------------------
+# Question Loop Templates
+# ----------------------------------------------------------
+question_loop:
+  templates:
+    - "Did this answer the actual question?"
+    - "What was missed?"
+    - "What adjacent insight exists?"
+    - "Should this feed into the knowledge graph?"
+
+# ----------------------------------------------------------
+# Task Classification Patterns
+# ----------------------------------------------------------
+classification_patterns:
+  execution:
+    keywords: ["code", "build", "deploy", "fix", "implement", "run", "execute", "compile", "test", "debug", "push", "commit"]
+    obelisk_function: "execution"
+    hlm_tier: "motor"
+  prediction:
+    keywords: ["research", "find", "search", "compare", "forecast", "predict", "trend", "investigate", "discover"]
+    obelisk_function: "prediction"
+    hlm_tier: "lateral"
+  strategy:
+    keywords: ["plan", "strategy", "decide", "evaluate", "assess", "prioritize", "roadmap", "architect"]
+    obelisk_function: "strategy"
+    hlm_tier: "head"
+  communication:
+    keywords: ["write", "draft", "email", "communicate", "message", "respond", "compose", "announce"]
+    obelisk_function: "communication"
+    hlm_tier: "lateral"
+  creativity:
+    keywords: ["create", "design", "brainstorm", "imagine", "innovate", "generate", "invent", "concept"]
+    obelisk_function: "creativity"
+    hlm_tier: "head"
+  analysis:
+    keywords: ["analyze", "review", "audit", "check", "inspect", "examine", "diagnose", "assess"]
+    obelisk_function: "analysis"
+    hlm_tier: "head"
+  synthesis:
+    keywords: ["summarize", "combine", "merge", "synthesize", "consolidate", "aggregate", "unify"]
+    obelisk_function: "synthesis"
+    hlm_tier: "lateral"
+  memory:
+    keywords: ["remember", "store", "recall", "log", "archive", "save", "document", "record"]
+    obelisk_function: "memory"
+    hlm_tier: "motor"
+  integration:
+    keywords: ["connect", "integrate", "wire", "sync", "link", "bridge", "orchestrate", "pipeline"]
+    obelisk_function: "integration"
+    hlm_tier: "head"
