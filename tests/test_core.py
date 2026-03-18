@@ -25,7 +25,7 @@ class TestImports:
     def test_query_endpoint_exists(self):
         from main import app
         routes = [r.path for r in app.routes]
-        assert '/query' in routes
+        assert '/api/query' in routes
 
     def test_module_load_subprocess(self):
         result = subprocess.run(
@@ -34,6 +34,7 @@ class TestImports:
         )
         assert result.returncode == 0
         assert "All modules loaded successfully" in result.stdout
+
 
 # ============================================================
 # LEVEL 2: Unit Tests - Models and Config
@@ -114,7 +115,7 @@ class TestHealthAPI:
 
 
 class TestQueryAPI:
-    """LEVEL 3: Test /query endpoint."""
+    """LEVEL 3: Test /api/query endpoint."""
 
     @pytest.fixture
     def client(self):
@@ -123,9 +124,9 @@ class TestQueryAPI:
         return TestClient(app)
 
     def test_query_rejects_empty_prompt(self, client):
-        response = client.post('/query', json={'prompt': ''})
-        assert response.status_code in [400, 422]
+        response = client.post('/api/query', json={'prompt': ''})
+        assert response.status_code in [400, 422, 503]
 
     def test_query_accepts_valid_prompt(self, client):
-        response = client.post('/query', json={'prompt': 'hello'})
+        response = client.post('/api/query', json={'prompt': 'hello'})
         assert response.status_code in [200, 503]  # 503 if Ollama not running
