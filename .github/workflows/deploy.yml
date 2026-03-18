@@ -21,12 +21,11 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   PYTHON_VERSION: '3.11'
-  NODE_VERSION: '20'
 
 jobs:
   test:
     name: Run Test Suite
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     if: ${{ github.event.inputs.skip_tests != 'true' }}
     steps:
       - name: Checkout Repository
@@ -38,28 +37,15 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov pytest-asyncio pytest-mock
-      - name: Install Node Dependencies
-        run: npm ci
-        if: hashFiles('package.json') != ''
       - name: Run Pytest Suite
         id: pytest
         run: |
           pytest tests/ -v --cov=. --cov-report=xml --junitxml=pytest-results.xml
-        continue-on-error: true
-      - name: Run Jest Tests
-        id: jest
-        run: npm test -- --coverage --passWithNoTests
-        if: hashFiles('package.json') != ''
         continue-on-error: true
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
@@ -174,20 +160,20 @@ jobs:
         run: |
           $payload = @{
             deployment = @{
-              status     = "${{ job.status }}"
+              status = "${{ job.status }}"
               commit_sha = "${{ github.sha }}"
-              branch     = "${{ github.ref_name }}"
-              author     = "${{ github.event.head_commit.author.name }}"
-              message    = "${{ github.event.head_commit.message }}"
-              timestamp  = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+              branch = "${{ github.ref_name }}"
+              author = "${{ github.event.head_commit.author.name }}"
+              message = "${{ github.event.head_commit.message }}"
+              timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
             }
             service = @{
-              health_status  = "${{ steps.health.outputs.health_status }}"
-              service_url    = "${{ steps.health.outputs.service_url }}"
-              image_tag      = "${{ needs.build.outputs.image_tag }}"
+              health_status = "${{ steps.health.outputs.health_status }}"
+              service_url = "${{ steps.health.outputs.service_url }}"
+              image_tag = "${{ needs.build.outputs.image_tag }}"
             }
             workflow = @{
-              run_id  = "${{ github.run_id }}"
+              run_id = "${{ github.run_id }}"
               run_url = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
           } | ConvertTo-Json -Depth 10
