@@ -1,75 +1,32 @@
-# ARK95X Unified Sovereign Stack - Python Dependencies
-
-# -- Core Web Framework --
-fastapi>=0.115.0
-uvicorn[standard]>=0.30.0
-pydantic>=2.8.0
-pydantic-settings>=2.4.0
+# ARK95X Unified Sovereign Stack - Dependencies
+# Core API
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+httpx>=0.27.0
+pydantic>=2.5.0
+loguru>=0.7.0
 python-dotenv>=1.0.0
 
-# -- Database Clients --
+# Command Base Dashboard
+dash>=2.14.0
+dash-bootstrap-components>=1.5.0
+plotly>=5.18.0
+
+# Database
 asyncpg>=0.29.0
-psycopg2-binary>=2.9.9
-motor>=3.5.0
-pymongo>=4.8.0
+motor>=3.3.0
 redis>=5.0.0
-aiosqlite>=0.20.0
-sqlalchemy>=2.0.30
-alembic>=1.13.0
+qdrant-client>=1.7.0
 
-# -- Vector Store --
-qdrant-client>=1.11.0
+# Monitoring
+prometheus-fastapi-instrumentator>=6.1.0
 
-# -- AI / LLM --
-openai>=1.45.0
-ollama>=0.3.0
-langchain>=0.3.0
-langchain-openai>=0.2.0
-langchain-community>=0.3.0
-langchain-core>=0.3.0
-crewai>=0.63.0
-crewai-tools>=0.12.0
-numpy>=1.26.0
+# AI/ML
+crewai>=0.28.0
+langchain>=0.1.0
+ollama>=0.1.0
 
-# -- HTTP / Async --
-httpx>=0.27.0
-aiohttp>=3.10.0
-requests>=2.32.0
-websockets>=13.0.0
-
-# -- Auth / Security --
-python-jose[cryptography]>=3.3.0
-passlib[bcrypt]>=1.7.4
-python-multipart>=0.0.9
-cryptography>=43.0.0
-
-# -- Observability --
-prometheus-client>=0.21.0
-prometheus-fastapi-instrumentator>=7.0.0
-opentelemetry-sdk>=1.27.0
-opentelemetry-api>=1.27.0
-opentelemetry-instrumentation-fastapi>=0.48b0
-loguru>=0.7.2
-
-# -- Task Queue --
-celery>=5.4.0
-kombu>=5.3.0
-
-# -- Data / ML --
-pandas>=2.2.0
-scikit-learn>=1.5.0
-
-# -- Utilities --
-python-slugify>=8.0.0
-arrow>=1.3.0
-rich>=13.8.0
-typer>=0.12.0
-click>=8.1.0
-tenacity>=9.0.0
-python-dateutil>=2.9.0
-
-# -- Testing --
-pytest>=8.3.0
-pytest-asyncio>=0.24.0
-pytest-cov>=5.0.0
-pytest-mock>=3.14.0
+# Utilities
+pyyaml>=6.0.0
+aiofiles>=23.0.0
+python-multipart>=0.0.6
