@@ -1,18 +1,15 @@
 version: '3.9'
-
 networks:
   ark95x-net:
     driver: bridge
-
 volumes:
   postgres-data:
   mongodb-data:
   redis-data:
   qdrant-data:
   n8n-data:
-
 services:
-
+  # === CORE API (port 8000) ===
   core:
     build:
       context: .
@@ -50,6 +47,127 @@ services:
       retries: 5
       start_period: 40s
 
+  # === COMMAND BASE DASHBOARD (port 8050) ===
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ark95x-dashboard
+    restart: unless-stopped
+    ports:
+      - "8050:8050"
+    environment:
+      - DASHBOARD_PORT=8050
+      - CORE_API_URL=http://core:8000
+      - FLAMEGATE_URL=http://flamegate:8443
+      - COMET_ROUTER_URL=http://comet-router:8100
+      - GATE_UNLOCKER_URL=http://gate-unlocker:8200
+    command: python -m command.dashboard
+    depends_on:
+      - core
+    networks:
+      - ark95x-net
+
+  # === FLAMEGATE TLS PROXY (port 8443) ===
+  flamegate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ark95x-flamegate
+    restart: unless-stopped
+    ports:
+      - "8443:8443"
+    environment:
+      - FLAMEGATE_PORT=8443
+      - FLAMEGATE_ADMIN_TOKEN=${FLAMEGATE_ADMIN_TOKEN:-ark95x-sovereign-flame-token}
+      - CORE_API_URL=http://core:8000
+      - COMET_ROUTER_URL=http://comet-router:8100
+      - GATE_UNLOCKER_URL=http://gate-unlocker:8200
+    command: uvicorn flame.flamegate_tls:app --host 0.0.0.0 --port 8443
+    depends_on:
+      - core
+    networks:
+      - ark95x-net
+
+  # === COMET ROUTER (port 8100) ===
+  comet-router:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ark95x-comet-router
+    restart: unless-stopped
+    ports:
+      - "8100:8100"
+    environment:
+      - COMET_ROUTER_PORT=8100
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+    command: uvicorn core.comet_router:app --host 0.0.0.0 --port 8100
+    networks:
+      - ark95x-net
+
+  # === GATE UNLOCKER (port 8200) ===
+  gate-unlocker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ark95x-gate-unlocker
+    restart: unless-stopped
+    ports:
+      - "8200:8200"
+    environment:
+      - GATE_UNLOCKER_PORT=8200
+      - FLAMEGATE_ADMIN_TOKEN=${FLAMEGATE_ADMIN_TOKEN:-ark95x-sovereign-flame-token}
+    command: uvicorn core.gate_unlocker:app --host 0.0.0.0 --port 8200
+    networks:
+      - ark95x-net
+
+  # === MULTI-AGENT COUNCIL (port 8300) ===
+  council:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ark95x-council
+    restart: unless-stopped
+    ports:
+      - "8300:8300"
+    environment:
+      - COUNCIL_PORT=8300
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - COUNCIL_MODEL=${COUNCIL_MODEL:-llama3}
+      - GATE_UNLOCKER_URL=http://gate-unlocker:8200
+    command: uvicorn flame.council:app --host 0.0.0.0 --port 8300
+    depends_on:
+      - gate-unlocker
+    networks:
+      - ark95x-net
+
+  # === SHADOW AGENT (port 8400) ===
+  shadow-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ark95x-shadow-agent
+    restart: unless-stopped
+    ports:
+      - "8400:8400"
+    environment:
+      - SHADOW_AGENT_PORT=8400
+      - SHADOW_POLL_INTERVAL=10
+      - CORE_API_URL=http://core:8000
+      - FLAMEGATE_URL=http://flamegate:8443
+      - COMET_ROUTER_URL=http://comet-router:8100
+      - GATE_UNLOCKER_URL=http://gate-unlocker:8200
+      - COUNCIL_URL=http://council:8300
+    command: uvicorn core.shadow_agent:app --host 0.0.0.0 --port 8400
+    depends_on:
+      - core
+    networks:
+      - ark95x-net
+
+  # === INFRASTRUCTURE SERVICES ===
   postgres:
     image: postgres:16-alpine
     container_name: ark95x-postgres
@@ -172,8 +290,6 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
     networks:
@@ -189,7 +305,6 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-ark95x_admin}
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_INSTALL_PLUGINS=grafana-clock-panel
     depends_on:
       - prometheus
     networks:
