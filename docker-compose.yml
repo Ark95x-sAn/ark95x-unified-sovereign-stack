@@ -1,4 +1,4 @@
-version: '3.9'
+
 networks:
   ark95x-net:
     driver: bridge
@@ -17,6 +17,7 @@ services:
     container_name: ark95x-core
     restart: unless-stopped
     ports:
+    env_file: .env
       - "8000:8000"
     environment:
       - APP_ENV=${APP_ENV:-production}
