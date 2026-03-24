@@ -23,24 +23,30 @@ CORE_API = os.getenv("CORE_API_URL", "http://localhost:8000")
 COMET_ROUTER = os.getenv("COMET_ROUTER_URL", "http://localhost:8100")
 GATE_UNLOCKER = os.getenv("GATE_UNLOCKER_URL", "http://localhost:8200")
 
+# TLS verification toggle: defaults to True (secure). Set to "false" in
+# env only for local dev behind self-signed certs.
+VERIFY_TLS = os.getenv("ARK95X_VERIFY_TLS", "true").lower() not in ("false", "0", "no")
+
+
 # === AUDIT DATABASE ===
 def init_audit_db():
     db = sqlite3.connect(AUDIT_DB)
     db.execute("""
-        CREATE TABLE IF NOT EXISTS audit_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT NOT NULL,
-            actor TEXT NOT NULL,
-            action TEXT NOT NULL,
-            target TEXT,
-            payload_hash TEXT,
-            status TEXT,
-            latency_ms REAL,
-            ip_address TEXT
-        )
+    CREATE TABLE IF NOT EXISTS audit_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT NOT NULL,
+        actor TEXT NOT NULL,
+        action TEXT NOT NULL,
+        target TEXT,
+        payload_hash TEXT,
+        status TEXT,
+        latency_ms REAL,
+        ip_address TEXT
+    )
     """)
     db.commit()
     return db
+
 
 def log_audit(actor, action, target=None, payload_hash=None, status="ok", latency_ms=0, ip="unknown"):
     try:
@@ -54,6 +60,7 @@ def log_audit(actor, action, target=None, payload_hash=None, status="ok", latenc
     except Exception as e:
         logger.error(f"Audit log failed: {e}")
 
+
 # === MODELS ===
 class ProxyPayload(BaseModel):
     target: str  # "core", "comet_router", "gate_unlocker", or full URL
@@ -63,10 +70,12 @@ class ProxyPayload(BaseModel):
     actor: str = "unknown"
     gate_id: str = ""
 
+
 class AuditQuery(BaseModel):
     limit: int = 50
     actor: str = ""
     action: str = ""
+
 
 # === APP ===
 app = FastAPI(
@@ -79,6 +88,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 # Init audit DB on startup
 init_audit_db()
 
+
 # === AUTH ===
 async def verify_token(request: Request):
     token = request.headers.get("X-Flamegate-Token", "")
@@ -87,6 +97,7 @@ async def verify_token(request: Request):
         raise HTTPException(status_code=403, detail="Invalid Flamegate token")
     return token
 
+
 # === TARGET RESOLUTION ===
 TARGET_MAP = {
     "core": CORE_API,
@@ -94,11 +105,13 @@ TARGET_MAP = {
     "gate_unlocker": GATE_UNLOCKER,
 }
 
+
 def resolve_target(target: str, path: str) -> str:
     base = TARGET_MAP.get(target, target)
     if not base.startswith("http"):
         base = f"http://{base}"
     return f"{base}{path}"
+
 
 # === ENDPOINTS ===
 @app.get("/health")
@@ -111,16 +124,15 @@ async def health():
         "audit_db": AUDIT_DB,
     }
 
+
 @app.post("/flamegate/proxy")
 async def proxy_request(payload: ProxyPayload, token: str = Depends(verify_token)):
     start = time.time()
     url = resolve_target(payload.target, payload.path)
     payload_hash = hashlib.sha256(json.dumps(payload.body, sort_keys=True).encode()).hexdigest()[:16]
-
     logger.info(f"[FLAMEGATE] {payload.actor} -> {payload.target}{payload.path} [{payload.method}]")
-
     try:
-        async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
+        async with httpx.AsyncClient(timeout=30.0, verify=VERIFY_TLS) as client:
             if payload.method.upper() == "GET":
                 r = await client.get(url)
             elif payload.method.upper() == "POST":
@@ -131,15 +143,12 @@ async def proxy_request(payload: ProxyPayload, token: str = Depends(verify_token
                 r = await client.delete(url)
             else:
                 raise HTTPException(400, f"Unsupported method: {payload.method}")
-
         latency = round((time.time() - start) * 1000, 2)
         log_audit(payload.actor, f"proxy_{payload.method.lower()}", payload.target, payload_hash, "ok", latency)
-
         try:
             response_data = r.json()
         except Exception:
             response_data = {"raw": r.text[:500]}
-
         return {
             "status": "proxied",
             "target": payload.target,
@@ -149,7 +158,6 @@ async def proxy_request(payload: ProxyPayload, token: str = Depends(verify_token
             "payload_hash": payload_hash,
             "response": response_data,
         }
-
     except httpx.ConnectError:
         latency = round((time.time() - start) * 1000, 2)
         log_audit(payload.actor, f"proxy_{payload.method.lower()}", payload.target, payload_hash, "connect_error", latency)
@@ -159,6 +167,7 @@ async def proxy_request(payload: ProxyPayload, token: str = Depends(verify_token
         log_audit(payload.actor, f"proxy_{payload.method.lower()}", payload.target, payload_hash, "error", latency)
         raise HTTPException(500, f"Proxy error: {e}")
 
+
 @app.get("/flamegate/audit")
 async def get_audit(limit: int = 50, token: str = Depends(verify_token)):
     db = sqlite3.connect(AUDIT_DB)
@@ -166,6 +175,7 @@ async def get_audit(limit: int = 50, token: str = Depends(verify_token)):
     rows = db.execute("SELECT * FROM audit_log ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
     db.close()
     return {"audit_log": [dict(r) for r in rows], "total": len(rows)}
+
 
 @app.get("/flamegate/stats")
 async def get_stats(token: str = Depends(verify_token)):
@@ -180,6 +190,7 @@ async def get_stats(token: str = Depends(verify_token)):
         "success_rate": round((total - errors) / max(total, 1) * 100, 2),
         "avg_latency_ms": round(avg_latency, 2),
     }
+
 
 if __name__ == "__main__":
     import uvicorn
