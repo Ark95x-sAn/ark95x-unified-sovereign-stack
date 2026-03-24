@@ -1,11 +1,6 @@
 name: ARK95X Sovereign Deploy Pipeline
 
 on:
-  push:
-    branches:
-      - main
-      - deploy
-      - deploy/**
   workflow_dispatch:
     inputs:
       skip_tests:
