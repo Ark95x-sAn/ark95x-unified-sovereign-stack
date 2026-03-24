@@ -150,7 +150,7 @@ async def proxy_request(payload: ProxyPayload, token: str = Depends(verify_token
             "response": response_data,
         }
 
-    except httpx.ConnectError as e:
+    except httpx.ConnectError:
         latency = round((time.time() - start) * 1000, 2)
         log_audit(payload.actor, f"proxy_{payload.method.lower()}", payload.target, payload_hash, "connect_error", latency)
         raise HTTPException(502, f"Target unreachable: {url}")
