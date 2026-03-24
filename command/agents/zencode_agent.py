@@ -96,7 +96,7 @@ class ZenCodeAgent:
 
     async def analyze(self, target, analysis_type="full"):
         logger.info(f"Analyzing {target} | type={analysis_type}")
-        cache_key = hashlib.md5(f"{target}:{analysis_type}".encode()).hexdigest()
+        cache_key = hashlib.sha256(f"{target}:{analysis_type}".encode()).hexdigest()
         if cache_key in self.analysis_cache:
             return self.analysis_cache[cache_key]
         skill = self.SKILLS.get(analysis_type, self.SKILLS["pattern_analysis"])
