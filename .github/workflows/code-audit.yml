@@ -16,57 +16,68 @@ jobs:
     name: Code Audit Master
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+      - uses: actions/checkout@v4
 
-    - name: Install audit tools
-      run: |
-        pip install pylint flake8 bandit mypy yamllint semgrep
-        npm install -g eslint typescript
-        curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -- -b /usr/local/bin latest
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin latest
-        sudo apt-get install -y shellcheck
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-    - name: Layer 1 - reviewdog pylint
-      if: github.event_name == 'pull_request'
-      env:
-        REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: pylint --recursive=y --output-format=text --score=no . 2>/dev/null | reviewdog -f=pylint -reporter=github-pr-review || true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-    - name: Layer 1 - reviewdog flake8
-      if: github.event_name == 'pull_request'
-      env:
-        REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: flake8 . 2>/dev/null | reviewdog -f=flake8 -reporter=github-pr-review || true
+      - name: Install audit tools
+        run: |
+          pip install pylint flake8 bandit mypy yamllint semgrep
+          npm install -g eslint typescript
+          curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -- -b /usr/local/bin latest
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin latest
+          sudo apt-get install -y shellcheck
 
-    - name: Layer 1 - reviewdog shellcheck
-      if: github.event_name == 'pull_request'
-      env:
-        REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: find . -name '*.sh' -exec shellcheck -f gcc {} + 2>/dev/null | reviewdog -f=gcc -reporter=github-pr-review || true
+      # === Layer 1: Static Analysis (advisory on PRs) ===
+      - name: Layer 1 - reviewdog pylint
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pylint --recursive=y --output-format=text --score=no . 2>/dev/null | reviewdog -f=pylint -reporter=github-pr-review
 
-    - name: Layer 2 - Bandit Security
-      run: bandit -r . -f txt -ll 2>/dev/null || true
+      - name: Layer 1 - reviewdog flake8
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: flake8 . 2>/dev/null | reviewdog -f=flake8 -reporter=github-pr-review
 
-    - name: Layer 2 - Semgrep SAST
-      run: semgrep scan --config auto . --text 2>/dev/null || true
+      - name: Layer 1 - reviewdog shellcheck
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: find . -name '*.sh' -exec shellcheck -f gcc {} + 2>/dev/null | reviewdog -f=gcc -reporter=github-pr-review
 
-    - name: Layer 3 - Trivy Vuln Scan
-      run: trivy fs . --severity HIGH,CRITICAL 2>/dev/null || true
+      # === Layer 2: Security (HARD GATE - fails on HIGH) ===
+      - name: Layer 2 - Bandit Security (HIGH severity gate)
+        run: bandit -r . -f txt -ll --severity-level high
 
-    - name: Layer 4 - MyPy Types
-      run: mypy . --ignore-missing-imports 2>/dev/null || true
+      - name: Layer 2 - Semgrep SAST
+        continue-on-error: true
+        run: semgrep scan --config auto . --text
 
-    - name: Audit Summary
-      if: always()
-      run: |
-        echo "=== EMERALD TABLET AUDIT COMPLETE ==="
-        echo "L1: Static (pylint/flake8/shellcheck)"
-        echo "L2: Security (bandit/semgrep)"
-        echo "L3: Vulns (trivy)"
-        echo "L4: Types (mypy)"
+      # === Layer 3: Vulnerability Scan (HARD GATE - fails on HIGH/CRITICAL) ===
+      - name: Layer 3 - Trivy Vuln Scan (HIGH/CRITICAL gate)
+        run: trivy fs . --severity HIGH,CRITICAL --exit-code 1
+
+      # === Layer 4: Type Checking (advisory) ===
+      - name: Layer 4 - MyPy Types
+        continue-on-error: true
+        run: mypy . --ignore-missing-imports
+
+      - name: Audit Summary
+        if: always()
+        run: |
+          echo "=== EMERALD TABLET AUDIT COMPLETE ==="
+          echo "L1: Static (pylint/flake8/shellcheck) - advisory"
+          echo "L2: Security (bandit=HARD GATE, semgrep=advisory)"
+          echo "L3: Vulns (trivy=HARD GATE on HIGH/CRITICAL)"
+          echo "L4: Types (mypy) - advisory"
