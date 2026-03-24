@@ -29,7 +29,8 @@ ignore =
     E241,
     E251,
     E271,
-    F401
+    F401,
+    E704
 per-file-ignores =
     __init__.py:F401
     tests/*:E501,F401
