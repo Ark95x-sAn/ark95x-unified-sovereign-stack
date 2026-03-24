@@ -148,7 +148,7 @@ def update_gates(_):
             status = "unhealthy"
         states[gid] = status
         cards.append(make_gate_card(gid, ginfo, status))
-    rows = [dbc.Row(cards[i:i+3]) for i in range(0, len(cards), 3)]
+    rows = [dbc.Row(cards[i:i + 3]) for i in range(0, len(cards), 3)]
     return rows, states
 
 @callback(
