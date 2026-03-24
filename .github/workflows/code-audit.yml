@@ -58,18 +58,25 @@ jobs:
 
       # === Layer 2: Security (HARD GATE - fails on HIGH) ===
       - name: Layer 2 - Bandit Security (HIGH severity gate)
-        run: bandit -r . -f txt -ll --severity-level high
+        id: bandit
+        continue-on-error: true
+        run: bandit -r . -f txt -lll
 
       - name: Layer 2 - Semgrep SAST
+        if: always()
         continue-on-error: true
         run: semgrep scan --config auto . --text
 
       # === Layer 3: Vulnerability Scan (HARD GATE - fails on HIGH/CRITICAL) ===
       - name: Layer 3 - Trivy Vuln Scan (HIGH/CRITICAL gate)
+        id: trivy
+        if: always()
+        continue-on-error: true
         run: trivy fs . --severity HIGH,CRITICAL --exit-code 1
 
       # === Layer 4: Type Checking (advisory) ===
       - name: Layer 4 - MyPy Types
+        if: always()
         continue-on-error: true
         run: mypy . --ignore-missing-imports
 
@@ -81,3 +88,17 @@ jobs:
           echo "L2: Security (bandit=HARD GATE, semgrep=advisory)"
           echo "L3: Vulns (trivy=HARD GATE on HIGH/CRITICAL)"
           echo "L4: Types (mypy) - advisory"
+
+      # === Enforce hard gates ===
+      - name: Enforce Security Gates
+        if: always()
+        run: |
+          if [ "${{ steps.bandit.outcome }}" = "failure" ]; then
+            echo "BANDIT GATE FAILED: HIGH severity issues found"
+            exit 1
+          fi
+          if [ "${{ steps.trivy.outcome }}" = "failure" ]; then
+            echo "TRIVY GATE FAILED: HIGH/CRITICAL vulnerabilities found"
+            exit 1
+          fi
+          echo "All security gates passed"
