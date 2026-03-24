@@ -17,14 +17,16 @@ asyncpg>=0.29.0
 motor>=3.3.0
 redis>=5.0.0
 qdrant-client>=1.7.0
+neo4j>=5.0.0
 
 # Monitoring
 prometheus-fastapi-instrumentator>=6.1.0
 
 # AI/ML
-crewai>=0.28.0
+crewai>=1.0.0,<2.0.0
 langchain>=0.1.0
 ollama>=0.1.0
+openai>=1.0.0
 
 # Utilities
 pyyaml>=6.0.0
