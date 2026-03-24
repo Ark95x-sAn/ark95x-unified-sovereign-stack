@@ -17,6 +17,10 @@ COMET_ROUTER_URL = os.getenv("COMET_ROUTER_URL", "http://localhost:8100")
 GATE_UNLOCKER_URL = os.getenv("GATE_UNLOCKER_URL", "http://localhost:8200")
 DASHBOARD_PORT = int(os.getenv("DASHBOARD_PORT", 8050))
 
+# TLS verification toggle: defaults to True (secure). Set to "false" in
+# env only for local dev behind self-signed certs.
+VERIFY_TLS = os.getenv("ARK95X_VERIFY_TLS", "true").lower() not in ("false", "0", "no")
+
 # === GATE DEFINITIONS ===
 GATES = {
     "gate_core": {"name": "Core API Gate", "port": 8000, "url": f"{CORE_API}/health"},
@@ -38,10 +42,11 @@ app = Dash(
     suppress_callback_exceptions=True,
 )
 
+
 def make_gate_card(gate_id, gate_info, status="unknown"):
     color_map = {"healthy": "success", "unhealthy": "danger", "unknown": "secondary", "locked": "warning", "unlocked": "success"}
     color = color_map.get(status, "secondary")
-    icon = {"healthy": "🟢", "unlocked": "🔓", "unhealthy": "🔴", "locked": "🔒", "unknown": "⚪"}.get(status, "⚪")
+    icon = {"healthy": "\U0001f7e2", "unlocked": "\U0001f513", "unhealthy": "\U0001f534", "locked": "\U0001f512", "unknown": "\u26aa"}.get(status, "\u26aa")
     return dbc.Col(
         dbc.Card([
             dbc.CardBody([
@@ -52,12 +57,13 @@ def make_gate_card(gate_id, gate_info, status="unknown"):
         width=4,
     )
 
+
 def build_layout():
     return dbc.Container([
         # Header
         dbc.Row([
             dbc.Col([
-                html.H1("🔥 ARK95X COMMAND BASE", className="text-warning mb-0"),
+                html.H1("\U0001f525 ARK95X COMMAND BASE", className="text-warning mb-0"),
                 html.P("Sovereign Stack Control Center | Network-95 LLC", className="text-muted"),
             ], width=8),
             dbc.Col([
@@ -66,27 +72,24 @@ def build_layout():
             ], width=4),
         ], className="my-3"),
         html.Hr(className="border-warning"),
-
         # Council Status
         dbc.Row([
             dbc.Col([
-                html.H4("⚡ Council Status", className="text-info"),
+                html.H4("\u26a1 Council Status", className="text-info"),
                 html.Div(id="council-status"),
             ]),
         ], className="mb-3"),
-
         # Gate Grid
         dbc.Row([
             dbc.Col([
-                html.H4("🚪 Gate Status Grid", className="text-warning"),
+                html.H4("\U0001f6aa Gate Status Grid", className="text-warning"),
                 html.Div(id="gate-grid"),
             ]),
         ], className="mb-3"),
-
         # Gate Unlock Controls
         dbc.Row([
             dbc.Col([
-                html.H4("🔓 Gate Unlock Console", className="text-success"),
+                html.H4("\U0001f513 Gate Unlock Console", className="text-success"),
                 dbc.InputGroup([
                     dbc.Select(
                         id="gate-select",
@@ -99,30 +102,29 @@ def build_layout():
                 html.Div(id="unlock-result", className="mt-2"),
             ]),
         ], className="mb-3"),
-
         # Telemetry Graph
         dbc.Row([
             dbc.Col([
-                html.H4("📊 System Telemetry", className="text-info"),
+                html.H4("\U0001f4ca System Telemetry", className="text-info"),
                 dcc.Graph(id="telemetry-graph"),
             ]),
         ], className="mb-3"),
-
         # Audit Log
         dbc.Row([
             dbc.Col([
-                html.H4("📋 Audit Log", className="text-muted"),
+                html.H4("\U0001f4cb Audit Log", className="text-muted"),
                 html.Div(id="audit-log", style={"maxHeight": "300px", "overflowY": "auto", "fontFamily": "monospace", "fontSize": "12px"}),
             ]),
         ], className="mb-3"),
-
         # Auto-refresh
         dcc.Interval(id="refresh-interval", interval=5000, n_intervals=0),
         dcc.Store(id="gate-states", data={}),
         dcc.Store(id="audit-entries", data=[]),
     ], fluid=True, className="bg-dark text-light p-3")
 
+
 app.layout = build_layout()
+
 
 # === CALLBACKS ===
 @callback(
@@ -131,6 +133,7 @@ app.layout = build_layout()
 )
 def update_clock(_):
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
 
 @callback(
     Output("gate-grid", "children"),
@@ -142,7 +145,7 @@ def update_gates(_):
     cards = []
     for gid, ginfo in GATES.items():
         try:
-            r = httpx.get(ginfo["url"], timeout=3.0, verify=False)
+            r = httpx.get(ginfo["url"], timeout=3.0, verify=VERIFY_TLS)
             status = "healthy" if r.status_code < 400 else "unhealthy"
         except Exception:
             status = "unhealthy"
@@ -150,6 +153,7 @@ def update_gates(_):
         cards.append(make_gate_card(gid, ginfo, status))
     rows = [dbc.Row(cards[i:i + 3]) for i in range(0, len(cards), 3)]
     return rows, states
+
 
 @callback(
     Output("council-status", "children"),
@@ -168,6 +172,7 @@ def update_council(states):
         style={"height": "30px"},
     )
 
+
 @callback(
     Output("unlock-result", "children"),
     Output("audit-entries", "data"),
@@ -185,7 +190,7 @@ def unlock_gate(n, gate_id, audit):
             f"{GATE_UNLOCKER_URL}/unlock",
             json={"gate_id": gate_id, "actor": "command_base", "timestamp": ts},
             timeout=10.0,
-            verify=False,
+            verify=VERIFY_TLS,
         )
         result = r.json()
         entry = f"[{ts}] UNLOCK {gate_id} -> {result.get('status', 'unknown')}"
@@ -196,12 +201,14 @@ def unlock_gate(n, gate_id, audit):
         audit.insert(0, entry)
         return dbc.Alert(f"Unlock failed: {e}", color="danger"), audit
 
+
 @callback(
     Output("audit-log", "children"),
     Input("audit-entries", "data"),
 )
 def update_audit(entries):
     return [html.Div(e, className="text-muted") for e in (entries or [])]
+
 
 @callback(
     Output("telemetry-graph", "figure"),
@@ -223,6 +230,7 @@ def update_telemetry(_, states):
         margin=dict(t=40, b=40, l=40, r=40),
     )
     return fig
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=DASHBOARD_PORT, debug=True)
