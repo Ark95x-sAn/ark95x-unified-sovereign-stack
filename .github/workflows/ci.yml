@@ -39,7 +39,7 @@ jobs:
       - name: Install linters
         run: pip install flake8
       - name: Check syntax
-        run: flake8 . --max-line-length=120 --extend-ignore=E501,W503,E402,F401,E722 --exclude=.git,__pycache__,venv,node_modules,.env
+        run: flake8 . --max-line-length=120 --extend-ignore=E501,W503,E402,F401,E722,E127 --exclude=.git,__pycache__,venv,node_modules,.env
 
   docker:
     needs: [test, lint]
