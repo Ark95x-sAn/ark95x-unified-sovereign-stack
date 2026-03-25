@@ -224,7 +224,7 @@ class SovereignCouncil:
 
     async def convene(self, query: str) -> CouncilVerdict:
         """Main entry — convene the council on a query."""
-        session_id = hashlib.md5(
+        session_id = hashlib.sha256(
             f"{query}{time.time()}".encode()
         ).hexdigest()[:12]
         tasks = [self._query_model(m, query) for m in self.models]
