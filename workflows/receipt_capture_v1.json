@@ -1,0 +1,67 @@
+{
+  "name": "Sovereign_Receipt_Capture_v1",
+  "nodes": [
+    {
+      "parameters": {
+        "event": "fileCreated"
+      },
+      "name": "Google_Drive_Watch",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "receipts_folder"
+    },
+    {
+      "parameters": {
+        "options": {},
+        "command": "tesseract {{$json.webViewLink}} stdout"
+      },
+      "name": "Local_OCR",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Extract: 1) Total amount 2) Date 3) Category (Meals/Travel/Software/Office) from this OCR text: {{$json.stdout}}"
+          }
+        ]
+      },
+      "name": "AI_Categorize",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetName": "Receipts_2024",
+        "values": {
+          "A": "={{$json.date}}",
+          "B": "={{$json.amount}}",
+          "C": "={{$json.category}}",
+          "D": "={{$json.webViewLink}}"
+        }
+      },
+      "name": "Log_To_Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Google_Drive_Watch": {
+      "main": [[{"node": "Local_OCR", "type": "main", "index": 0}]]
+    },
+    "Local_OCR": {
+      "main": [[{"node": "AI_Categorize", "type": "main", "index": 0}]]
+    },
+    "AI_Categorize": {
+      "main": [[{"node": "Log_To_Sheets", "type": "main", "index": 0}]]
+    }
+  }
+}
