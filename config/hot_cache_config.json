@@ -1,0 +1,86 @@
+{
+  "name": "BLACK_01_HOT_CACHE",
+  "version": "1.0",
+  "last_updated": "2026-04-09",
+  "deploy_time_target": "30_SECONDS",
+  "method": "CLONE_FROM_VICTORY_LOGS",
+  "hot_cache": [
+    {
+      "id": 1,
+      "name": "Receipt_Workflow",
+      "template": "workflows/receipt_capture_v1.json",
+      "status": "DEPLOYABLE",
+      "last_used": "2026-04-09"
+    },
+    {
+      "id": 2,
+      "name": "Market_Alert",
+      "template": "workflows/financial_core_v1.json",
+      "status": "DEPLOYABLE",
+      "last_used": "2026-04-09"
+    },
+    {
+      "id": 3,
+      "name": "Tax_Categorizer",
+      "template": null,
+      "status": "PENDING_BUILD"
+    },
+    {
+      "id": 4,
+      "name": "Discord_Blast",
+      "template": "embedded_in_financial_core_v1",
+      "status": "DEPLOYABLE"
+    },
+    {
+      "id": 5,
+      "name": "Sheet_Logger",
+      "template": "embedded_in_receipt_capture_v1",
+      "status": "DEPLOYABLE"
+    },
+    {
+      "id": 6,
+      "name": "PDF_Parser",
+      "template": null,
+      "status": "PENDING_BUILD"
+    },
+    {
+      "id": 7,
+      "name": "Email_Draft",
+      "template": null,
+      "status": "PENDING_BUILD"
+    },
+    {
+      "id": 8,
+      "name": "Backup_Script",
+      "template": null,
+      "status": "PENDING_BUILD"
+    },
+    {
+      "id": 9,
+      "name": "API_Connector",
+      "template": null,
+      "status": "PENDING_BUILD"
+    },
+    {
+      "id": 10,
+      "name": "OCR_Pipeline",
+      "template": "embedded_in_receipt_capture_v1",
+      "status": "DEPLOYABLE"
+    }
+  ],
+  "standing_orders": {
+    "GREY_01": {
+      "monday_0600": "Scan weekend chats, update CONTEXT",
+      "friday_1800": "Compress week builds to Victory Log"
+    },
+    "BLACK_01": {
+      "on_build_complete": "Auto-save to Template Library",
+      "on_api_failure": "Switch to offline mode, notify Discord only"
+    }
+  },
+  "advancement_scripts": {
+    "ALPHA_SPEED_TRIAGE": "Route by complexity: SIMPLE=instant deploy, COMPLEX=grey scan first",
+    "BETA_SKILL_HYBRID": "Black learns skill, Grey auto-learns audit for that skill",
+    "GAMMA_NOISE_REDUCTION": "Skip redundant questions, pull previous parameters"
+  }
+}
