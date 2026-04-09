@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: arcx-n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASS}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/home/node/.n8n/workflows
+    networks:
+      - arcx-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: arcx-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASS}
+    volumes:
+      - redis_data:/data
+    networks:
+      - arcx-net
+
+  memory-engine:
+    build:
+      context: ../core
+      dockerfile: Dockerfile.memory
+    container_name: arcx-memory
+    restart: always
+    environment:
+      - ARCX_MEMORY_DIR=/data/memory
+      - REDIS_URL=redis://:${REDIS_PASS}@redis:6379
+    volumes:
+      - memory_data:/data/memory
+    networks:
+      - arcx-net
+    depends_on:
+      - redis
+
+  handoff-router:
+    build:
+      context: ../core
+      dockerfile: Dockerfile.router
+    container_name: arcx-router
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_URL=redis://:${REDIS_PASS}@redis:6379
+      - MEMORY_URL=http://memory-engine:5000
+    networks:
+      - arcx-net
+    depends_on:
+      - redis
+      - memory-engine
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: arcx-watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=300
+    networks:
+      - arcx-net
+
+volumes:
+  n8n_data:
+  redis_data:
+  memory_data:
+
+networks:
+  arcx-net:
+    driver: bridge
