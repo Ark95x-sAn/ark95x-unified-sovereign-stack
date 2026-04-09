@@ -1,0 +1,93 @@
+{
+  "council_version": "1.0.0",
+  "deployment": "ark95x-sovereign-stack",
+  "brains": {
+    "grey_01": {
+      "name": "GREY 01 - Intel Extractor",
+      "role": "Research, extraction, raw intel gathering",
+      "capabilities": ["research", "intel", "extraction", "analysis"],
+      "model": "gpt-4o",
+      "priority": 1,
+      "max_concurrent": 5,
+      "status": "active"
+    },
+    "black_02": {
+      "name": "BLACK 02 - Security Sentinel",
+      "role": "Security, encryption, threat detection, audit",
+      "capabilities": ["security", "encryption", "threat_detection", "audit"],
+      "model": "claude-sonnet-4-20250514",
+      "priority": 2,
+      "max_concurrent": 3,
+      "status": "active"
+    },
+    "red_03": {
+      "name": "RED 03 - Financial Core",
+      "role": "Trading, financial alerts, market analysis",
+      "capabilities": ["trading", "financial", "market_analysis", "alerts"],
+      "model": "gpt-4o",
+      "priority": 3,
+      "max_concurrent": 4,
+      "status": "active"
+    },
+    "green_04": {
+      "name": "GREEN 04 - Growth Engine",
+      "role": "Marketing, outreach, social media, growth",
+      "capabilities": ["growth", "marketing", "outreach", "social"],
+      "model": "gpt-4o-mini",
+      "priority": 4,
+      "max_concurrent": 6,
+      "status": "standby"
+    },
+    "blue_05": {
+      "name": "BLUE 05 - Legal Shield",
+      "role": "Legal compliance, contracts, dispute analysis",
+      "capabilities": ["legal", "compliance", "contracts", "disputes"],
+      "model": "claude-sonnet-4-20250514",
+      "priority": 5,
+      "max_concurrent": 2,
+      "status": "active"
+    },
+    "white_06": {
+      "name": "WHITE 06 - Ops Commander",
+      "role": "Operations, scheduling, coordination, logistics",
+      "capabilities": ["operations", "scheduling", "coordination", "logistics"],
+      "model": "gpt-4o-mini",
+      "priority": 6,
+      "max_concurrent": 8,
+      "status": "active"
+    },
+    "gold_07": {
+      "name": "GOLD 07 - Strategy Architect",
+      "role": "Strategy, planning, architecture, sovereign vision",
+      "capabilities": ["strategy", "planning", "architecture", "vision"],
+      "model": "gpt-4o",
+      "priority": 7,
+      "max_concurrent": 2,
+      "status": "active"
+    },
+    "violet_08": {
+      "name": "VIOLET 08 - Creative Director",
+      "role": "Creative, design, content, branding",
+      "capabilities": ["creative", "design", "content", "branding"],
+      "model": "gpt-4o",
+      "priority": 8,
+      "max_concurrent": 4,
+      "status": "standby"
+    },
+    "silver_09": {
+      "name": "SILVER 09 - System Monitor",
+      "role": "Monitoring, health checks, diagnostics, recovery",
+      "capabilities": ["monitoring", "health_check", "diagnostics", "recovery"],
+      "model": "gpt-4o-mini",
+      "priority": 9,
+      "max_concurrent": 10,
+      "status": "active"
+    }
+  },
+  "routing_rules": {
+    "default_brain": "gold_07",
+    "escalation_chain": ["silver_09", "white_06", "gold_07"],
+    "security_override": "black_02",
+    "max_handoffs_per_task": 3
+  }
+}
