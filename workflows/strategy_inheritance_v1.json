@@ -1,0 +1,49 @@
+{
+  "name": "Strategy_Inheritance_v1",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "database",
+        "operation": "create",
+        "databaseId": "SOVEREIGN_ARCHIVES",
+        "properties": {
+          "Mission_Name": "={{ $json.mission }}",
+          "Tactics_Used": "={{ $json.tactics }}",
+          "Time_to_Complete": "={{ $json.duration }}",
+          "Success_Rating": "={{ $json.success }}/10",
+          "Lessons_Learned": "={{ $json.failures }}",
+          "Reusable_Scripts": "={{ $json.code_snippets }}"
+        }
+      },
+      "name": "Archive_Mission",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "resource": "database",
+        "operation": "query",
+        "databaseId": "SOVEREIGN_ARCHIVES",
+        "filterType": "formula",
+        "formula": "and(contains(prop(\"Mission_Name\"), \"{{ $json.current_mission_type }}\"))",
+        "sorts": [
+          {
+            "property": "Success_Rating",
+            "direction": "descending"
+          }
+        ],
+        "limit": 3
+      },
+      "name": "Context_Injection",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [250, 300]
+    }
+  ],
+  "connections": {
+    "Context_Injection": {
+      "main": [[{"node": "Archive_Mission", "type": "main", "index": 0}]]
+    }
+  }
+}
