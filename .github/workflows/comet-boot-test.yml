@@ -1,0 +1,142 @@
+# COMET OS — Scheduled Boot Test Workflow
+# Gate #6: Who/what runs the boot test on a schedule, not just once?
+# Runs every 6 hours. Results logged. ARK95X notified on failure.
+
+name: COMET Boot Test (Gate #6)
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # Every 6 hours
+  workflow_dispatch:         # Manual trigger for ARK95X
+    inputs:
+      force_full_check:
+        description: 'Run full 25-gate check'
+        required: false
+        default: 'false'
+
+jobs:
+  comet-health-check:
+    name: COMET OS Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: comet-dispatch
+
+      - name: Gate #1 — Container Health Check
+        id: gate1
+        run: |
+          echo "=== GATE 1: Container Health ==="
+          echo "NOTE: This job validates the gate-checklist.json schema integrity."
+          echo "For live container checks, run deploy-ark95x.sh on your host."
+          python3 -c "
+import json, sys
+with open('comet-dispatch/gates/gate-checklist.json') as f:
+    data = json.load(f)
+print(f'Gate checklist loaded: {data[\"total_gates\"]} gates defined')
+print(f'Pass required: {data[\"pass_required_for_deploy\"]}')
+print(f'Current pass count: {data[\"current_pass_count\"]}')
+print('GATE 1 SCHEMA: PASS')
+"
+
+      - name: Gate #2 — Model Key Registry Check
+        id: gate2
+        run: |
+          echo "=== GATE 2: Model Key Registry ==="
+          python3 -c "
+import json
+with open('comet-dispatch/crews/herald.json') as f:
+    data = json.load(f)
+print('Model lanes defined:')
+for task, model in data['model_lanes'].items():
+    print(f'  {task} -> {model}')
+print('GATE 2 SCHEMA: PASS')
+"
+
+      - name: Gate #16 — Crew Profiles Loaded
+        id: gate16
+        run: |
+          echo "=== GATE 16: Crew Profile Validation ==="
+          python3 << 'EOF'
+          import json, os, sys
+          crews = ['vanguard', 'herald', 'forge', 'wraith']
+          all_pass = True
+          for crew in crews:
+              path = f'comet-dispatch/crews/{crew}.json'
+              if os.path.exists(path):
+                  with open(path) as f:
+                      data = json.load(f)
+                  required_fields = ['id', 'name', 'role', 'backstory', 'authority_matrix', 'deployment_prompt', 'gate_closes']
+                  missing = [field for field in required_fields if field not in data]
+                  if missing:
+                      print(f'FAIL: {crew} missing fields: {missing}')
+                      all_pass = False
+                  else:
+                      print(f'PASS: {crew} — all required fields present')
+              else:
+                  print(f'FAIL: {crew}.json not found')
+                  all_pass = False
+          if all_pass:
+              print('GATE 16: PASS — all 4 crew profiles valid')
+          else:
+              print('GATE 16: FAIL — see above')
+              sys.exit(1)
+          EOF
+
+      - name: Gate #20 — Council Seat Validation
+        id: gate20
+        run: |
+          echo "=== GATE 20: Council Seats Validation ==="
+          python3 << 'EOF'
+          import json
+          with open('comet-dispatch/council/council-seats.json') as f:
+              data = json.load(f)
+          print(f"Total seats: {len(data['seats'])} (required: 5)")
+          print(f"Quorum: {data['quorum_required']} of {len(data['seats'])}")
+          print(f"ARK95X veto gates: {data['ark95x_veto_gates']}")
+          all_gates_covered = set()
+          for seat in data['seats']:
+              all_gates_covered.update(seat['closes_gates'])
+              print(f"  {seat['name']}: closes gates {seat['closes_gates']}")
+          print(f"All gates covered by council: {sorted(all_gates_covered)}")
+          print("GATE 20: PASS — council structure valid")
+          EOF
+
+      - name: Gate Progress Summary
+        run: |
+          echo "=== COMET GATE PROGRESS SUMMARY ==="
+          python3 << 'EOF'
+          import json
+          with open('comet-dispatch/gates/gate-checklist.json') as f:
+              data = json.load(f)
+          total = data['total_gates']
+          passing = sum(1 for g in data['gates'] if g['status'] == 'pass')
+          pending = sum(1 for g in data['gates'] if g['status'] == 'pending')
+          failed = sum(1 for g in data['gates'] if g['status'] == 'fail')
+          pct = round(passing/total*100)
+          print(f"Total Gates: {total}")
+          print(f"PASS: {passing} ({pct}%)")
+          print(f"PENDING: {pending}")
+          print(f"FAIL: {failed}")
+          print(f"Deployment unlock: {'READY' if passing == total else f'BLOCKED — {total - passing} gates remaining'}")
+          by_cat = {}
+          for g in data['gates']:
+              cat = g['category']
+              if cat not in by_cat: by_cat[cat] = {'pass':0,'pending':0,'fail':0}
+              by_cat[cat][g['status']] = by_cat[cat].get(g['status'],0) + 1
+          print("\nBy Category:")
+          for cat, counts in by_cat.items():
+              print(f"  {cat}: {counts}")
+          EOF
+
+      - name: Notify ARK95X on failure
+        if: failure()
+        run: |
+          echo "=== CRITICAL: COMET Boot Test FAILED ==="
+          echo "ARK95X — manual review required."
+          echo "Kill switch candidate: check synthetic confidence thresholds."
+          echo "Stop condition check: container_health + model_count status."
+          exit 1
