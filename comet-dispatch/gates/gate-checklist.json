@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "total_gates": 25,
+  "pass_required_for_deploy": 25,
+  "current_pass_count": 0,
+  "ark95x_veto_gate": 21,
+  "council_quorum": 3,
+  "categories": {
+    "runtime": [1, 2, 3, 4, 5, 6],
+    "data": [7, 8, 9, 10, 11],
+    "router": [12, 13, 14, 15],
+    "crew_chain": [16, 17, 18, 19, 20],
+    "safety_apex": [21, 22, 23, 24, 25]
+  },
+  "gates": [
+    {"n": 1, "category": "runtime", "q": "Are all containers up and returning a live health PASS?", "answer": "docker ps --format '{{.Names}} {{.Status}}' — all must show healthy. Manual toggle doesn't count.", "owner": "FORGE", "status": "pending"},
+    {"n": 2, "category": "runtime", "q": "Which of the 27 model keys actually validate, and which are dead?", "answer": "24 live, 3 dead. Run validation loop per key against /api/validate.", "owner": "CIPHER", "status": "pending"},
+    {"n": 3, "category": "runtime", "q": "Is /api/tags returning model count > 0 — are models truly pulled?", "answer": "curl http://localhost:11434/api/tags | jq '.models|length' — currently returns 0. Run: ollama pull <model>.", "owner": "FORGE", "status": "pending"},
+    {"n": 4, "category": "runtime", "q": "Are all n8n webhooks registered and test-fired successfully?", "answer": "n8n UI: Webhook node → Test URL. Each of the 4 crew routes must show 200 OK.", "owner": "ARCHON", "status": "pending"},
+    {"n": 5, "category": "runtime", "q": "What's the rollback if a container or key fails mid-deploy?", "answer": "docker-compose up --scale <service>=0 && docker-compose up -d <service>. Key failure: rotate to backup pool.", "owner": "ENFORCER", "status": "pending"},
+    {"n": 6, "category": "runtime", "q": "Who/what runs the boot test on a schedule, not just once?", "answer": "Cron: 0 */6 * * * — GitHub Actions comet-boot-test.yml every 6h. Results logged to ROITracker.", "owner": "ENFORCER", "status": "pending"},
+    {"n": 7, "category": "data", "q": "Is the activity feed connected to a real inbound stream yet?", "answer": "No — currently synthetic. WebSocket or n8n HTTP-polling to Perplexity AI activity endpoint required.", "owner": "WITNESS", "status": "pending"},
+    {"n": 8, "category": "data", "q": "Is every dispatch metric REAL or still SYNTHETIC — labeled field by field?", "answer": "ops_count: SYNTHETIC | gate_progress: REAL | crew_status: REAL | model_keys: REAL | council_seats: REAL", "owner": "HERALD", "status": "pending"},
+    {"n": 9, "category": "data", "q": "Is the remembrance engine wired to persistent storage (survives reload)?", "answer": "Currently in-memory only. Wire to IndexedDB or POST to /api/memory endpoint.", "owner": "WITNESS", "status": "pending"},
+    {"n": 10, "category": "data", "q": "What's the telemetry schema both teams emit into?", "answer": "{event_id, crew_id, timestamp_iso, action_type, payload_json, confidence_score, data_source, ark95x_approval_required}", "owner": "WITNESS", "status": "pending"},
+    {"n": 11, "category": "data", "q": "Is ROITracker.log_task() receiving non-null data?", "answer": "ROITracker.log_task({task_id, crew, time_saved_min, action_type, source}) — currently receives null. Wire after gate 7.", "owner": "WITNESS", "status": "pending"},
+    {"n": 12, "category": "router", "q": "Does the classifier read tab context (URL, title, DOM) reliably?", "answer": "Chrome extension or browser bridge. window.location.href + document.title on tab switch. DOM: MutationObserver.", "owner": "HERALD", "status": "pending"},
+    {"n": 13, "category": "router", "q": "What's the task-classification taxonomy, and who owns it?", "answer": "Owner: HERALD. Taxonomy: [search, compose, extract, route, analyze, monitor, vote, escalate].", "owner": "HERALD", "status": "pending"},
+    {"n": 14, "category": "router", "q": "Which model lane is primary/secondary for each task type?", "answer": "search→llama3 | compose→mistral | extract→codellama | analyze→phi3 | escalate→COUNCIL", "owner": "HERALD", "status": "pending"},
+    {"n": 15, "category": "router", "q": "What happens when classification is ambiguous — fallback rule?", "answer": "Confidence < 0.65: route to HERALD. HERALD unavailable: default to analyze lane. Log ambiguity event.", "owner": "HERALD", "status": "pending"},
+    {"n": 16, "category": "crew_chain", "q": "Who are the 4 real crews — names, roles, assignments?", "answer": "VANGUARD: Offense | HERALD: Intel/Router | FORGE: Build | WRAITH: Extraction", "owner": "ENFORCER", "status": "pending"},
+    {"n": 17, "category": "crew_chain", "q": "Are crew profile slots filled with real context or still blank?", "answer": "All 4 crews filled. See crews/ directory. Backstory generator active in dashboard.", "owner": "ENFORCER", "status": "pending"},
+    {"n": 18, "category": "crew_chain", "q": "Are route definitions bound to real endpoint URLs, not placeholders?", "answer": "3/8 routes have real URLs. 5 pending. Wire Routes panel shows live status per route.", "owner": "ENFORCER", "status": "pending"},
+    {"n": 19, "category": "crew_chain", "q": "What does each crew have authority to do vs. only suggest?", "answer": "AUTO: dispatch, log, classify. ARK95X: create routes, merge, publish to surfaces, kill switch.", "owner": "ENFORCER", "status": "pending"},
+    {"n": 20, "category": "crew_chain", "q": "How is the Council vote resolved when seats disagree (dissent)?", "answer": "Majority: 3 of 5 seats. ARK95X veto on Gate 21 only. Dissent logged with reasoning.", "owner": "ENFORCER", "status": "pending"},
+    {"n": 21, "category": "safety_apex", "q": "What is the single stop-condition that halts deployment?", "answer": "container_health=FAIL AND model_count=0 simultaneously for > 5 minutes. ARK95X notified. No auto-resume.", "owner": "ARCHON", "ark95x_veto": true, "status": "pending"},
+    {"n": 22, "category": "safety_apex", "q": "Which actions auto-execute vs. require your (ark95x) approval?", "answer": "AUTO: suggestions, logging, routing. ARK95X: crew creation, key rotation, kill switch, surface publishing.", "owner": "ARCHON", "status": "pending"},
+    {"n": 23, "category": "safety_apex", "q": "What's the kill switch if the system acts on synthetic confidence?", "answer": "Confidence > 80% on synthetic source → red-flag. All auto-execution pauses. Kill switch arms. ARK95X review.", "owner": "CIPHER", "status": "pending"},
+    {"n": 24, "category": "safety_apex", "q": "Which surfaces (Notion, Gmail, Drive, ChatGPT, OWUI) are in-scope at launch?", "answer": "In-scope v1: OWUI (primary), Notion (read/write). Monitoring: ChatGPT. Out v1: Gmail, Drive → v2.", "owner": "CIPHER", "status": "pending"},
+    {"n": 25, "category": "safety_apex", "q": "What does 'success' measure — time saved, money, risk, or skill — one metric?", "answer": "North Star: HOURS SAVED PER WEEK. Target: >10h/week by week 4.", "owner": "WITNESS", "status": "pending"}
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "total_seats": 5,
+  "quorum_required": 3,
+  "ark95x_veto_gates": [21],
+  "vote_resolution": "majority_3_of_5",
+  "dissent_protocol": "Log dissent with reasoning. ARK95X notified. 3+ override required.",
+  "seats": [
+    {
+      "id": "archon",
+      "name": "ARCHON",
+      "icon": "⚔️",
+      "role": "Commander Seat",
+      "closes_gates": [1, 4, 21, 22],
+      "shortcut": "A+C",
+      "authority": "Deployment go/no-go, webhook registration, stop-condition oversight"
+    },
+    {
+      "id": "herald",
+      "name": "HERALD",
+      "icon": "🔭",
+      "role": "Intelligence Seat",
+      "closes_gates": [12, 13, 14, 15, 8],
+      "shortcut": "H+I",
+      "authority": "Classifier ownership, model lane assignments, ambiguity routing"
+    },
+    {
+      "id": "cipher",
+      "name": "CIPHER",
+      "icon": "🔐",
+      "role": "Security Seat",
+      "closes_gates": [2, 3, 23, 24],
+      "shortcut": "C+S",
+      "authority": "Model key validation, kill switch logic, surface scope approval"
+    },
+    {
+      "id": "witness",
+      "name": "WITNESS",
+      "icon": "📡",
+      "role": "Data Seat",
+      "closes_gates": [7, 9, 10, 11, 25],
+      "shortcut": "W+D",
+      "authority": "Feed stream, remembrance persistence, telemetry schema, ROITracker, success metric"
+    },
+    {
+      "id": "enforcer",
+      "name": "ENFORCER",
+      "icon": "🔨",
+      "role": "Build Seat",
+      "closes_gates": [5, 6, 16, 17, 18, 19, 20],
+      "shortcut": "E+B",
+      "authority": "Rollback procedures, boot test schedule, crew definitions, route endpoints, authority matrix"
+    }
+  ]
+}
