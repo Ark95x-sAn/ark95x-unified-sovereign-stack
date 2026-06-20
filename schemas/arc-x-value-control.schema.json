@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://network95ur.local/schemas/arc-x-value-control.schema.json",
+  "title": "ARC X Value Control Score",
+  "type": "object",
+  "required": ["value", "control", "decision"],
+  "properties": {
+    "value": {
+      "type": "object",
+      "required": ["revenue", "authority", "automation", "speed", "compound"],
+      "properties": {
+        "revenue": { "type": "number", "minimum": 0, "maximum": 20 },
+        "authority": { "type": "number", "minimum": 0, "maximum": 20 },
+        "automation": { "type": "number", "minimum": 0, "maximum": 20 },
+        "speed": { "type": "number", "minimum": 0, "maximum": 20 },
+        "compound": { "type": "number", "minimum": 0, "maximum": 20 }
+      },
+      "additionalProperties": false
+    },
+    "control": {
+      "type": "object",
+      "required": ["permission", "platform", "privacy", "reputation", "data_quality"],
+      "properties": {
+        "permission": { "type": "number", "minimum": 0, "maximum": 20 },
+        "platform": { "type": "number", "minimum": 0, "maximum": 20 },
+        "privacy": { "type": "number", "minimum": 0, "maximum": 20 },
+        "reputation": { "type": "number", "minimum": 0, "maximum": 20 },
+        "data_quality": { "type": "number", "minimum": 0, "maximum": 20 }
+      },
+      "additionalProperties": false
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["execute", "stage", "research", "revise", "hold"]
+    },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}
