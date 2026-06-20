@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://network95ur.local/schemas/arc-x-memory.schema.json",
+  "title": "ARC X Memory Event",
+  "type": "object",
+  "required": ["id", "created_at", "source", "decoded_intent", "domain", "action", "tags"],
+  "properties": {
+    "id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "source": { "type": "string" },
+    "raw_signal_ref": { "type": "string" },
+    "decoded_intent": { "type": "string" },
+    "domain": {
+      "type": "string",
+      "enum": ["content", "research", "code", "automation", "business", "realestate", "hardware", "wellness", "memory", "strategy", "other"]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "value_score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "control_score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "action": { "type": "string", "enum": ["store", "activate", "upgrade", "pause", "archive"] },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "linked_assets": { "type": "object", "additionalProperties": true },
+    "route_outcome": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}
