@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://network95ur.local/schemas/arc-x-handoff.schema.json",
+  "title": "ARC X Handoff",
+  "type": "object",
+  "required": ["handoff_id", "source", "target", "mission", "context", "output", "deadline"],
+  "properties": {
+    "handoff_id": { "type": "string" },
+    "source": { "type": "string" },
+    "target": { "type": "string" },
+    "mission": { "type": "string", "minLength": 1 },
+    "context": {
+      "type": "object",
+      "required": ["user_intent", "project", "confidence"],
+      "properties": {
+        "user_intent": { "type": "string" },
+        "project": { "type": "string" },
+        "constraints": { "type": "array", "items": { "type": "string" } },
+        "prior_memory": { "type": "array", "items": { "type": "string" } },
+        "confidence": { "type": "string", "enum": ["high", "medium", "low", "unknown"] }
+      },
+      "additionalProperties": true
+    },
+    "output": {
+      "type": "object",
+      "required": ["format", "review_required", "success_criteria"],
+      "properties": {
+        "format": { "type": "string", "enum": ["markdown", "json", "code", "issue", "workflow", "draft", "dashboard"] },
+        "review_required": { "type": "boolean" },
+        "success_criteria": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "deadline": { "type": "string", "enum": ["now", "today", "sprint", "backlog"] }
+  },
+  "additionalProperties": false
+}
