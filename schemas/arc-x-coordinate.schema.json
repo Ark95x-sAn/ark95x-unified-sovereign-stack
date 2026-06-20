@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://network95ur.local/schemas/arc-x-coordinate.schema.json",
+  "title": "ARC X Coordinate Request and Response",
+  "type": "object",
+  "required": ["request", "response"],
+  "properties": {
+    "request": {
+      "type": "object",
+      "required": ["raw_signal", "source", "approval_mode"],
+      "properties": {
+        "raw_signal": { "type": "string", "minLength": 1 },
+        "source": {
+          "type": "string",
+          "enum": ["chat", "voice", "file", "screenshot", "repo", "browser", "email", "calendar", "wearable", "crm", "manual"]
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["decode", "build", "research", "post", "code", "automate", "audit", "memory", "simulate", "realestate", "wellness", "hardware"]
+        },
+        "desired_output": { "type": "string" },
+        "approval_mode": {
+          "type": "string",
+          "enum": ["auto_draft", "require_review", "restricted"]
+        },
+        "context": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": false
+    },
+    "response": {
+      "type": "object",
+      "required": ["decoded", "best_move", "offensive_score", "defensive_score", "bottleneck", "next_action"],
+      "properties": {
+        "decoded": { "type": "string" },
+        "cut": { "type": "string" },
+        "best_move": { "type": "string" },
+        "execution": { "type": "object", "additionalProperties": true },
+        "agent_route": { "type": "array", "items": { "type": "string" } },
+        "automation_route": { "type": "array", "items": { "type": "string" } },
+        "offensive_score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "defensive_score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "requires_review": { "type": "boolean" },
+        "bottleneck": {
+          "type": "string",
+          "enum": ["clarity", "data", "execution", "distribution", "monetization", "trust", "memory", "hardware", "none"]
+        },
+        "memory_patch": { "type": "object", "additionalProperties": true },
+        "next_action": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
