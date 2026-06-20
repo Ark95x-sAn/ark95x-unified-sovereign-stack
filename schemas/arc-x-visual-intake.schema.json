@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://network95ur.local/schemas/arc-x-visual-intake.schema.json",
+  "title": "ARC X Visual Intake",
+  "type": "object",
+  "required": ["image_id", "source", "category", "review_mode", "analysis", "routing", "memory_patch"],
+  "properties": {
+    "image_id": { "type": "string" },
+    "source": {
+      "type": "string",
+      "enum": ["user_upload", "authorized_upload", "public", "screenshot", "other"]
+    },
+    "category": {
+      "type": "string",
+      "enum": ["property", "document", "device", "workspace", "public_environment", "screenshot", "wellness", "other"]
+    },
+    "review_mode": {
+      "type": "string",
+      "enum": ["auto_decode", "review_first", "limited_summary"]
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "analysis": {
+      "type": "object",
+      "required": ["surface_description", "hidden_items", "meaning", "limits"],
+      "properties": {
+        "surface_description": { "type": "string" },
+        "hidden_items": { "type": "array", "items": { "type": "string" } },
+        "meaning": { "type": "array", "items": { "type": "string" } },
+        "limits": { "type": "array", "items": { "type": "string" } },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "scoring": {
+      "type": "object",
+      "properties": {
+        "operational_value": { "type": "number", "minimum": 0, "maximum": 100 },
+        "privacy_risk": { "type": "number", "minimum": 0, "maximum": 100 },
+        "review_required": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "routing": {
+      "type": "object",
+      "required": ["recommended_route", "next_action"],
+      "properties": {
+        "recommended_route": {
+          "type": "string",
+          "enum": ["real_estate", "business_intel", "security_review", "hardware", "research", "documentation", "archive", "limited"]
+        },
+        "agent_route": { "type": "array", "items": { "type": "string" } },
+        "next_action": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "memory_patch": {
+      "type": "object",
+      "required": ["domain", "decoded_summary", "tags"],
+      "properties": {
+        "domain": { "type": "string", "const": "visual_intelligence" },
+        "decoded_summary": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "store_action": { "type": "string", "enum": ["store", "activate", "upgrade", "pause", "archive"] }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
