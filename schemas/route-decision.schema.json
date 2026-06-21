@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://network95ur.local/schemas/route-decision.schema.json",
+  "title": "ARC X Route Decision",
+  "type": "object",
+  "required": ["request_id", "domain", "selected_model", "reason", "review_required", "route_score", "next_action"],
+  "properties": {
+    "request_id": { "type": "string" },
+    "domain": { "type": "string" },
+    "selected_model": { "type": "string" },
+    "fallback_models": { "type": "array", "items": { "type": "string" } },
+    "selected_agents": { "type": "array", "items": { "type": "string" } },
+    "selected_tools": { "type": "array", "items": { "type": "string" } },
+    "reason": { "type": "string" },
+    "evidence_level": { "type": "string", "enum": ["observed", "inferred", "unknown", "mixed"] },
+    "risk_level": { "type": "string", "enum": ["low", "medium", "high"] },
+    "review_required": { "type": "boolean" },
+    "route_score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "next_action": { "type": "string" },
+    "memory_patch": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}
