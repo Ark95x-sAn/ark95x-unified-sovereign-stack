@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://network95ur.local/schemas/model-fleet-registry.schema.json",
+  "title": "ARC X Model Fleet Registry",
+  "type": "object",
+  "required": ["models"],
+  "properties": {
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["model_id", "model_type", "strengths", "best_tasks", "privacy_level", "last_eval_score"],
+        "properties": {
+          "model_id": { "type": "string" },
+          "provider": { "type": "string" },
+          "model_type": { "type": "string", "enum": ["reasoning", "code", "vision", "research", "small_fast", "local", "legacy", "experimental"] },
+          "strengths": { "type": "array", "items": { "type": "string" } },
+          "weaknesses": { "type": "array", "items": { "type": "string" } },
+          "cost": { "type": "string", "enum": ["low", "medium", "high", "unknown"] },
+          "speed": { "type": "string", "enum": ["fast", "medium", "slow", "unknown"] },
+          "privacy_level": { "type": "string", "enum": ["local", "private_cloud", "public_api", "unknown"] },
+          "context_capacity": { "type": "string", "enum": ["small", "medium", "large", "huge", "unknown"] },
+          "best_tasks": { "type": "array", "items": { "type": "string" } },
+          "do_not_use_for": { "type": "array", "items": { "type": "string" } },
+          "last_eval_score": { "type": "number", "minimum": 0, "maximum": 100 },
+          "enabled": { "type": "boolean", "default": true }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
