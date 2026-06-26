@@ -67,12 +67,12 @@ DEFAULT_MODEL_FLEET: List[ModelProfile] = [
 ]
 
 DOMAIN_KEYWORDS = {
-    "code": ["code", "repo", "github", "bug", "test", "python", "typescript", "codex"],
+    "code": ["code", "repo", "github", "bug", "test", "python", "typescript", "codex", "build", "deploy", "package", "pypi", "npm"],
     "vision": ["image", "photo", "screenshot", "visual", "picture"],
-    "research": ["research", "source", "market", "current", "news", "verify"],
+    "research": ["research", "source", "market", "current", "news", "verify", "search", "analyze", "dark pool", "funding", "options flow", "intelligence"],
     "client_delivery": ["client", "diagnostic", "leak map", "delivery", "dashboard"],
-    "security": ["security", "risk", "harden", "incident", "audit"],
-    "automation": ["n8n", "workflow", "automation", "zapier", "make", "webhook"],
+    "security": ["security", "risk", "harden", "incident", "audit", "vulnerability", "vulnerabilities", "secure", "threat"],
+    "automation": ["n8n", "workflow", "automation", "zapier", "make", "webhook", "teams", "office", "schedule", "message", "send"],
 }
 
 RISK_KEYWORDS = [
