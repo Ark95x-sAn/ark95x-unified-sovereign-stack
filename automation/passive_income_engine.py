@@ -453,7 +453,7 @@ class PassiveIncomeEngine:
                 continue
 
             tasks = [self.full_pipeline(product) for product in batch]
-            results_list = await asyncio.gather(*tasks, return_exceptions=True)
+            await asyncio.gather(*tasks, return_exceptions=True)
 
             live_count = len(self.products_by_status(BuildStatus.LIVE))
             total_mrr = sum(

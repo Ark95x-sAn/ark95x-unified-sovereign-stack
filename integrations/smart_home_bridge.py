@@ -429,7 +429,6 @@ class MQTTBridge(SmartHomeHub):
         topic = self._command_to_topic(cmd)
         payload_str = json.dumps({"command": cmd.command.value, "value": cmd.value})
         try:
-            import asyncio
             proc = await asyncio.create_subprocess_exec(
                 "mosquitto_pub",
                 "-h", self.host,
@@ -546,8 +545,6 @@ bridge = SmartHomeBridge()
 
 
 if __name__ == "__main__":
-    import asyncio
-
     async def demo() -> None:
         result = await bridge.send_nl("Turn on the living room lights")
         print(json.dumps(result, indent=2))
