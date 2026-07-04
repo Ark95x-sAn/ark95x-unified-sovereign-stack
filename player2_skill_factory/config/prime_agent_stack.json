@@ -1,0 +1,137 @@
+{
+  "version": "1.0",
+  "name": "ARK95X Prime Agent Stack",
+  "purpose": "Compress PC resources, model lanes, terminal bridges, gaming/compute capacity, and research engines into one safe Windows 11 Pro operations layer.",
+  "operating_system": {
+    "primary": "Windows 11 Pro",
+    "shells": [
+      "PowerShell",
+      "CMD",
+      "Windows Terminal",
+      "WSL",
+      "Python",
+      "Node"
+    ],
+    "safe_boundary": "workspace-first; system mutation only with explicit human approval"
+  },
+  "prime_agent": {
+    "role": "router_of_routers",
+    "mission": "Take raw intent and route it to the best safe execution lane while preserving logs, proof, and rollback context.",
+    "loop": [
+      "observe",
+      "classify",
+      "score",
+      "route",
+      "execute_or_plan",
+      "test",
+      "proof",
+      "learn"
+    ],
+    "default_mode": "plan_then_execute_workspace_only"
+  },
+  "compute_lanes": [
+    {
+      "id": "gaming_engine",
+      "description": "Use gaming PC/GPU resources as local compute and simulation capacity.",
+      "uses": [
+        "local model inference",
+        "browser automation testing",
+        "simulation",
+        "video/visual asset rendering",
+        "high-performance local workloads"
+      ],
+      "limits": [
+        "no hardware overclock automation",
+        "no firmware mutation",
+        "no destructive system commands"
+      ]
+    },
+    {
+      "id": "trading_research_engine",
+      "description": "Use trading algorithm patterns for research/backtest and operations scoring only.",
+      "uses": [
+        "signal design",
+        "backtest-style task review",
+        "risk scoring",
+        "allocation logic for projects",
+        "MAP-Elites-style skill exploration"
+      ],
+      "limits": [
+        "no live trading",
+        "no financial advice",
+        "no order execution",
+        "no client fund management"
+      ]
+    },
+    {
+      "id": "terminal_bridge",
+      "description": "Bridge intent into shells and agent CLIs.",
+      "connectors": [
+        "codex",
+        "claude",
+        "openclaw_handoff",
+        "ollama",
+        "github_cli",
+        "powershell",
+        "python"
+      ],
+      "limits": [
+        "sentinel safety check before commands",
+        "logs required",
+        "workspace-first execution"
+      ]
+    }
+  ],
+  "model_lanes": [
+    {
+      "id": "codex",
+      "role": "code_builder_and_patch_operator",
+      "target": "terminal",
+      "safe_mode": "workspace-write"
+    },
+    {
+      "id": "claude",
+      "role": "review_architecture_audit_operator",
+      "target": "terminal",
+      "safe_mode": "workspace"
+    },
+    {
+      "id": "openclaw",
+      "role": "external_operator_handoff_bridge",
+      "target": "handoff_file_or_cli",
+      "safe_mode": "workspace_handoff"
+    },
+    {
+      "id": "ollama",
+      "role": "local_private_reasoning_lane",
+      "target": "localhost_11434",
+      "safe_mode": "plan"
+    },
+    {
+      "id": "github",
+      "role": "source_control_and_proof_lane",
+      "target": "official_api_or_gh_cli",
+      "safe_mode": "authenticated_official_api"
+    }
+  ],
+  "symbolic_compression": {
+    "sovereign_mindset": "self-hosted local-first decision posture",
+    "quantum_brilliance": "parallel hypothesis scoring and simulation, not a physics claim",
+    "morpheus": "operator persona for terminal bridge and pattern translation",
+    "core_roots": "workspace, repo, logs, config, scripts, database, proof",
+    "binary_connection": "executable commands, JSON configs, CLI outputs, hashes, and state rows",
+    "prime_agent": "controlled master router that coordinates specialist lanes"
+  },
+  "resource_score_formula": "(impact * confidence * urgency * available_compute) - (risk + complexity + cost + heat_or_context_switch_penalty)",
+  "stage_gates": [
+    "intake",
+    "resource_scan",
+    "intent_score",
+    "lane_select",
+    "sentinel_check",
+    "workspace_execute_or_plan",
+    "test",
+    "proof",
+    "learning_update"
+  ]
+}
