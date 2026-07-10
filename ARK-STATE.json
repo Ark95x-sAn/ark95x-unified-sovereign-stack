@@ -1,15 +1,15 @@
 {
   "genome_id": "ark95x-command-ledger",
-  "genome_version": "0.1.0",
-  "updated_at": "2026-07-10T00:00:00Z",
+  "genome_version": "0.2.0",
+  "updated_at": "2026-07-10T07:20:00Z",
   "updated_by": "claude-sonnet-5",
   "mission": "Wire real money data (NetX signal -> risk calculator -> passive_income_engine -> OmniNet cockpit) into one provable ROI machine, with a credit-proof handoff protocol so any model can resume the build from this file alone.",
 
   "data_flow": [
-    { "step": 1, "name": "signal_fired", "module": "netx", "produces": "signal" },
-    { "step": 2, "name": "risk_sizing", "module": "risk_calculator", "consumes": "signal", "produces": "risk_sized_order" },
-    { "step": 3, "name": "ledger_recording", "module": "command_ledger + passive_income_engine", "consumes": "risk_sized_order", "produces": "ledger_entry" },
-    { "step": 4, "name": "cockpit_broadcast", "module": "omnikernel-orchestrator cockpit (:8080 WebSocket)", "consumes": "ledger_entry", "produces": "telemetry_event" }
+    { "step": 1, "name": "signal_fired", "module": "netx/signal_engine.py", "produces": "signal" },
+    { "step": 2, "name": "risk_sizing", "module": "netx/risk_calculator.py", "consumes": "signal", "produces": "risk_sized_order" },
+    { "step": 3, "name": "ledger_recording", "module": "ledger/command_ledger.py + passive_income_engine.py", "consumes": "risk_sized_order", "produces": "ledger_entry" },
+    { "step": 4, "name": "cockpit_broadcast", "module": "cockpit/app.py (FastAPI + WebSocket, :8080)", "consumes": "ledger_entry", "produces": "telemetry_event" }
   ],
 
   "contracts": {
@@ -19,28 +19,28 @@
 
   "source_systems": {
     "omnikernel-orchestrator": {
-      "role": "FastAPI + WebSocket cockpit on :8080, Aura telemetry canvas, 9-agent Council voting, ROI ledger + leverage meter (currently decorative/fake numbers)",
-      "repo": "Ark95x-sAn/ark95x-omnikernel-orchestrator",
-      "in_session_scope": false,
-      "note": "Not attached to this GitHub session. Phase 3 cockpit wiring needs this repo added via add_repo before it can edit real cockpit code; until then Phase 3 tasks are blocked."
+      "role": "Originally described as hosting a FastAPI + WebSocket cockpit on :8080, Aura telemetry canvas, 9-agent Council voting, and an ROI ledger + leverage meter.",
+      "repo": "ark95x-san/ark95x-omnikernel-orchestrator",
+      "in_session_scope": true,
+      "note": "Attached and cloned 2026-07-10. VERIFIED: council-ouroboros/council.py IS a real 9-voter weighted council with AUDITOR veto -- matches the description. NOT FOUND anywhere in the repo: any FastAPI app on :8080, any WebSocket server, anything named/themed 'Aura', any ROI ledger, any leverage meter. src/core/telemetry.py is a generic metrics collector (counters/gauges/histograms) with no Aura or ROI concept. The only FastAPI apps in the repo run on :8501/:8502 and are unrelated demo tools (creations/ai-engineer, creations/flame-arsenal). Decision (user, 2026-07-10): build the cockpit fresh in this repo (unified-sovereign-stack) as cockpit/app.py rather than edit this repo."
     },
     "unified-sovereign-stack": {
-      "role": "This repo. Intended home for passive_income_engine.py, smart_home_bridge.py, multi-PC coordinator.",
-      "repo": "Ark95x-sAn/ark95x-unified-sovereign-stack",
+      "role": "This repo. Home for the whole Command Ledger build: contracts, ledger core, cockpit, failover router.",
+      "repo": "ark95x-san/ark95x-unified-sovereign-stack",
       "in_session_scope": true,
-      "note": "Verified 2026-07-10: passive_income_engine.py, smart_home_bridge.py, and a multi-PC coordinator do NOT exist in this repo yet. netx/, trading/, protocol/, integrations/ are empty __init__.py stubs per MIGRATION_ROADMAP.md (marked ARCHIVE/MERGE, priority P2/P3). This is a known gap -- see known_gaps."
+      "note": "passive_income_engine.py, smart_home_bridge.py, and a multi-PC coordinator do not exist in this repo. Decision (user, 2026-07-10): build passive_income_engine.py for real here as part of Phase 2; smart_home_bridge.py and the multi-PC coordinator are out of scope for the Command Ledger data flow and are not being built under this genome."
     },
     "net95x": {
-      "role": "NetX trading signal engine, risk calculator (position_size = capital * risk_pct / stop_distance), n8n alert workflows (Signals -> Notion -> Slack/Email), backtest framework",
-      "repo": "net95x (n8n)",
-      "in_session_scope": false,
-      "note": "Not attached to this GitHub session. Contract shapes in contracts/ark-state.schema.json were derived from the task description, not read from source. Confirm against real NetX output before wiring Phase 2."
+      "role": "Originally described as the NetX trading signal engine, risk calculator, n8n alert workflows, and backtest framework.",
+      "repo": "ark95x-san/net95x",
+      "in_session_scope": true,
+      "note": "Attached and cloned 2026-07-10. VERIFIED: this repo is a static 'coming soon' landing page for net95x.net (Cloudflare Pages, HTML/CSS only, README says 'Private. Stealth mode. Building quietly.'). No trading engine, risk calculator, n8n workflow, or backtest code exists here. Decision (user, 2026-07-10): build netx/signal_engine.py and netx/risk_calculator.py fresh in this repo, spec'd from contracts/ark-state.schema.json."
     },
     "EQCV018537-evidence": {
-      "role": "Lossless state serialization / round-trip encode-decode pattern to reuse for ledger snapshot/restore",
-      "repo": "EQCV018537-evidence",
-      "in_session_scope": false,
-      "note": "Not attached to this GitHub session. Phase 2's round-trip test will need this repo added, or the pattern re-derived from the ledger_entry contract alone if it stays unavailable."
+      "role": "Originally described as holding a lossless state serialization / round-trip encode-decode pattern.",
+      "repo": "ark95x-san/eqcv018537-evidence",
+      "in_session_scope": true,
+      "note": "Attached and cloned 2026-07-10. VERIFIED: repo contains a single commit with only a .gitignore file -- no code of any kind. Decision (user, 2026-07-10): implement the round-trip encode/decode pattern fresh as part of passive_income_engine.py's snapshot()/restore(), covered by a dedicated round-trip test."
     }
   },
 
@@ -56,6 +56,27 @@
       "phase": 1,
       "note": "This file. Update updated_at/updated_by and the relevant todo_queue entry's status every time a task completes."
     },
+    "netx_signal_engine": {
+      "path": "netx/signal_engine.py",
+      "status": "not_started",
+      "phase": 2,
+      "produces": ["signal"]
+    },
+    "netx_risk_calculator": {
+      "path": "netx/risk_calculator.py",
+      "status": "not_started",
+      "phase": 2,
+      "consumes": ["signal"],
+      "produces": ["risk_sized_order"]
+    },
+    "passive_income_engine": {
+      "path": "passive_income_engine.py",
+      "status": "not_started",
+      "phase": 2,
+      "consumes": ["risk_sized_order"],
+      "produces": ["ledger_entry"],
+      "note": "Includes snapshot()/restore() lossless round-trip (the EQCV pattern, built fresh)."
+    },
     "command_ledger": {
       "path": "ledger/command_ledger.py",
       "status": "not_started",
@@ -68,14 +89,21 @@
       "status": "not_started",
       "phase": 2
     },
-    "cockpit_wiring": {
-      "path": "(in omnikernel-orchestrator repo, not this one)",
+    "cockpit": {
+      "path": "cockpit/app.py",
       "status": "not_started",
       "phase": 3,
-      "blocked_by": "omnikernel-orchestrator not attached to session"
+      "consumes": ["ledger_entry"],
+      "produces": ["telemetry_event"],
+      "note": "New FastAPI + WebSocket app on :8080. Not a modification of omnikernel-orchestrator -- that repo is left untouched."
     },
     "failover_router": {
       "path": "router/failover.py",
+      "status": "not_started",
+      "phase": 4
+    },
+    "failover_workflow": {
+      "path": "workflows/ark_failover_dispatch_v1.json",
       "status": "not_started",
       "phase": 4
     },
@@ -87,104 +115,33 @@
   },
 
   "phases": [
-    { "id": 1, "name": "Contracts & Genome", "status": "in_progress", "deliverables": ["contracts/ark-state.schema.json", "ARK-STATE.json"] },
-    { "id": 2, "name": "Ledger Core", "status": "pending", "deliverables": ["ledger/command_ledger.py", "tests/test_command_ledger.py", "lossless round-trip snapshot/restore test"] },
-    { "id": 3, "name": "Live Cockpit Wiring", "status": "pending", "deliverables": ["real ROI ledger + leverage meter over :8080 WebSocket", "Aura telemetry reflecting real P&L"] },
-    { "id": 4, "name": "Credit-Proof Failover Router", "status": "pending", "deliverables": ["router/failover.py", "n8n dispatch workflow", "HANDOFF.md"] }
+    { "id": 1, "name": "Contracts & Genome", "status": "done", "deliverables": ["contracts/ark-state.schema.json", "ARK-STATE.json"] },
+    { "id": 2, "name": "Ledger Core", "status": "in_progress", "deliverables": ["netx/signal_engine.py", "netx/risk_calculator.py", "passive_income_engine.py", "ledger/command_ledger.py", "tests/test_command_ledger.py", "lossless round-trip snapshot/restore test"] },
+    { "id": 3, "name": "Live Cockpit Wiring", "status": "pending", "deliverables": ["cockpit/app.py FastAPI + WebSocket on :8080", "real ROI ledger + leverage meter over WebSocket", "Aura telemetry reflecting real P&L"] },
+    { "id": 4, "name": "Credit-Proof Failover Router", "status": "pending", "deliverables": ["router/failover.py", "workflows/ark_failover_dispatch_v1.json", "HANDOFF.md"] }
   ],
-  "current_phase": 1,
+  "current_phase": 2,
 
   "todo_queue": [
-    {
-      "id": "T1.1",
-      "phase": 1,
-      "title": "Draft contracts/ark-state.schema.json",
-      "status": "done",
-      "depends_on": []
-    },
-    {
-      "id": "T1.2",
-      "phase": 1,
-      "title": "Draft ARK-STATE.json genome",
-      "status": "done",
-      "depends_on": []
-    },
-    {
-      "id": "T1.3",
-      "phase": 1,
-      "title": "User reviews Phase 1 schema + genome, approves or requests changes",
-      "status": "pending",
-      "depends_on": ["T1.1", "T1.2"]
-    },
-    {
-      "id": "T2.1",
-      "phase": 2,
-      "title": "Resolve known_gaps: locate or re-implement passive_income_engine.py, smart_home_bridge.py in this repo (or attach the repo that has them)",
-      "status": "pending",
-      "depends_on": ["T1.3"]
-    },
-    {
-      "id": "T2.2",
-      "phase": 2,
-      "title": "Implement ledger/command_ledger.py: subscribe to NetX signals, call risk calculator, record entries via passive_income_engine, emit telemetry_event",
-      "status": "pending",
-      "depends_on": ["T2.1"]
-    },
-    {
-      "id": "T2.3",
-      "phase": 2,
-      "title": "Unit tests for command_ledger.py + lossless round-trip snapshot/restore test (reuse EQCV encode/decode pattern if repo attached, else derive from ledger_entry contract)",
-      "status": "pending",
-      "depends_on": ["T2.2"]
-    },
-    {
-      "id": "T3.1",
-      "phase": 3,
-      "title": "Attach omnikernel-orchestrator repo to session (requires user action via add_repo)",
-      "status": "pending",
-      "depends_on": ["T2.3"]
-    },
-    {
-      "id": "T3.2",
-      "phase": 3,
-      "title": "Replace decorative ROI ledger + leverage meter values with live telemetry_event data over :8080 WebSocket",
-      "status": "pending",
-      "depends_on": ["T3.1"]
-    },
-    {
-      "id": "T3.3",
-      "phase": 3,
-      "title": "Wire Aura telemetry canvas to reflect real P&L as flow/stress aura_state",
-      "status": "pending",
-      "depends_on": ["T3.2"]
-    },
-    {
-      "id": "T4.1",
-      "phase": 4,
-      "title": "Implement router/failover.py: read todo_queue in ARK-STATE.json, dispatch next pending task to first available backend (Claude, Ollama :11434, Groq, Gemini)",
-      "status": "pending",
-      "depends_on": ["T3.3"]
-    },
-    {
-      "id": "T4.2",
-      "phase": 4,
-      "title": "Build n8n workflow that triggers failover.py dispatch on a schedule or on Claude-unavailable signal",
-      "status": "pending",
-      "depends_on": ["T4.1"]
-    },
-    {
-      "id": "T4.3",
-      "phase": 4,
-      "title": "Write HANDOFF.md documenting the resume protocol for a fresh Ollama/Groq/Gemini session",
-      "status": "pending",
-      "depends_on": ["T4.1"]
-    }
+    { "id": "T1.1", "phase": 1, "title": "Draft contracts/ark-state.schema.json", "status": "done", "depends_on": [] },
+    { "id": "T1.2", "phase": 1, "title": "Draft ARK-STATE.json genome", "status": "done", "depends_on": [] },
+    { "id": "T1.3", "phase": 1, "title": "User reviews Phase 1 schema + genome, approves or requests changes", "status": "done", "depends_on": ["T1.1", "T1.2"] },
+    { "id": "T1.4", "phase": 1, "title": "Attach omnikernel-orchestrator, net95x, EQCV018537-evidence repos and verify their real contents against the task description", "status": "done", "depends_on": ["T1.3"] },
+    { "id": "T2.1", "phase": 2, "title": "Implement netx/signal_engine.py (Signal dataclass, SignalBus pub/sub, webhook ingestion helper) and netx/risk_calculator.py (position_size formula + approval gate)", "status": "pending", "depends_on": ["T1.4"] },
+    { "id": "T2.2", "phase": 2, "title": "Implement passive_income_engine.py: real ledger entries, running balance/ROI, snapshot()/restore() lossless round-trip", "status": "pending", "depends_on": ["T1.4"] },
+    { "id": "T2.3", "phase": 2, "title": "Implement ledger/command_ledger.py: subscribe to signals, call risk calculator, record entries via passive_income_engine, emit telemetry_event", "status": "pending", "depends_on": ["T2.1", "T2.2"] },
+    { "id": "T2.4", "phase": 2, "title": "Unit tests for signal engine, risk calculator, passive_income_engine, command_ledger + lossless round-trip test", "status": "pending", "depends_on": ["T2.3"] },
+    { "id": "T3.1", "phase": 3, "title": "Build cockpit/app.py: FastAPI + WebSocket on :8080 broadcasting real telemetry_event (ROI ledger, leverage meter, Aura flow/stress state) from command_ledger state, plus a NetX/n8n signal ingestion webhook route", "status": "pending", "depends_on": ["T2.4"] },
+    { "id": "T3.2", "phase": 3, "title": "Manually verify the cockpit end-to-end: POST a signal, confirm risk sizing, ledger entry, and WebSocket telemetry broadcast all reflect real computed numbers", "status": "pending", "depends_on": ["T3.1"] },
+    { "id": "T4.1", "phase": 4, "title": "Implement router/failover.py: read todo_queue in ARK-STATE.json, dispatch next pending task to first available backend (Claude, Ollama :11434, Groq, Gemini)", "status": "pending", "depends_on": ["T3.2"] },
+    { "id": "T4.2", "phase": 4, "title": "Build workflows/ark_failover_dispatch_v1.json n8n workflow that triggers failover.py dispatch", "status": "pending", "depends_on": ["T4.1"] },
+    { "id": "T4.3", "phase": 4, "title": "Write HANDOFF.md documenting the resume protocol for a fresh Ollama/Groq/Gemini session", "status": "pending", "depends_on": ["T4.1"] }
   ],
 
   "known_gaps": [
-    "passive_income_engine.py, smart_home_bridge.py, and a multi-PC coordinator do not exist anywhere in this repo as of 2026-07-10, despite being listed as already-built. Phase 2 cannot call real code until these are located and either ported into this repo or the actual repo containing them is attached to the session.",
-    "omnikernel-orchestrator, net95x, and EQCV018537-evidence repos are not attached to this GitHub session. Their described behavior (ROI ledger, risk calculator formula, encode/decode pattern) is taken on faith from the task description, not verified against source. Attach via add_repo before Phase 2/3 implementation to avoid building against a guessed API.",
-    "netx/, trading/, protocol/, integrations/ in this repo are empty __init__.py stubs slated for ARCHIVE or MERGE per MIGRATION_ROADMAP.md -- building command_ledger.py against them will need that roadmap decision revisited or a new home chosen (e.g. a fresh ledger/ module that imports nothing from the stubs)."
+    "smart_home_bridge.py and a multi-PC coordinator are referenced in the original brief but are out of scope for the Command Ledger data flow (signal -> risk -> ledger -> cockpit) and are not being built under this genome unless explicitly requested.",
+    "netx/, trading/, protocol/, integrations/ in this repo are empty __init__.py stubs slated for ARCHIVE or MERGE per MIGRATION_ROADMAP.md. netx/signal_engine.py and netx/risk_calculator.py are being added as new real files inside netx/ despite that roadmap note; the archive/merge decision should be revisited given this repo is now becoming the module's real home.",
+    "cockpit/app.py is a new build, not a patch to the existing omnikernel-orchestrator repo. If the user later wants the real omnikernel-orchestrator cockpit (once one exists there) to be the system of record instead, this module will need to be ported or the two reconciled."
   ],
 
   "backend_router": {
