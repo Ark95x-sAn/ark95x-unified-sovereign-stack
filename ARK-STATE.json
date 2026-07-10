@@ -1,7 +1,7 @@
 {
   "genome_id": "ark95x-command-ledger",
-  "genome_version": "0.3.0",
-  "updated_at": "2026-07-10T07:30:00Z",
+  "genome_version": "0.4.0",
+  "updated_at": "2026-07-10T07:45:00Z",
   "updated_by": "claude-sonnet-5",
   "mission": "Wire real money data (NetX signal -> risk calculator -> passive_income_engine -> OmniNet cockpit) into one provable ROI machine, with a credit-proof handoff protocol so any model can resume the build from this file alone.",
 
@@ -106,17 +106,19 @@
     },
     "failover_router": {
       "path": "router/failover.py",
-      "status": "not_started",
-      "phase": 4
+      "status": "done",
+      "phase": 4,
+      "note": "ClaudeBackend/OllamaBackend/GroqBackend/GeminiBackend adapters, priority-ordered availability check, dispatch_next() reads+updates ARK-STATE.json's todo_queue. Verified against the real ARK-STATE.json file (not just fixtures)."
     },
     "failover_workflow": {
       "path": "workflows/ark_failover_dispatch_v1.json",
-      "status": "not_started",
-      "phase": 4
+      "status": "done",
+      "phase": 4,
+      "note": "Hourly schedule trigger -> Execute Command runs router/failover.py -> switches on result.status -> commits+pushes ARK-STATE.json on success, alerts on failure/no-backend, logs on idle. NOT live-tested against a running n8n instance -- verify ARK_REPO_PATH env var and Discord/Sheets credentials first."
     },
     "handoff_doc": {
       "path": "HANDOFF.md",
-      "status": "not_started",
+      "status": "done",
       "phase": 4
     }
   },
@@ -125,9 +127,10 @@
     { "id": 1, "name": "Contracts & Genome", "status": "done", "deliverables": ["contracts/ark-state.schema.json", "ARK-STATE.json"] },
     { "id": 2, "name": "Ledger Core", "status": "done", "deliverables": ["netx/signal_engine.py", "netx/risk_calculator.py", "passive_income_engine.py", "ledger/command_ledger.py", "tests/test_command_ledger.py", "lossless round-trip snapshot/restore test"] },
     { "id": 3, "name": "Live Cockpit Wiring", "status": "done", "deliverables": ["cockpit/app.py FastAPI + WebSocket on :8080", "real ROI ledger + leverage meter over WebSocket", "Aura telemetry reflecting real P&L"] },
-    { "id": 4, "name": "Credit-Proof Failover Router", "status": "in_progress", "deliverables": ["router/failover.py", "workflows/ark_failover_dispatch_v1.json", "HANDOFF.md"] }
+    { "id": 4, "name": "Credit-Proof Failover Router", "status": "done", "deliverables": ["router/failover.py", "workflows/ark_failover_dispatch_v1.json", "HANDOFF.md"] },
+    { "id": 5, "name": "Human Review & Live Wiring", "status": "pending", "deliverables": ["human sign-off on merging draft PR #31", "n8n workflow live-tested against a real instance", "optional: real trading account wired behind netx/signal_engine.py"] }
   ],
-  "current_phase": 4,
+  "current_phase": 5,
 
   "todo_queue": [
     { "id": "T1.1", "phase": 1, "title": "Draft contracts/ark-state.schema.json", "status": "done", "depends_on": [] },
@@ -140,31 +143,36 @@
     { "id": "T2.4", "phase": 2, "title": "Unit tests for signal engine, risk calculator, passive_income_engine, command_ledger + lossless round-trip test", "status": "done", "depends_on": ["T2.3"] },
     { "id": "T3.1", "phase": 3, "title": "Build cockpit/app.py: FastAPI + WebSocket on :8080 broadcasting real telemetry_event (ROI ledger, leverage meter, Aura flow/stress state) from command_ledger state, plus a NetX/n8n signal ingestion webhook route", "status": "done", "depends_on": ["T2.4"] },
     { "id": "T3.2", "phase": 3, "title": "Manually verify the cockpit end-to-end: POST a signal, confirm risk sizing, ledger entry, and WebSocket telemetry broadcast all reflect real computed numbers", "status": "done", "depends_on": ["T3.1"] },
-    { "id": "T4.1", "phase": 4, "title": "Implement router/failover.py: read todo_queue in ARK-STATE.json, dispatch next pending task to first available backend (Claude, Ollama :11434, Groq, Gemini)", "status": "in_progress", "depends_on": ["T3.2"] },
-    { "id": "T4.2", "phase": 4, "title": "Build workflows/ark_failover_dispatch_v1.json n8n workflow that triggers failover.py dispatch", "status": "pending", "depends_on": ["T4.1"] },
-    { "id": "T4.3", "phase": 4, "title": "Write HANDOFF.md documenting the resume protocol for a fresh Ollama/Groq/Gemini session", "status": "pending", "depends_on": ["T4.1"] }
+    { "id": "T4.1", "phase": 4, "title": "Implement router/failover.py: read todo_queue in ARK-STATE.json, dispatch next pending task to first available backend (Claude, Ollama :11434, Groq, Gemini)", "status": "done", "depends_on": ["T3.2"] },
+    { "id": "T4.2", "phase": 4, "title": "Build workflows/ark_failover_dispatch_v1.json n8n workflow that triggers failover.py dispatch", "status": "done", "depends_on": ["T4.1"] },
+    { "id": "T4.3", "phase": 4, "title": "Write HANDOFF.md documenting the resume protocol for a fresh Ollama/Groq/Gemini session", "status": "done", "depends_on": ["T4.1"] },
+    { "id": "T5.1", "phase": 5, "title": "Human review of draft PR #31 (all four phases); decide whether/when to merge to main", "status": "pending", "depends_on": ["T4.2", "T4.3"] },
+    { "id": "T5.2", "phase": 5, "title": "Live-test workflows/ark_failover_dispatch_v1.json against a real n8n instance (set ARK_REPO_PATH, Discord/Sheets credentials)", "status": "pending", "depends_on": ["T4.2"] },
+    { "id": "T5.3", "phase": 5, "title": "If desired, wire an actual funded/paper trading account behind netx/signal_engine.py and cockpit/app.py's /netx/webhook so the ROI numbers reflect live external signals instead of manually-posted test signals", "status": "pending", "depends_on": ["T5.1"] }
   ],
 
   "known_gaps": [
     "smart_home_bridge.py and a multi-PC coordinator are referenced in the original brief but are out of scope for the Command Ledger data flow (signal -> risk -> ledger -> cockpit) and are not being built under this genome unless explicitly requested.",
     "netx/, trading/, protocol/, integrations/ in this repo are empty __init__.py stubs slated for ARCHIVE or MERGE per MIGRATION_ROADMAP.md. netx/signal_engine.py and netx/risk_calculator.py are being added as new real files inside netx/ despite that roadmap note; the archive/merge decision should be revisited given this repo is now becoming the module's real home.",
-    "cockpit/app.py is a new build, not a patch to the existing omnikernel-orchestrator repo. If the user later wants the real omnikernel-orchestrator cockpit (once one exists there) to be the system of record instead, this module will need to be ported or the two reconciled."
+    "cockpit/app.py is a new build, not a patch to the existing omnikernel-orchestrator repo. If the user later wants the real omnikernel-orchestrator cockpit (once one exists there) to be the system of record instead, this module will need to be ported or the two reconciled.",
+    "netx/signal_engine.py's /netx/webhook route accepts manually-posted test signals; no real broker/exchange or NetX production signal source is wired in yet (T5.3).",
+    "workflows/ark_failover_dispatch_v1.json has not been executed against a live n8n instance -- it is a definition file only, matching the existing convention of the other files in workflows/."
   ],
 
   "backend_router": {
-    "status": "not_implemented",
-    "note": "Populated in Phase 4. Intended contract: router/failover.py reads todo_queue above, finds the first entry with status=pending and all depends_on marked done, and dispatches it to whichever backend responds first from the list below.",
+    "status": "implemented",
+    "note": "router/failover.py implements this. FailoverRouter.dispatch_next() reads todo_queue above, finds the first entry with status=pending and all depends_on marked done, and dispatches it to whichever backend's is_available() returns true first, in priority order below.",
     "backends": [
-      { "name": "claude", "kind": "api", "priority": 1 },
-      { "name": "ollama", "kind": "local", "endpoint": "http://localhost:11434", "priority": 2 },
-      { "name": "groq", "kind": "api", "priority": 3 },
-      { "name": "gemini", "kind": "api", "priority": 4 }
+      { "name": "claude", "kind": "api", "priority": 1, "env": ["ANTHROPIC_API_KEY", "ANTHROPIC_MODEL"] },
+      { "name": "ollama", "kind": "local", "endpoint": "http://localhost:11434", "priority": 2, "env": ["OLLAMA_HOST", "OLLAMA_MODEL"] },
+      { "name": "groq", "kind": "api", "priority": 3, "env": ["GROQ_API_KEY", "GROQ_MODEL"] },
+      { "name": "gemini", "kind": "api", "priority": 4, "env": ["GEMINI_API_KEY", "GEMINI_MODEL"] }
     ]
   },
 
   "handoff_protocol": {
     "doc": "HANDOFF.md",
-    "status": "not_written",
-    "rule": "Any model resuming this build reads ARK-STATE.json first, finds the lowest-numbered todo_queue entry with status=pending and satisfied depends_on, executes it, then updates that entry's status plus updated_at/updated_by before stopping."
+    "status": "written",
+    "rule": "Any model resuming this build reads ARK-STATE.json first, finds the lowest-numbered todo_queue entry with status=pending and satisfied depends_on, executes it, then updates that entry's status plus updated_at/updated_by before stopping. Never merge the working branch's PR to main autonomously -- that is a human decision (see T5.1)."
   }
 }

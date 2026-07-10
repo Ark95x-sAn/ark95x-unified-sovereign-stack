@@ -1,0 +1,131 @@
+{
+  "name": "Sovereign_Failover_Dispatch_v1",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": "EVERY_HOUR"
+      },
+      "name": "Failover_Heartbeat",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "command": "cd {{$env.ARK_REPO_PATH}} && python3 router/failover.py"
+      },
+      "name": "Run_Failover_Router",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: JSON.parse($input.first().json.stdout) }];"
+      },
+      "name": "Parse_Dispatch_Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            { "conditions": { "conditions": [{ "leftValue": "={{$json.status}}", "rightValue": "dispatched", "operator": { "type": "string", "operation": "equals" } }] }, "outputKey": "dispatched" },
+            { "conditions": { "conditions": [{ "leftValue": "={{$json.status}}", "rightValue": "no_backend_available", "operator": { "type": "string", "operation": "equals" } }] }, "outputKey": "no_backend" },
+            { "conditions": { "conditions": [{ "leftValue": "={{$json.status}}", "rightValue": "dispatch_failed", "operator": { "type": "string", "operation": "equals" } }] }, "outputKey": "failed" },
+            { "conditions": { "conditions": [{ "leftValue": "={{$json.status}}", "rightValue": "no_pending_tasks", "operator": { "type": "string", "operation": "equals" } }] }, "outputKey": "idle" }
+          ]
+        }
+      },
+      "name": "Check_Dispatch_Status",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "command": "cd {{$env.ARK_REPO_PATH}} && git add ARK-STATE.json && git commit -m \"failover: {{$json.backend}} picked up {{$json.task_id}}\" && git push"
+      },
+      "name": "Commit_Genome_Update",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1050, 150]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "channel": "#ark95x-build",
+        "text": "ARK95X FAILOVER: task {{$json.task_id}} dispatched to `{{$json.backend}}`. GitHub genome updated.",
+        "options": {}
+      },
+      "name": "Notify_Dispatch_Success",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [1250, 150]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "channel": "#ark95x-build",
+        "text": "ARK95X FAILOVER ALERT: no backend available for task {{$json.task_id}}. Claude, Ollama (:11434), Groq, and Gemini are all unreachable -- the build is stalled until one comes back or ARK-STATE.json is picked up manually.",
+        "options": {}
+      },
+      "name": "Alert_No_Backend",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "channel": "#ark95x-build",
+        "text": "ARK95X FAILOVER ERROR: backend `{{$json.backend}}` failed to dispatch task {{$json.task_id}}: {{$json.error}}. Task remains pending -- will retry next heartbeat.",
+        "options": {}
+      },
+      "name": "Alert_Dispatch_Failed",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [1050, 450]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetName": "Failover_Heartbeat_Log",
+        "values": {
+          "A": "={{new Date().toISOString()}}",
+          "B": "no_pending_tasks"
+        }
+      },
+      "name": "Log_Idle_Heartbeat",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1050, 600]
+    }
+  ],
+  "connections": {
+    "Failover_Heartbeat": {
+      "main": [[{ "node": "Run_Failover_Router", "type": "main", "index": 0 }]]
+    },
+    "Run_Failover_Router": {
+      "main": [[{ "node": "Parse_Dispatch_Result", "type": "main", "index": 0 }]]
+    },
+    "Parse_Dispatch_Result": {
+      "main": [[{ "node": "Check_Dispatch_Status", "type": "main", "index": 0 }]]
+    },
+    "Check_Dispatch_Status": {
+      "main": [
+        [{ "node": "Commit_Genome_Update", "type": "main", "index": 0 }],
+        [{ "node": "Alert_No_Backend", "type": "main", "index": 0 }],
+        [{ "node": "Alert_Dispatch_Failed", "type": "main", "index": 0 }],
+        [{ "node": "Log_Idle_Heartbeat", "type": "main", "index": 0 }]
+      ]
+    },
+    "Commit_Genome_Update": {
+      "main": [[{ "node": "Notify_Dispatch_Success", "type": "main", "index": 0 }]]
+    }
+  }
+}
