@@ -1,7 +1,7 @@
 {
   "genome_id": "ark95x-command-ledger",
-  "genome_version": "0.2.0",
-  "updated_at": "2026-07-10T07:20:00Z",
+  "genome_version": "0.3.0",
+  "updated_at": "2026-07-10T07:30:00Z",
   "updated_by": "claude-sonnet-5",
   "mission": "Wire real money data (NetX signal -> risk calculator -> passive_income_engine -> OmniNet cockpit) into one provable ROI machine, with a credit-proof handoff protocol so any model can resume the build from this file alone.",
 
@@ -58,44 +58,51 @@
     },
     "netx_signal_engine": {
       "path": "netx/signal_engine.py",
-      "status": "not_started",
+      "status": "done",
       "phase": 2,
       "produces": ["signal"]
     },
     "netx_risk_calculator": {
       "path": "netx/risk_calculator.py",
-      "status": "not_started",
+      "status": "done",
       "phase": 2,
       "consumes": ["signal"],
       "produces": ["risk_sized_order"]
     },
     "passive_income_engine": {
       "path": "passive_income_engine.py",
-      "status": "not_started",
+      "status": "done",
       "phase": 2,
       "consumes": ["risk_sized_order"],
       "produces": ["ledger_entry"],
-      "note": "Includes snapshot()/restore() lossless round-trip (the EQCV pattern, built fresh)."
+      "note": "Includes snapshot()/restore() + encode()/decode() lossless round-trip (the EQCV pattern, built fresh). Persists to LEDGER_PERSIST_PATH (default data/ledger_state.json)."
     },
     "command_ledger": {
       "path": "ledger/command_ledger.py",
-      "status": "not_started",
+      "status": "done",
       "phase": 2,
       "consumes": ["signal", "risk_sized_order"],
       "produces": ["ledger_entry", "telemetry_event"]
     },
     "ledger_tests": {
       "path": "tests/test_command_ledger.py",
-      "status": "not_started",
-      "phase": 2
+      "status": "done",
+      "phase": 2,
+      "note": "14 tests, all passing, including a lossless round-trip test."
     },
     "cockpit": {
       "path": "cockpit/app.py",
-      "status": "not_started",
+      "status": "done",
       "phase": 3,
       "consumes": ["ledger_entry"],
       "produces": ["telemetry_event"],
-      "note": "New FastAPI + WebSocket app on :8080. Not a modification of omnikernel-orchestrator -- that repo is left untouched."
+      "note": "New FastAPI + WebSocket app on :8080. Not a modification of omnikernel-orchestrator -- that repo is left untouched. Verified live: ran uvicorn, POSTed a real signal to /netx/webhook, closed it via /fills, confirmed /roi and a live /ws/cockpit WebSocket connection both reflected the real computed P&L (not decorative)."
+    },
+    "cockpit_tests": {
+      "path": "tests/test_cockpit.py",
+      "status": "done",
+      "phase": 3,
+      "note": "8 tests, all passing, including WebSocket connect + live broadcast assertions."
     },
     "failover_router": {
       "path": "router/failover.py",
@@ -116,24 +123,24 @@
 
   "phases": [
     { "id": 1, "name": "Contracts & Genome", "status": "done", "deliverables": ["contracts/ark-state.schema.json", "ARK-STATE.json"] },
-    { "id": 2, "name": "Ledger Core", "status": "in_progress", "deliverables": ["netx/signal_engine.py", "netx/risk_calculator.py", "passive_income_engine.py", "ledger/command_ledger.py", "tests/test_command_ledger.py", "lossless round-trip snapshot/restore test"] },
-    { "id": 3, "name": "Live Cockpit Wiring", "status": "pending", "deliverables": ["cockpit/app.py FastAPI + WebSocket on :8080", "real ROI ledger + leverage meter over WebSocket", "Aura telemetry reflecting real P&L"] },
-    { "id": 4, "name": "Credit-Proof Failover Router", "status": "pending", "deliverables": ["router/failover.py", "workflows/ark_failover_dispatch_v1.json", "HANDOFF.md"] }
+    { "id": 2, "name": "Ledger Core", "status": "done", "deliverables": ["netx/signal_engine.py", "netx/risk_calculator.py", "passive_income_engine.py", "ledger/command_ledger.py", "tests/test_command_ledger.py", "lossless round-trip snapshot/restore test"] },
+    { "id": 3, "name": "Live Cockpit Wiring", "status": "done", "deliverables": ["cockpit/app.py FastAPI + WebSocket on :8080", "real ROI ledger + leverage meter over WebSocket", "Aura telemetry reflecting real P&L"] },
+    { "id": 4, "name": "Credit-Proof Failover Router", "status": "in_progress", "deliverables": ["router/failover.py", "workflows/ark_failover_dispatch_v1.json", "HANDOFF.md"] }
   ],
-  "current_phase": 2,
+  "current_phase": 4,
 
   "todo_queue": [
     { "id": "T1.1", "phase": 1, "title": "Draft contracts/ark-state.schema.json", "status": "done", "depends_on": [] },
     { "id": "T1.2", "phase": 1, "title": "Draft ARK-STATE.json genome", "status": "done", "depends_on": [] },
     { "id": "T1.3", "phase": 1, "title": "User reviews Phase 1 schema + genome, approves or requests changes", "status": "done", "depends_on": ["T1.1", "T1.2"] },
     { "id": "T1.4", "phase": 1, "title": "Attach omnikernel-orchestrator, net95x, EQCV018537-evidence repos and verify their real contents against the task description", "status": "done", "depends_on": ["T1.3"] },
-    { "id": "T2.1", "phase": 2, "title": "Implement netx/signal_engine.py (Signal dataclass, SignalBus pub/sub, webhook ingestion helper) and netx/risk_calculator.py (position_size formula + approval gate)", "status": "pending", "depends_on": ["T1.4"] },
-    { "id": "T2.2", "phase": 2, "title": "Implement passive_income_engine.py: real ledger entries, running balance/ROI, snapshot()/restore() lossless round-trip", "status": "pending", "depends_on": ["T1.4"] },
-    { "id": "T2.3", "phase": 2, "title": "Implement ledger/command_ledger.py: subscribe to signals, call risk calculator, record entries via passive_income_engine, emit telemetry_event", "status": "pending", "depends_on": ["T2.1", "T2.2"] },
-    { "id": "T2.4", "phase": 2, "title": "Unit tests for signal engine, risk calculator, passive_income_engine, command_ledger + lossless round-trip test", "status": "pending", "depends_on": ["T2.3"] },
-    { "id": "T3.1", "phase": 3, "title": "Build cockpit/app.py: FastAPI + WebSocket on :8080 broadcasting real telemetry_event (ROI ledger, leverage meter, Aura flow/stress state) from command_ledger state, plus a NetX/n8n signal ingestion webhook route", "status": "pending", "depends_on": ["T2.4"] },
-    { "id": "T3.2", "phase": 3, "title": "Manually verify the cockpit end-to-end: POST a signal, confirm risk sizing, ledger entry, and WebSocket telemetry broadcast all reflect real computed numbers", "status": "pending", "depends_on": ["T3.1"] },
-    { "id": "T4.1", "phase": 4, "title": "Implement router/failover.py: read todo_queue in ARK-STATE.json, dispatch next pending task to first available backend (Claude, Ollama :11434, Groq, Gemini)", "status": "pending", "depends_on": ["T3.2"] },
+    { "id": "T2.1", "phase": 2, "title": "Implement netx/signal_engine.py (Signal dataclass, SignalBus pub/sub, webhook ingestion helper) and netx/risk_calculator.py (position_size formula + approval gate)", "status": "done", "depends_on": ["T1.4"] },
+    { "id": "T2.2", "phase": 2, "title": "Implement passive_income_engine.py: real ledger entries, running balance/ROI, snapshot()/restore() lossless round-trip", "status": "done", "depends_on": ["T1.4"] },
+    { "id": "T2.3", "phase": 2, "title": "Implement ledger/command_ledger.py: subscribe to signals, call risk calculator, record entries via passive_income_engine, emit telemetry_event", "status": "done", "depends_on": ["T2.1", "T2.2"] },
+    { "id": "T2.4", "phase": 2, "title": "Unit tests for signal engine, risk calculator, passive_income_engine, command_ledger + lossless round-trip test", "status": "done", "depends_on": ["T2.3"] },
+    { "id": "T3.1", "phase": 3, "title": "Build cockpit/app.py: FastAPI + WebSocket on :8080 broadcasting real telemetry_event (ROI ledger, leverage meter, Aura flow/stress state) from command_ledger state, plus a NetX/n8n signal ingestion webhook route", "status": "done", "depends_on": ["T2.4"] },
+    { "id": "T3.2", "phase": 3, "title": "Manually verify the cockpit end-to-end: POST a signal, confirm risk sizing, ledger entry, and WebSocket telemetry broadcast all reflect real computed numbers", "status": "done", "depends_on": ["T3.1"] },
+    { "id": "T4.1", "phase": 4, "title": "Implement router/failover.py: read todo_queue in ARK-STATE.json, dispatch next pending task to first available backend (Claude, Ollama :11434, Groq, Gemini)", "status": "in_progress", "depends_on": ["T3.2"] },
     { "id": "T4.2", "phase": 4, "title": "Build workflows/ark_failover_dispatch_v1.json n8n workflow that triggers failover.py dispatch", "status": "pending", "depends_on": ["T4.1"] },
     { "id": "T4.3", "phase": 4, "title": "Write HANDOFF.md documenting the resume protocol for a fresh Ollama/Groq/Gemini session", "status": "pending", "depends_on": ["T4.1"] }
   ],

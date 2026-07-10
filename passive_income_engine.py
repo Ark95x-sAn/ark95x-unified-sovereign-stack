@@ -110,7 +110,9 @@ class PassiveIncomeEngine:
         self.entries.append(entry)
         logger.info(f"Ledger entry recorded: {entry.entry_id} {entry_type} ${amount_usd:.2f} -> balance ${self.balance:.2f}")
         if self.persist_path:
-            Path(self.persist_path).write_text(self.encode())
+            path = Path(self.persist_path)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(self.encode())
         return entry
 
     @property
