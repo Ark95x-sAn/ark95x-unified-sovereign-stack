@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://network95ur.local/contracts/ark-state.schema.json",
+  "title": "ARK95X Command Ledger - Shared State Contracts",
+  "description": "Message contracts for the live money pipeline: NetX signal -> risk-sized order -> ledger entry -> cockpit telemetry event. Every module in the ledger integration layer reads or writes one of these four shapes, discriminated by 'kind'.",
+  "oneOf": [
+    { "$ref": "#/$defs/signal" },
+    { "$ref": "#/$defs/risk_sized_order" },
+    { "$ref": "#/$defs/ledger_entry" },
+    { "$ref": "#/$defs/telemetry_event" }
+  ],
+  "$defs": {
+    "signal": {
+      "type": "object",
+      "title": "NetX Trading Signal",
+      "description": "Raw signal fired by the NetX / net95x n8n signal engine before risk sizing.",
+      "required": ["kind", "signal_id", "source", "symbol", "side", "strategy", "entry_price", "stop_price", "timestamp"],
+      "properties": {
+        "kind": { "const": "signal" },
+        "signal_id": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "description": "e.g. 'netx', 'n8n:signal-engine-v2'" },
+        "symbol": { "type": "string", "minLength": 1 },
+        "side": { "type": "string", "enum": ["long", "short", "buy", "sell", "flat"] },
+        "strategy": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "entry_price": { "type": "number", "exclusiveMinimum": 0 },
+        "stop_price": { "type": "number", "exclusiveMinimum": 0 },
+        "take_profit_price": { "type": "number", "exclusiveMinimum": 0 },
+        "timeframe": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "raw": {
+          "type": "object",
+          "description": "Untouched pass-through of the originating n8n/webhook payload for audit purposes.",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "risk_sized_order": {
+      "type": "object",
+      "title": "Risk-Sized Order",
+      "description": "Output of the NetX risk calculator: position_size = account_capital * (risk_pct / 100) / stop_distance.",
+      "required": ["kind", "order_id", "signal_id", "symbol", "side", "account_capital", "risk_pct", "stop_distance", "position_size", "max_loss_usd", "entry_price", "stop_price", "approved", "timestamp"],
+      "properties": {
+        "kind": { "const": "risk_sized_order" },
+        "order_id": { "type": "string", "minLength": 1 },
+        "signal_id": { "type": "string", "minLength": 1, "description": "References signal.signal_id" },
+        "symbol": { "type": "string", "minLength": 1 },
+        "side": { "type": "string", "enum": ["long", "short", "buy", "sell", "flat"] },
+        "account_capital": { "type": "number", "minimum": 0 },
+        "risk_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "stop_distance": { "type": "number", "exclusiveMinimum": 0 },
+        "position_size": { "type": "number", "minimum": 0, "description": "account_capital * (risk_pct/100) / stop_distance" },
+        "notional_value": { "type": "number", "minimum": 0 },
+        "max_loss_usd": { "type": "number", "minimum": 0, "description": "account_capital * (risk_pct/100)" },
+        "entry_price": { "type": "number", "exclusiveMinimum": 0 },
+        "stop_price": { "type": "number", "exclusiveMinimum": 0 },
+        "take_profit_price": { "type": "number", "exclusiveMinimum": 0 },
+        "approved": { "type": "boolean", "description": "False if the risk gate rejected the order" },
+        "rejection_reason": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "ledger_entry": {
+      "type": "object",
+      "title": "Command Ledger Entry",
+      "description": "Real dollar entry recorded by passive_income_engine / command_ledger once an order is filled or settled.",
+      "required": ["kind", "entry_id", "type", "amount_usd", "balance_after_usd", "source_module", "status", "timestamp"],
+      "properties": {
+        "kind": { "const": "ledger_entry" },
+        "entry_id": { "type": "string", "minLength": 1 },
+        "order_id": { "type": "string", "description": "References risk_sized_order.order_id, if this entry originated from a trade" },
+        "signal_id": { "type": "string", "description": "References signal.signal_id, if this entry originated from a trade" },
+        "type": { "type": "string", "enum": ["realized_pnl", "unrealized_pnl", "fee", "funding", "deposit", "withdrawal", "adjustment"] },
+        "amount_usd": { "type": "number", "description": "Signed dollar amount; positive is income" },
+        "balance_after_usd": { "type": "number" },
+        "symbol": { "type": "string" },
+        "source_module": { "type": "string", "enum": ["netx", "risk_calculator", "passive_income_engine", "smart_home_bridge", "command_ledger", "manual"] },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "reconciled", "voided"] },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "telemetry_event": {
+      "type": "object",
+      "title": "Cockpit Telemetry Event",
+      "description": "Event broadcast over the OmniNet :8080 WebSocket to drive the ROI ledger, leverage meter, and Aura flow/stress canvas.",
+      "required": ["kind", "event_id", "event_type", "aura_state", "timestamp"],
+      "properties": {
+        "kind": { "const": "telemetry_event" },
+        "event_id": { "type": "string", "minLength": 1 },
+        "event_type": { "type": "string", "enum": ["roi_update", "leverage_update", "aura_state", "agent_vote", "system_health"] },
+        "ledger_snapshot": {
+          "type": "object",
+          "description": "Live rollup pushed to the ROI ledger + leverage meter widgets.",
+          "properties": {
+            "total_pnl_usd": { "type": "number" },
+            "realized_pnl_usd": { "type": "number" },
+            "unrealized_pnl_usd": { "type": "number" },
+            "roi_pct": { "type": "number" },
+            "payback_status": { "type": "string", "enum": ["not_started", "in_progress", "achieved"] },
+            "leverage_ratio": { "type": "number", "minimum": 0 },
+            "open_risk_usd": { "type": "number", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "aura_state": { "type": "string", "enum": ["flow", "stress", "neutral", "surge", "drain"] },
+        "intensity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source_entry_id": { "type": "string", "description": "References ledger_entry.entry_id that triggered this event" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "broadcast": { "type": "boolean", "description": "True once pushed over the WebSocket to connected cockpit clients" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

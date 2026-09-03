@@ -1,0 +1,243 @@
+{
+  "genome_id": "ark95x-command-ledger",
+  "genome_version": "0.10.0",
+  "updated_at": "2026-09-03T11:10:00Z",
+  "updated_by": "claude-sonnet-5",
+  "mission": "Wire real money data (NetX signal -> risk calculator -> passive_income_engine -> OmniNet cockpit) into one provable ROI machine, with a credit-proof handoff protocol so any model can resume the build from this file alone.",
+
+  "data_flow": [
+    { "step": 1, "name": "signal_fired", "module": "netx/signal_engine.py", "produces": "signal" },
+    { "step": 2, "name": "risk_sizing", "module": "netx/risk_calculator.py", "consumes": "signal", "produces": "risk_sized_order" },
+    { "step": 3, "name": "ledger_recording", "module": "ledger/command_ledger.py + passive_income_engine.py", "consumes": "risk_sized_order", "produces": "ledger_entry" },
+    { "step": 4, "name": "cockpit_broadcast", "module": "cockpit/app.py (FastAPI + WebSocket, :8080)", "consumes": "ledger_entry", "produces": "telemetry_event" }
+  ],
+
+  "contracts": {
+    "path": "contracts/ark-state.schema.json",
+    "kinds": ["signal", "risk_sized_order", "ledger_entry", "telemetry_event"]
+  },
+
+  "source_systems": {
+    "omnikernel-orchestrator": {
+      "role": "Originally described as hosting a FastAPI + WebSocket cockpit on :8080, Aura telemetry canvas, 9-agent Council voting, and an ROI ledger + leverage meter.",
+      "repo": "ark95x-san/ark95x-omnikernel-orchestrator",
+      "in_session_scope": true,
+      "note": "Attached and cloned 2026-07-10. VERIFIED: council-ouroboros/council.py IS a real 9-voter weighted council with AUDITOR veto -- matches the description. NOT FOUND anywhere in the repo: any FastAPI app on :8080, any WebSocket server, anything named/themed 'Aura', any ROI ledger, any leverage meter. src/core/telemetry.py is a generic metrics collector (counters/gauges/histograms) with no Aura or ROI concept. The only FastAPI apps in the repo run on :8501/:8502 and are unrelated demo tools (creations/ai-engineer, creations/flame-arsenal). Decision (user, 2026-07-10): build the cockpit fresh in this repo (unified-sovereign-stack) as cockpit/app.py rather than edit this repo."
+    },
+    "unified-sovereign-stack": {
+      "role": "This repo. Home for the whole Command Ledger build: contracts, ledger core, cockpit, failover router.",
+      "repo": "ark95x-san/ark95x-unified-sovereign-stack",
+      "in_session_scope": true,
+      "note": "passive_income_engine.py, smart_home_bridge.py, and a multi-PC coordinator do not exist in this repo. Decision (user, 2026-07-10): build passive_income_engine.py for real here as part of Phase 2; smart_home_bridge.py and the multi-PC coordinator are out of scope for the Command Ledger data flow and are not being built under this genome."
+    },
+    "net95x": {
+      "role": "Originally described as the NetX trading signal engine, risk calculator, n8n alert workflows, and backtest framework.",
+      "repo": "ark95x-san/net95x",
+      "in_session_scope": true,
+      "note": "Attached and cloned 2026-07-10. VERIFIED: this repo is a static 'coming soon' landing page for net95x.net (Cloudflare Pages, HTML/CSS only, README says 'Private. Stealth mode. Building quietly.'). No trading engine, risk calculator, n8n workflow, or backtest code exists here. Decision (user, 2026-07-10): build netx/signal_engine.py and netx/risk_calculator.py fresh in this repo, spec'd from contracts/ark-state.schema.json."
+    },
+    "EQCV018537-evidence": {
+      "role": "Originally described as holding a lossless state serialization / round-trip encode-decode pattern.",
+      "repo": "ark95x-san/eqcv018537-evidence",
+      "in_session_scope": true,
+      "note": "Attached and cloned 2026-07-10. VERIFIED: repo contains a single commit with only a .gitignore file -- no code of any kind. Decision (user, 2026-07-10): implement the round-trip encode/decode pattern fresh as part of passive_income_engine.py's snapshot()/restore(), covered by a dedicated round-trip test."
+    }
+  },
+
+  "modules": {
+    "contracts": {
+      "path": "contracts/ark-state.schema.json",
+      "status": "done",
+      "phase": 1
+    },
+    "genome": {
+      "path": "ARK-STATE.json",
+      "status": "done",
+      "phase": 1,
+      "note": "This file. Update updated_at/updated_by and the relevant todo_queue entry's status every time a task completes."
+    },
+    "netx_signal_engine": {
+      "path": "netx/signal_engine.py",
+      "status": "done",
+      "phase": 2,
+      "produces": ["signal"]
+    },
+    "netx_risk_calculator": {
+      "path": "netx/risk_calculator.py",
+      "status": "done",
+      "phase": 2,
+      "consumes": ["signal"],
+      "produces": ["risk_sized_order"]
+    },
+    "passive_income_engine": {
+      "path": "passive_income_engine.py",
+      "status": "done",
+      "phase": 2,
+      "consumes": ["risk_sized_order"],
+      "produces": ["ledger_entry"],
+      "note": "Includes snapshot()/restore() + encode()/decode() lossless round-trip (the EQCV pattern, built fresh). Persists to LEDGER_PERSIST_PATH (default data/ledger_state.json)."
+    },
+    "command_ledger": {
+      "path": "ledger/command_ledger.py",
+      "status": "done",
+      "phase": 2,
+      "consumes": ["signal", "risk_sized_order"],
+      "produces": ["ledger_entry", "telemetry_event"]
+    },
+    "ledger_tests": {
+      "path": "tests/test_command_ledger.py",
+      "status": "done",
+      "phase": 2,
+      "note": "14 tests, all passing, including a lossless round-trip test."
+    },
+    "cockpit": {
+      "path": "cockpit/app.py",
+      "status": "done",
+      "phase": 3,
+      "consumes": ["ledger_entry"],
+      "produces": ["telemetry_event"],
+      "note": "New FastAPI + WebSocket app on :8080. Not a modification of omnikernel-orchestrator -- that repo is left untouched. Verified live: ran uvicorn, POSTed a real signal to /netx/webhook, closed it via /fills, confirmed /roi and a live /ws/cockpit WebSocket connection both reflected the real computed P&L (not decorative)."
+    },
+    "cockpit_tests": {
+      "path": "tests/test_cockpit.py",
+      "status": "done",
+      "phase": 3,
+      "note": "8 tests, all passing, including WebSocket connect + live broadcast assertions."
+    },
+    "failover_router": {
+      "path": "router/failover.py",
+      "status": "done",
+      "phase": 4,
+      "note": "ClaudeBackend/OllamaBackend/GroqBackend/GeminiBackend adapters, priority-ordered availability check, dispatch_next() reads+updates ARK-STATE.json's todo_queue. Verified against the real ARK-STATE.json file (not just fixtures)."
+    },
+    "failover_workflow": {
+      "path": "workflows/ark_failover_dispatch_v1.json",
+      "status": "done",
+      "phase": 5,
+      "note": "T5.2, live-tested 2026-09-03 against a real n8n instance (n8nio/n8n:latest in the data stack) -- not just re-validated as JSON. Along the way, dispatch moved off Execute Command entirely: Run_Failover_Router is now an HTTP Request node calling POST {COCKPIT_URL}/failover/dispatch (new cockpit/app.py route that runs router/failover.py's dispatch_next() in-process), because n8n's official Docker image ships no python3 and has no repo mounted, so `python3 router/failover.py` could never have worked there regardless of ARK_REPO_PATH. Commit_Genome_Update still uses Execute Command (git add/commit/push) and still needs a host where git + a repo checkout are actually available -- that part remains untested live. Discord/Google Sheets nodes (Notify_Dispatch_Success, Alert_No_Backend, Alert_Dispatch_Failed, Log_Idle_Heartbeat) still need real credentials, untested live. Found and fixed 3 more real n8n v2 defaults blocking this while getting the dispatch path working: NODES_EXCLUDE (Execute Command disabled by default), N8N_BLOCK_ENV_ACCESS_IN_NODE (blocks $env.* in expressions), and host.docker.internal not resolving on native Linux Docker without extra_hosts: host-gateway. All three documented inline in docker-compose.yml. Live run result: Failover_Heartbeat -> Run_Failover_Router (real HTTP call, real response) -> Check_Dispatch_Status all executed successfully in n8n, correctly returning/branching on {\"status\": \"no_backend_available\", \"task_id\": \"T5.1\"} -- the same honest result router/failover.py gives standalone in this sandbox (no API keys, no local Ollama)."
+    },
+    "cockpit_failover_dispatch_route": {
+      "path": "cockpit/app.py (POST /failover/dispatch)",
+      "status": "done",
+      "phase": 5,
+      "note": "Added while live-testing T5.2: runs FailoverRouter(state_path=ARK_STATE_PATH).dispatch_next() and returns the result as JSON, so n8n's HTTP Request node (or anything else) can trigger the failover cascade without needing python3/git/a repo checkout in its own runtime. 2 tests in tests/test_cockpit.py::TestFailoverDispatchEndpoint."
+    },
+    "handoff_doc": {
+      "path": "HANDOFF.md",
+      "status": "done",
+      "phase": 4
+    },
+    "control_plane": {
+      "path": "control_plane/control_plane.py",
+      "status": "done",
+      "phase": 5,
+      "note": "Added directly to this branch on 2026-07-19 by the repo owner (commits 89e0428..5ce3c5b), not via router/failover.py dispatch. ControlPlane registers the 8 existing ARK95X roles (arc_x, codex_security, memory_cortex, monitoring, github, n8n, devices, business_ops) under one authority/reporting contract, with ARK-STATE.json declared as AUTHORITATIVE_STATE_PATH. Agents cannot override the plane or self-approve; financial/legal/public/destructive/deployment/security/system-mutation/account-change actions route to queued_for_human_approval. It does not yet read or write ARK-STATE.json in code -- that's the documented next pass. See docs/control-plane-pass-1.md for the full contract. Verified independently: 65 tests pass repo-wide (13 control_plane tests included), flake8 clean, CI (lint/test/Code Audit Master) green on commit 5ce3c5b."
+    },
+    "control_plane_ledger_gate": {
+      "path": "ledger/command_ledger.py (request_close_order/approve_pending_action) + cockpit/app.py (/fills, /pending, /approve/{id}, /control-plane)",
+      "status": "done",
+      "phase": 5,
+      "note": "T5.5: the 'next adjustment pass' from docs/control-plane-pass-1.md, wired for real. CommandLedger now takes an optional control_plane; closing a position is a 'financial' action, which control_plane.APPROVAL_REQUIRED_ACTION_CLASSES always routes to queued_for_human_approval. Money does not move until CommandLedger.approve_pending_action() executes it and reports the real outcome back to the control plane via ControlPlane.report(). cockpit/app.py wires this in by default (CONTROL_PLANE_ENABLED=true) -- POST /fills queues, GET /pending shows the queue, POST /approve/{request_id} executes, GET /control-plane exposes the live authority/reporting state. Proved live 2026-09-03: ran uvicorn with the gate on, POSTed a real signal and a real fill request, confirmed /roi stayed at $0 pnl while queued, approved it, confirmed /roi then showed the real $200 P&L, and confirmed business_ops's last_report in /control-plane matched the real ledger_entry.entry_id. Backward compatible: control_plane=None (or CONTROL_PLANE_ENABLED=false) preserves the original immediate-execution behavior, covered by tests."
+    },
+    "control_plane_tests": {
+      "path": "tests/test_control_plane.py",
+      "status": "done",
+      "phase": 5
+    },
+    "control_plane_gate_tests": {
+      "path": "tests/test_control_plane_gate.py + tests/test_cockpit.py::TestControlPlaneGatedFills",
+      "status": "done",
+      "phase": 5,
+      "note": "11 tests total: ledger-level (money doesn't move until approved, control plane gets the report, two pending closures stay independent) and cockpit-level (queue/pending/approve/control-plane endpoints)."
+    },
+    "prove_the_network_script": {
+      "path": "scripts/prove_the_network.py",
+      "status": "done",
+      "phase": 5,
+      "note": "Re-runnable proof: drives the real cockpit app in-process to prove the authority gate blocks and then releases real money with a matching control-plane audit trail, then proves the failover router's cascade (Claude skipped -> Ollama picked up) and its write-back into a scratch genome file, plus (as of the auth fix below) that unauthenticated requests are rejected. `python3 scripts/prove_the_network.py`."
+    },
+    "cockpit_auth": {
+      "path": "cockpit/app.py (verify_token/X-Cockpit-Token) + control_plane/control_plane.py (uuid4 request_id)",
+      "status": "done",
+      "phase": 5,
+      "note": "Security fix, not a feature: a dedicated review (background agent, then independently re-verified by a second filtering pass per the security-review skill, confidence 9/10) found /fills, /approve/{request_id}, /pending, /control-plane, /netx/webhook, and /failover/dispatch had ZERO authentication, and control_plane.request_action()'s request_id was a predictable sequential counter (\"business_ops:1\", \"business_ops:2\", ...) -- meaning the 'financial actions require human approval' gate from T5.5 was decorative: anyone who could reach the port could queue AND approve their own request with no credential at all. Fixed: those 6 routes now require an X-Cockpit-Token header matching COCKPIT_ADMIN_TOKEN (env var; a random token is generated and logged once if unset -- no hardcoded default), and request_id now embeds a uuid4 (verified via a dedicated test that the old sequential format never appears). /health, /monitoring/health, /roi, and /ws/cockpit remain open as the read-only dashboard surface -- a deliberate scoping choice, not an oversight; revisit if /roi's real P&L data should also be gated. workflows/ark_failover_dispatch_v1.json's HTTP Request node updated to send the token from $env.COCKPIT_ADMIN_TOKEN; docker-compose.yml's n8n service now requires COCKPIT_ADMIN_TOKEN be set (no default) and documents that this, combined with N8N_BLOCK_ENV_ACCESS_IN_NODE=false, exposes the token (and DB_POSTGRESDB_PASSWORD/N8N_ENCRYPTION_KEY) to any node in any workflow on that n8n instance -- a real tradeoff flagged in-line, not hidden. Verified live over a real socket (curl, not just TestClient): no token -> 403, correct token -> 200. 9 new tests, 141 passing repo-wide."
+    },
+    "data_stack": {
+      "path": "docker-compose.yml (postgres, mongodb, redis, qdrant, n8n services)",
+      "status": "done",
+      "phase": 5,
+      "note": "Brought up live 2026-09-03 via `docker compose up -d postgres mongodb redis qdrant n8n` -- all 5 healthy and verified with real commands (pg_isready, redis-cli ping, mongosh ping, qdrant /healthz, n8n /healthz), not just 'container running'. Found and fixed 4 real pre-existing bugs in docker-compose.yml along the way: (1) core service had `env_file: .env` spliced into the middle of its `ports:` list, breaking YAML parsing for the whole file; (2) n8n's DB_POSTGRESDB_DATABASE=n8n was never created by anything (only `sovereign` is, via postgres's POSTGRES_DB) -- n8n crash-looped with 'database n8n does not exist' until the database was created manually; (3) n8n defaults to binding IPv6 `::`, unavailable in network-restricted sandboxes -- added N8N_LISTEN_ADDRESS=0.0.0.0; (4) qdrant's healthcheck used `curl`, which the qdrant/qdrant image does not ship -- replaced with a bash /dev/tcp port probe. app services (core/dashboard/flamegate/comet-router/gate-unlocker/council/shadow-agent) and monitoring (searxng/prometheus/grafana) were left alone -- out of scope for 'data stack' and mostly reference unbuilt/stub application code per MIGRATION_ROADMAP.md."
+    },
+    "control_plane_remaining_adapters": {
+      "path": "monitoring/health.py, memory_cortex/proposals.py, codex_security/scanner.py, devices/local_exec.py, github_adapter/repo_state.py, n8n/dispatch_adapter.py, router/failover.py (arc_x wiring) + cockpit/app.py (GET /monitoring/health)",
+      "status": "done",
+      "phase": 5,
+      "note": "T5.6: all 7 remaining adapters wired into ControlPlane.report()/request_action() at their own real integration points (business_ops/command_ledger from T5.5 was the template; none of these are a generic shim). monitoring: monitoring/health.py's run_health_check() does a real ledger-reachability check plus best-effort TCP probes of the docker-compose data stack's standard ports, reported through control_plane and exposed at GET /monitoring/health (existing /health left untouched so it stays CI-safe). memory_cortex: memory_cortex/proposals.py's MemoryCortexAdapter proposes known_gaps/todo_queue patches via action_class=memory_update (not in APPROVAL_REQUIRED_ACTION_CLASSES, so it auto-queues as queued_for_control_plane) and is the only thing that then actually writes the patch to the state file and reports the real outcome. codex_security: codex_security/scanner.py's CodexSecurityAdapter runs a real regex secret-pattern scan (AWS keys, generic api_key/secret/token assignments, PEM private key headers, Slack/GitHub tokens) over real `git diff --name-only` changed files (or explicit paths); a finding reports status=vetoed, a clean scan still requests release under action_class=security_sensitive (always queued_for_human_approval -- never self-released). devices: devices/local_exec.py's DevicesAdapter does a real, ungated `docker compose ps <service>` status check, and gates `docker compose restart <service>` behind action_class=system_mutation (request_restart queues for human approval; only approve_pending_action() actually runs the subprocess and reports the real returncode/stdout/stderr). github: github_adapter/repo_state.py's GitHubAdapter reports real `git status`/`git log` state (HEAD, branch, dirty file count) directly, and gates a real `git push` behind action_class=deployment (queued for human approval; approve_pending_push() runs it and reports success/failure) -- local-git-based only, no GitHub API credentials assumed. n8n: n8n/dispatch_adapter.py's N8nDispatchAdapter is the code-side mirror of workflows/ark_failover_dispatch_v1.json's Check_Dispatch_Status branches -- a 'dispatched' result requests the genome commit+push as action_class=account_change (queued for human approval, matching invariant 7: n8n is transport, not the brain); no_backend/dispatch_failed report as alerts, no_pending_tasks reports as idle. arc_x: router/failover.py's FailoverRouter now takes an optional control_plane; every dispatch_next() call requests the routing decision as action_class=routing (arc_x's own authority scope, not approval-required, so it proceeds immediately) and reports the outcome (routed/no_backend/dispatch_failed/idle) back through the plane -- this is arc_x's real 'route_agents'/'simulate' job per docs/control-plane-pass-1.md. All 7 are additive and optional (control_plane=None preserves prior behavior everywhere), covered by 50 new tests (tests/test_monitoring_health.py, test_memory_cortex.py, test_codex_security.py, test_devices.py, test_github_adapter.py, test_n8n_dispatch_adapter.py, test_failover_arc_x_control_plane.py, test_cockpit_monitoring_health.py). 130/130 tests pass repo-wide, flake8 clean."
+    },
+    "postgres_ledger_backend": {
+      "path": "passive_income_engine.py (postgres_url param, _pg_* methods) + cockpit/app.py (POSTGRES_URL env var)",
+      "status": "done",
+      "phase": 5,
+      "note": "PassiveIncomeEngine now takes an optional postgres_url; when set it creates ledger_state (single row: starting_balance/balance/breakeven_cost_usd) and ledger_entries tables in Postgres, restores from them on init (Postgres is authoritative over persist_path when both given), and writes every record_entry() to Postgres in addition to/instead of the JSON file. cockpit/app.py picks POSTGRES_URL over LEDGER_PERSIST_PATH automatically when set. Proved live 2026-09-03 against the real postgres container: ran the full control-plane-gated signal->fills->approve flow through a real uvicorn process, then queried Postgres directly with `docker exec ... psql` (outside the app entirely) and confirmed the exact real ledger_entries row and updated ledger_state.balance. Also proved durability: a brand-new PassiveIncomeEngine instance pointed at the same postgres_url restores the prior state exactly (ignoring the constructor's starting_balance argument), simulating a process restart. tests/test_passive_income_engine_postgres.py (3 tests) skips gracefully when no Postgres is reachable, so this repo's CI (which doesn't run docker-compose) stays green; run `docker compose up -d postgres` first to exercise them. requirements.txt gained psycopg2-binary."
+    }
+  },
+
+  "phases": [
+    { "id": 1, "name": "Contracts & Genome", "status": "done", "deliverables": ["contracts/ark-state.schema.json", "ARK-STATE.json"] },
+    { "id": 2, "name": "Ledger Core", "status": "done", "deliverables": ["netx/signal_engine.py", "netx/risk_calculator.py", "passive_income_engine.py", "ledger/command_ledger.py", "tests/test_command_ledger.py", "lossless round-trip snapshot/restore test"] },
+    { "id": 3, "name": "Live Cockpit Wiring", "status": "done", "deliverables": ["cockpit/app.py FastAPI + WebSocket on :8080", "real ROI ledger + leverage meter over WebSocket", "Aura telemetry reflecting real P&L"] },
+    { "id": 4, "name": "Credit-Proof Failover Router", "status": "done", "deliverables": ["router/failover.py", "workflows/ark_failover_dispatch_v1.json", "HANDOFF.md"] },
+    { "id": 5, "name": "Human Review & Live Wiring", "status": "in_progress", "deliverables": ["human sign-off on merging draft PR #31", "n8n workflow live-tested against a real instance", "optional: real trading account wired behind netx/signal_engine.py", "control_plane/ single authority contract (done)", "business_ops wired into the ledger's financial-action gate, proved live (done)", "data stack (postgres/mongodb/redis/qdrant/n8n) brought up live, ledger backed by real Postgres, proved live (done)", "remaining 7 control-plane adapters (arc_x, codex_security, memory_cortex, monitoring, github, n8n, devices) wired to their own real actions (done, T5.6)"] }
+  ],
+  "current_phase": 5,
+
+  "todo_queue": [
+    { "id": "T1.1", "phase": 1, "title": "Draft contracts/ark-state.schema.json", "status": "done", "depends_on": [] },
+    { "id": "T1.2", "phase": 1, "title": "Draft ARK-STATE.json genome", "status": "done", "depends_on": [] },
+    { "id": "T1.3", "phase": 1, "title": "User reviews Phase 1 schema + genome, approves or requests changes", "status": "done", "depends_on": ["T1.1", "T1.2"] },
+    { "id": "T1.4", "phase": 1, "title": "Attach omnikernel-orchestrator, net95x, EQCV018537-evidence repos and verify their real contents against the task description", "status": "done", "depends_on": ["T1.3"] },
+    { "id": "T2.1", "phase": 2, "title": "Implement netx/signal_engine.py (Signal dataclass, SignalBus pub/sub, webhook ingestion helper) and netx/risk_calculator.py (position_size formula + approval gate)", "status": "done", "depends_on": ["T1.4"] },
+    { "id": "T2.2", "phase": 2, "title": "Implement passive_income_engine.py: real ledger entries, running balance/ROI, snapshot()/restore() lossless round-trip", "status": "done", "depends_on": ["T1.4"] },
+    { "id": "T2.3", "phase": 2, "title": "Implement ledger/command_ledger.py: subscribe to signals, call risk calculator, record entries via passive_income_engine, emit telemetry_event", "status": "done", "depends_on": ["T2.1", "T2.2"] },
+    { "id": "T2.4", "phase": 2, "title": "Unit tests for signal engine, risk calculator, passive_income_engine, command_ledger + lossless round-trip test", "status": "done", "depends_on": ["T2.3"] },
+    { "id": "T3.1", "phase": 3, "title": "Build cockpit/app.py: FastAPI + WebSocket on :8080 broadcasting real telemetry_event (ROI ledger, leverage meter, Aura flow/stress state) from command_ledger state, plus a NetX/n8n signal ingestion webhook route", "status": "done", "depends_on": ["T2.4"] },
+    { "id": "T3.2", "phase": 3, "title": "Manually verify the cockpit end-to-end: POST a signal, confirm risk sizing, ledger entry, and WebSocket telemetry broadcast all reflect real computed numbers", "status": "done", "depends_on": ["T3.1"] },
+    { "id": "T4.1", "phase": 4, "title": "Implement router/failover.py: read todo_queue in ARK-STATE.json, dispatch next pending task to first available backend (Claude, Ollama :11434, Groq, Gemini)", "status": "done", "depends_on": ["T3.2"] },
+    { "id": "T4.2", "phase": 4, "title": "Build workflows/ark_failover_dispatch_v1.json n8n workflow that triggers failover.py dispatch", "status": "done", "depends_on": ["T4.1"] },
+    { "id": "T4.3", "phase": 4, "title": "Write HANDOFF.md documenting the resume protocol for a fresh Ollama/Groq/Gemini session", "status": "done", "depends_on": ["T4.1"] },
+    { "id": "T5.1", "phase": 5, "title": "Human review of draft PR #31 (all four phases); decide whether/when to merge to main", "status": "pending", "depends_on": ["T4.2", "T4.3"] },
+    { "id": "T5.2", "phase": 5, "title": "Live-test workflows/ark_failover_dispatch_v1.json against a real n8n instance", "status": "done", "depends_on": ["T4.2"] },
+    { "id": "T5.3", "phase": 5, "title": "If desired, wire an actual funded/paper trading account behind netx/signal_engine.py and cockpit/app.py's /netx/webhook so the ROI numbers reflect live external signals instead of manually-posted test signals", "status": "pending", "depends_on": ["T5.1"] },
+    { "id": "T5.4", "phase": 5, "title": "Add control_plane/ (single authority/reporting contract over 8 ARK95X roles) -- added directly to this branch outside the todo_queue on 2026-07-19", "status": "done", "depends_on": [] },
+    { "id": "T5.5", "phase": 5, "title": "Wire business_ops into ControlPlane.request_action()/report() for the highest-value, most consequential adapter: real money movement. Closing a position in ledger/command_ledger.py is now a 'financial' action gated by the control plane -- it queues for human approval and only executes (and reports back) via approve_pending_action(). Exposed through cockpit/app.py as /fills (queue), /pending, /approve/{id}, /control-plane. Proved live end-to-end 2026-09-03 -- see scripts/prove_the_network.py.", "status": "done", "depends_on": ["T5.4"] },
+    { "id": "T5.6", "phase": 5, "title": "Wire the remaining 7 adapters (arc_x, codex_security, memory_cortex, monitoring, github, n8n, devices) into ControlPlane.report()/request_action() at their own real integration points -- e.g. github reporting on PR/commit actions, n8n on workflow triggers, monitoring on health checks. business_ops -> command_ledger (T5.5) is the template; each adapter needs its own domain wiring, not a generic one-size-fits-all shim. DONE for all 7 -- monitoring/health.py, memory_cortex/proposals.py, codex_security/scanner.py, devices/local_exec.py, github_adapter/repo_state.py, n8n/dispatch_adapter.py, router/failover.py (arc_x). See modules.control_plane_remaining_adapters for the full breakdown and scripts/prove_the_network.py-style verification notes.", "status": "done", "depends_on": ["T5.5"] },
+    { "id": "T5.7", "phase": 5, "title": "Bring up the docker-compose data stack (postgres, mongodb, redis, qdrant, n8n) live and wire passive_income_engine.py to a real Postgres database instead of a JSON file", "status": "done", "depends_on": [] }
+  ],
+
+  "known_gaps": [
+    "n8n's NODES_EXCLUDE=[] + N8N_BLOCK_ENV_ACCESS_IN_NODE=false (docker-compose.yml) genuinely expose DB_POSTGRESDB_PASSWORD/N8N_ENCRYPTION_KEY/COCKPIT_ADMIN_TOKEN to any $env expression in any workflow on that n8n instance, not just workflows/ark_failover_dispatch_v1.json's. A security review flagged this (confidence 5/10 on strict re-verification: real underlying issue, but overstated since n8n requires its own owner/auth setup before the editor is reachable at all, so the realistic attacker population is 'authenticated n8n users', not 'anyone on the network'). Not fixed in this pass -- if this instance is ever exposed beyond a single trusted operator, move secrets into n8n's credential store instead of $env and scope NODES_EXCLUDE narrower than '[]'.",
+    "smart_home_bridge.py and a multi-PC coordinator are referenced in the original brief but are out of scope for the Command Ledger data flow (signal -> risk -> ledger -> cockpit) and are not being built under this genome unless explicitly requested.",
+    "netx/, trading/, protocol/, integrations/ in this repo are empty __init__.py stubs slated for ARCHIVE or MERGE per MIGRATION_ROADMAP.md. netx/signal_engine.py and netx/risk_calculator.py are being added as new real files inside netx/ despite that roadmap note; the archive/merge decision should be revisited given this repo is now becoming the module's real home.",
+    "cockpit/app.py is a new build, not a patch to the existing omnikernel-orchestrator repo. If the user later wants the real omnikernel-orchestrator cockpit (once one exists there) to be the system of record instead, this module will need to be ported or the two reconciled.",
+    "netx/signal_engine.py's /netx/webhook route accepts manually-posted test signals; no real broker/exchange or NetX production signal source is wired in yet (T5.3).",
+    "workflows/ark_failover_dispatch_v1.json's Commit_Genome_Update node (git add/commit/push) and its Discord/Google Sheets notification nodes remain untested live -- they need a host with git+repo access and real credentials respectively, neither of which this sandbox has. The dispatch path itself (Failover_Heartbeat -> Run_Failover_Router -> Check_Dispatch_Status) IS live-tested (T5.2).",
+    "control_plane/ was added directly to this branch (commits 89e0428..5ce3c5b, 2026-07-19) without updating this genome or todo_queue first, which is exactly the drift HANDOFF.md's protocol exists to prevent. Reconciled retroactively as T5.4/T5.5 -- future sessions/agents adding a module should update ARK-STATE.json in the same commit, not after the fact."
+  ],
+
+  "backend_router": {
+    "status": "implemented",
+    "note": "router/failover.py implements this. FailoverRouter.dispatch_next() reads todo_queue above, finds the first entry with status=pending and all depends_on marked done, and dispatches it to whichever backend's is_available() returns true first, in priority order below.",
+    "backends": [
+      { "name": "claude", "kind": "api", "priority": 1, "env": ["ANTHROPIC_API_KEY", "ANTHROPIC_MODEL"] },
+      { "name": "ollama", "kind": "local", "endpoint": "http://localhost:11434", "priority": 2, "env": ["OLLAMA_HOST", "OLLAMA_MODEL"] },
+      { "name": "groq", "kind": "api", "priority": 3, "env": ["GROQ_API_KEY", "GROQ_MODEL"] },
+      { "name": "gemini", "kind": "api", "priority": 4, "env": ["GEMINI_API_KEY", "GEMINI_MODEL"] }
+    ]
+  },
+
+  "handoff_protocol": {
+    "doc": "HANDOFF.md",
+    "status": "written",
+    "rule": "Any model resuming this build reads ARK-STATE.json first, finds the lowest-numbered todo_queue entry with status=pending and satisfied depends_on, executes it, then updates that entry's status plus updated_at/updated_by before stopping. Never merge the working branch's PR to main autonomously -- that is a human decision (see T5.1)."
+  }
+}
