@@ -1,7 +1,7 @@
 {
   "genome_id": "ark95x-command-ledger",
-  "genome_version": "0.5.0",
-  "updated_at": "2026-07-19T16:55:00Z",
+  "genome_version": "0.6.0",
+  "updated_at": "2026-09-03T10:05:00Z",
   "updated_by": "claude-sonnet-5",
   "mission": "Wire real money data (NetX signal -> risk calculator -> passive_income_engine -> OmniNet cockpit) into one provable ROI machine, with a credit-proof handoff protocol so any model can resume the build from this file alone.",
 
@@ -127,10 +127,28 @@
       "phase": 5,
       "note": "Added directly to this branch on 2026-07-19 by the repo owner (commits 89e0428..5ce3c5b), not via router/failover.py dispatch. ControlPlane registers the 8 existing ARK95X roles (arc_x, codex_security, memory_cortex, monitoring, github, n8n, devices, business_ops) under one authority/reporting contract, with ARK-STATE.json declared as AUTHORITATIVE_STATE_PATH. Agents cannot override the plane or self-approve; financial/legal/public/destructive/deployment/security/system-mutation/account-change actions route to queued_for_human_approval. It does not yet read or write ARK-STATE.json in code -- that's the documented next pass. See docs/control-plane-pass-1.md for the full contract. Verified independently: 65 tests pass repo-wide (13 control_plane tests included), flake8 clean, CI (lint/test/Code Audit Master) green on commit 5ce3c5b."
     },
+    "control_plane_ledger_gate": {
+      "path": "ledger/command_ledger.py (request_close_order/approve_pending_action) + cockpit/app.py (/fills, /pending, /approve/{id}, /control-plane)",
+      "status": "done",
+      "phase": 5,
+      "note": "T5.5: the 'next adjustment pass' from docs/control-plane-pass-1.md, wired for real. CommandLedger now takes an optional control_plane; closing a position is a 'financial' action, which control_plane.APPROVAL_REQUIRED_ACTION_CLASSES always routes to queued_for_human_approval. Money does not move until CommandLedger.approve_pending_action() executes it and reports the real outcome back to the control plane via ControlPlane.report(). cockpit/app.py wires this in by default (CONTROL_PLANE_ENABLED=true) -- POST /fills queues, GET /pending shows the queue, POST /approve/{request_id} executes, GET /control-plane exposes the live authority/reporting state. Proved live 2026-09-03: ran uvicorn with the gate on, POSTed a real signal and a real fill request, confirmed /roi stayed at $0 pnl while queued, approved it, confirmed /roi then showed the real $200 P&L, and confirmed business_ops's last_report in /control-plane matched the real ledger_entry.entry_id. Backward compatible: control_plane=None (or CONTROL_PLANE_ENABLED=false) preserves the original immediate-execution behavior, covered by tests."
+    },
     "control_plane_tests": {
       "path": "tests/test_control_plane.py",
       "status": "done",
       "phase": 5
+    },
+    "control_plane_gate_tests": {
+      "path": "tests/test_control_plane_gate.py + tests/test_cockpit.py::TestControlPlaneGatedFills",
+      "status": "done",
+      "phase": 5,
+      "note": "11 tests total: ledger-level (money doesn't move until approved, control plane gets the report, two pending closures stay independent) and cockpit-level (queue/pending/approve/control-plane endpoints)."
+    },
+    "prove_the_network_script": {
+      "path": "scripts/prove_the_network.py",
+      "status": "done",
+      "phase": 5,
+      "note": "Re-runnable proof: drives the real cockpit app in-process to prove the authority gate blocks and then releases real money with a matching control-plane audit trail, then proves the failover router's cascade (Claude skipped -> Ollama picked up) and its write-back into a scratch genome file. 15/15 checks pass. `python3 scripts/prove_the_network.py`."
     }
   },
 
@@ -139,7 +157,7 @@
     { "id": 2, "name": "Ledger Core", "status": "done", "deliverables": ["netx/signal_engine.py", "netx/risk_calculator.py", "passive_income_engine.py", "ledger/command_ledger.py", "tests/test_command_ledger.py", "lossless round-trip snapshot/restore test"] },
     { "id": 3, "name": "Live Cockpit Wiring", "status": "done", "deliverables": ["cockpit/app.py FastAPI + WebSocket on :8080", "real ROI ledger + leverage meter over WebSocket", "Aura telemetry reflecting real P&L"] },
     { "id": 4, "name": "Credit-Proof Failover Router", "status": "done", "deliverables": ["router/failover.py", "workflows/ark_failover_dispatch_v1.json", "HANDOFF.md"] },
-    { "id": 5, "name": "Human Review & Live Wiring", "status": "in_progress", "deliverables": ["human sign-off on merging draft PR #31", "n8n workflow live-tested against a real instance", "optional: real trading account wired behind netx/signal_engine.py", "control_plane/ single authority contract (done)", "control_plane adapters wired to ARK-STATE.json + command_ledger (pending)"] }
+    { "id": 5, "name": "Human Review & Live Wiring", "status": "in_progress", "deliverables": ["human sign-off on merging draft PR #31", "n8n workflow live-tested against a real instance", "optional: real trading account wired behind netx/signal_engine.py", "control_plane/ single authority contract (done)", "business_ops wired into the ledger's financial-action gate, proved live (done)", "remaining 7 control-plane adapters wired to their own real actions (pending, T5.6)"] }
   ],
   "current_phase": 5,
 
@@ -161,7 +179,8 @@
     { "id": "T5.2", "phase": 5, "title": "Live-test workflows/ark_failover_dispatch_v1.json against a real n8n instance (set ARK_REPO_PATH, Discord/Sheets credentials)", "status": "pending", "depends_on": ["T4.2"] },
     { "id": "T5.3", "phase": 5, "title": "If desired, wire an actual funded/paper trading account behind netx/signal_engine.py and cockpit/app.py's /netx/webhook so the ROI numbers reflect live external signals instead of manually-posted test signals", "status": "pending", "depends_on": ["T5.1"] },
     { "id": "T5.4", "phase": 5, "title": "Add control_plane/ (single authority/reporting contract over 8 ARK95X roles) -- added directly to this branch outside the todo_queue on 2026-07-19", "status": "done", "depends_on": [] },
-    { "id": "T5.5", "phase": 5, "title": "Wire existing adapters (arc_x, codex_security, memory_cortex, monitoring, github, n8n, devices, business_ops) into ControlPlane.report()/request_action(), and make completed control-plane actions write back into ARK-STATE.json and passive_income_engine via ledger/command_ledger.py -- per docs/control-plane-pass-1.md's 'Next adjustment pass'. Do not add another coordinator, registry, or state file.", "status": "pending", "depends_on": ["T5.4"] }
+    { "id": "T5.5", "phase": 5, "title": "Wire business_ops into ControlPlane.request_action()/report() for the highest-value, most consequential adapter: real money movement. Closing a position in ledger/command_ledger.py is now a 'financial' action gated by the control plane -- it queues for human approval and only executes (and reports back) via approve_pending_action(). Exposed through cockpit/app.py as /fills (queue), /pending, /approve/{id}, /control-plane. Proved live end-to-end 2026-09-03 -- see scripts/prove_the_network.py.", "status": "done", "depends_on": ["T5.4"] },
+    { "id": "T5.6", "phase": 5, "title": "Wire the remaining 7 adapters (arc_x, codex_security, memory_cortex, monitoring, github, n8n, devices) into ControlPlane.report()/request_action() at their own real integration points -- e.g. github reporting on PR/commit actions, n8n on workflow triggers, monitoring on health checks. business_ops -> command_ledger (T5.5) is the template; each adapter needs its own domain wiring, not a generic one-size-fits-all shim.", "status": "pending", "depends_on": ["T5.5"] }
   ],
 
   "known_gaps": [

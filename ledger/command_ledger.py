@@ -2,16 +2,24 @@
 Subscribes to NetX signals, sizes them through the risk calculator, records
 real ledger entries via passive_income_engine, and emits telemetry_event
 updates (ROI ledger + leverage meter + Aura state) for the cockpit.
+
+When a control_plane is supplied, closing a position (a "financial" action
+under control_plane's authority invariants) is gated: it is queued for
+human approval instead of executing immediately, and only recorded once
+approve_pending_action() is called. This is the "next adjustment pass"
+docs/control-plane-pass-1.md calls for -- the ledger is where an approved
+control-plane action actually moves real money.
 """
 import uuid
 import logging
 from datetime import datetime, timezone
-from typing import Awaitable, Callable, Dict, Optional, Tuple
+from typing import Any, Awaitable, Callable, Dict, Optional, Tuple
 
 from netx.signal_engine import Signal, SignalBus
 from netx.risk_calculator import RiskCalculator, RiskSizedOrder
 from passive_income_engine import PassiveIncomeEngine, LedgerEntry
 from ledger.telemetry_event import TelemetryEvent
+from control_plane import ControlPlane
 
 logger = logging.getLogger("ark95x.ledger.command_ledger")
 
@@ -28,14 +36,19 @@ class CommandLedger:
         risk_pct: float = 1.0,
         signal_bus: Optional[SignalBus] = None,
         on_telemetry: Optional[TelemetryCallback] = None,
+        control_plane: Optional[ControlPlane] = None,
+        requesting_agent_id: str = "business_ops",
     ):
         self.engine = engine
         self.risk_calculator = risk_calculator or RiskCalculator()
         self.risk_pct = risk_pct
         self.signal_bus = signal_bus or SignalBus()
         self.on_telemetry = on_telemetry
+        self.control_plane = control_plane
+        self.requesting_agent_id = requesting_agent_id
         self.open_orders: Dict[str, RiskSizedOrder] = {}
         self._open_notional_usd = 0.0
+        self._pending_closures: Dict[str, Dict[str, Any]] = {}
 
     def size_signal(self, signal: Signal) -> RiskSizedOrder:
         order = self.risk_calculator.size_order(
@@ -118,6 +131,74 @@ class CommandLedger:
         entry = self.close_order(order_id, exit_price)
         event = self.build_telemetry_event(event_type="roi_update", source_entry_id=entry.entry_id)
         await self._emit(event)
+        return entry
+
+    async def request_close_order(self, order_id: str, exit_price: float) -> Dict[str, Any]:
+        """Closes a position immediately if ungated, or queues it for human
+        approval when a control_plane is attached (financial actions always
+        require approval under control_plane's authority invariants)."""
+        if order_id not in self.open_orders:
+            raise KeyError(f"No open order with id {order_id}")
+
+        if self.control_plane is None:
+            entry = await self.close_order_and_emit(order_id, exit_price)
+            return {"disposition": "executed_no_gate", "entry": entry.to_dict()}
+
+        order = self.open_orders[order_id]
+        request = self.control_plane.request_action(
+            agent_id=self.requesting_agent_id,
+            action=f"close_order:{order_id}",
+            action_class="financial",
+            payload={
+                "order_id": order_id,
+                "exit_price": exit_price,
+                "symbol": order.symbol,
+                "side": order.side,
+                "position_size": order.position_size,
+            },
+        )
+
+        if request["disposition"] == "queued_for_human_approval":
+            self._pending_closures[request["request_id"]] = {
+                "order_id": order_id,
+                "exit_price": exit_price,
+            }
+        elif request["disposition"] == "queued_for_control_plane":
+            # Not a consequential action class under this control plane's
+            # current rules -- safe to execute without a human in the loop.
+            entry = await self.close_order_and_emit(order_id, exit_price)
+            self.control_plane.report(
+                agent_id=self.requesting_agent_id,
+                status="completed",
+                payload={"request_id": request["request_id"], "entry_id": entry.entry_id},
+            )
+            request = dict(request, executed=True, entry=entry.to_dict())
+        # "rejected_out_of_scope": nothing to execute; return the rejection as-is.
+
+        return request
+
+    async def approve_pending_action(self, request_id: str) -> LedgerEntry:
+        """Executes a previously queued close_order request and reports the
+        real outcome back to the control plane."""
+        pending = self._pending_closures.pop(request_id, None)
+        if pending is None:
+            raise KeyError(f"No pending closure for request_id {request_id}")
+
+        entry = await self.close_order_and_emit(pending["order_id"], pending["exit_price"])
+
+        if self.control_plane is not None:
+            self.control_plane.report(
+                agent_id=self.requesting_agent_id,
+                status="completed",
+                payload={
+                    "request_id": request_id,
+                    "evidence_ref": entry.entry_id,
+                    "entry_id": entry.entry_id,
+                    "amount_usd": entry.amount_usd,
+                    "observed_at": entry.timestamp,
+                },
+            )
+
         return entry
 
     async def run(self):

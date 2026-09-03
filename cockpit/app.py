@@ -3,6 +3,11 @@ FastAPI + WebSocket cockpit on :8080. Replaces the decorative ROI ledger /
 leverage meter concept with numbers computed live from real ledger state:
 NetX signal -> risk calculator -> passive_income_engine -> command_ledger,
 broadcast to connected clients over /ws/cockpit as telemetry_event payloads.
+
+Financial actions (closing a position) are gated by the single control
+plane by default: /fills queues the request for human approval instead of
+moving money immediately, per control_plane's authority invariants. Set
+CONTROL_PLANE_ENABLED=false to fall back to immediate execution.
 """
 import os
 import logging
@@ -15,6 +20,7 @@ from netx.signal_engine import Signal
 from netx.risk_calculator import RiskCalculator
 from passive_income_engine import PassiveIncomeEngine
 from ledger.command_ledger import CommandLedger
+from control_plane import build_default_control_plane
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ark95x.cockpit")
@@ -24,6 +30,7 @@ STARTING_CAPITAL = float(os.getenv("STARTING_CAPITAL_USD", "10000"))
 BREAKEVEN_COST_USD = float(os.getenv("BREAKEVEN_COST_USD", "0"))
 LEDGER_PERSIST_PATH = os.getenv("LEDGER_PERSIST_PATH", "data/ledger_state.json")
 DEFAULT_RISK_PCT = float(os.getenv("DEFAULT_RISK_PCT", "1.0"))
+CONTROL_PLANE_ENABLED = os.getenv("CONTROL_PLANE_ENABLED", "true").lower() != "false"
 
 
 class ConnectionManager:
@@ -78,11 +85,13 @@ engine = PassiveIncomeEngine(
     persist_path=LEDGER_PERSIST_PATH,
 )
 risk_calculator = RiskCalculator()
+control_plane = build_default_control_plane() if CONTROL_PLANE_ENABLED else None
 ledger = CommandLedger(
     engine=engine,
     risk_calculator=risk_calculator,
     risk_pct=DEFAULT_RISK_PCT,
     on_telemetry=manager.broadcast,
+    control_plane=control_plane,
 )
 
 app = FastAPI(title="ARK95X OmniNet Cockpit")
@@ -113,12 +122,48 @@ async def netx_webhook(payload: SignalWebhookPayload):
 
 @app.post("/fills")
 async def report_fill(fill: FillRequest):
-    """Reports a closed position; records real realized P&L and broadcasts it."""
+    """Reports a closed position. With the control plane enabled (default),
+    this is a FINANCIAL action -- it queues for human approval and does not
+    move money until POST /approve/{request_id} is called. Disabled, it
+    records the real realized P&L immediately, as before."""
     try:
-        entry = await ledger.close_order_and_emit(fill.order_id, fill.exit_price)
+        result = await ledger.request_close_order(fill.order_id, fill.exit_price)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return result
+
+
+@app.get("/pending")
+async def pending_actions():
+    """Actions queued for human approval -- the control plane's authority
+    gate made visible."""
+    if control_plane is None:
+        return {"control_plane_enabled": False, "pending": []}
+    pending = [r for r in control_plane.action_queue if not r["executed"]]
+    return {"control_plane_enabled": True, "pending": pending}
+
+
+@app.post("/approve/{request_id}")
+async def approve_action(request_id: str):
+    """A human approves a queued financial action; only now does the real
+    ledger entry get recorded and reported back through the control plane."""
+    if control_plane is None:
+        raise HTTPException(status_code=409, detail="control plane is disabled -- nothing to approve")
+    try:
+        entry = await ledger.approve_pending_action(request_id)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
     return entry.to_dict()
+
+
+@app.get("/control-plane")
+async def control_plane_snapshot():
+    """The authority/reporting state itself -- who's registered, what they
+    can do, and what's queued. ARK-STATE.json stays authoritative; this is
+    a read-only view."""
+    if control_plane is None:
+        return {"control_plane_enabled": False}
+    return {"control_plane_enabled": True, **control_plane.snapshot()}
 
 
 @app.websocket("/ws/cockpit")
