@@ -1,7 +1,7 @@
 {
   "genome_id": "ark95x-command-ledger",
-  "genome_version": "0.4.0",
-  "updated_at": "2026-07-10T07:45:00Z",
+  "genome_version": "0.5.0",
+  "updated_at": "2026-07-19T16:55:00Z",
   "updated_by": "claude-sonnet-5",
   "mission": "Wire real money data (NetX signal -> risk calculator -> passive_income_engine -> OmniNet cockpit) into one provable ROI machine, with a credit-proof handoff protocol so any model can resume the build from this file alone.",
 
@@ -120,6 +120,17 @@
       "path": "HANDOFF.md",
       "status": "done",
       "phase": 4
+    },
+    "control_plane": {
+      "path": "control_plane/control_plane.py",
+      "status": "done",
+      "phase": 5,
+      "note": "Added directly to this branch on 2026-07-19 by the repo owner (commits 89e0428..5ce3c5b), not via router/failover.py dispatch. ControlPlane registers the 8 existing ARK95X roles (arc_x, codex_security, memory_cortex, monitoring, github, n8n, devices, business_ops) under one authority/reporting contract, with ARK-STATE.json declared as AUTHORITATIVE_STATE_PATH. Agents cannot override the plane or self-approve; financial/legal/public/destructive/deployment/security/system-mutation/account-change actions route to queued_for_human_approval. It does not yet read or write ARK-STATE.json in code -- that's the documented next pass. See docs/control-plane-pass-1.md for the full contract. Verified independently: 65 tests pass repo-wide (13 control_plane tests included), flake8 clean, CI (lint/test/Code Audit Master) green on commit 5ce3c5b."
+    },
+    "control_plane_tests": {
+      "path": "tests/test_control_plane.py",
+      "status": "done",
+      "phase": 5
     }
   },
 
@@ -128,7 +139,7 @@
     { "id": 2, "name": "Ledger Core", "status": "done", "deliverables": ["netx/signal_engine.py", "netx/risk_calculator.py", "passive_income_engine.py", "ledger/command_ledger.py", "tests/test_command_ledger.py", "lossless round-trip snapshot/restore test"] },
     { "id": 3, "name": "Live Cockpit Wiring", "status": "done", "deliverables": ["cockpit/app.py FastAPI + WebSocket on :8080", "real ROI ledger + leverage meter over WebSocket", "Aura telemetry reflecting real P&L"] },
     { "id": 4, "name": "Credit-Proof Failover Router", "status": "done", "deliverables": ["router/failover.py", "workflows/ark_failover_dispatch_v1.json", "HANDOFF.md"] },
-    { "id": 5, "name": "Human Review & Live Wiring", "status": "pending", "deliverables": ["human sign-off on merging draft PR #31", "n8n workflow live-tested against a real instance", "optional: real trading account wired behind netx/signal_engine.py"] }
+    { "id": 5, "name": "Human Review & Live Wiring", "status": "in_progress", "deliverables": ["human sign-off on merging draft PR #31", "n8n workflow live-tested against a real instance", "optional: real trading account wired behind netx/signal_engine.py", "control_plane/ single authority contract (done)", "control_plane adapters wired to ARK-STATE.json + command_ledger (pending)"] }
   ],
   "current_phase": 5,
 
@@ -148,7 +159,9 @@
     { "id": "T4.3", "phase": 4, "title": "Write HANDOFF.md documenting the resume protocol for a fresh Ollama/Groq/Gemini session", "status": "done", "depends_on": ["T4.1"] },
     { "id": "T5.1", "phase": 5, "title": "Human review of draft PR #31 (all four phases); decide whether/when to merge to main", "status": "pending", "depends_on": ["T4.2", "T4.3"] },
     { "id": "T5.2", "phase": 5, "title": "Live-test workflows/ark_failover_dispatch_v1.json against a real n8n instance (set ARK_REPO_PATH, Discord/Sheets credentials)", "status": "pending", "depends_on": ["T4.2"] },
-    { "id": "T5.3", "phase": 5, "title": "If desired, wire an actual funded/paper trading account behind netx/signal_engine.py and cockpit/app.py's /netx/webhook so the ROI numbers reflect live external signals instead of manually-posted test signals", "status": "pending", "depends_on": ["T5.1"] }
+    { "id": "T5.3", "phase": 5, "title": "If desired, wire an actual funded/paper trading account behind netx/signal_engine.py and cockpit/app.py's /netx/webhook so the ROI numbers reflect live external signals instead of manually-posted test signals", "status": "pending", "depends_on": ["T5.1"] },
+    { "id": "T5.4", "phase": 5, "title": "Add control_plane/ (single authority/reporting contract over 8 ARK95X roles) -- added directly to this branch outside the todo_queue on 2026-07-19", "status": "done", "depends_on": [] },
+    { "id": "T5.5", "phase": 5, "title": "Wire existing adapters (arc_x, codex_security, memory_cortex, monitoring, github, n8n, devices, business_ops) into ControlPlane.report()/request_action(), and make completed control-plane actions write back into ARK-STATE.json and passive_income_engine via ledger/command_ledger.py -- per docs/control-plane-pass-1.md's 'Next adjustment pass'. Do not add another coordinator, registry, or state file.", "status": "pending", "depends_on": ["T5.4"] }
   ],
 
   "known_gaps": [
@@ -156,7 +169,8 @@
     "netx/, trading/, protocol/, integrations/ in this repo are empty __init__.py stubs slated for ARCHIVE or MERGE per MIGRATION_ROADMAP.md. netx/signal_engine.py and netx/risk_calculator.py are being added as new real files inside netx/ despite that roadmap note; the archive/merge decision should be revisited given this repo is now becoming the module's real home.",
     "cockpit/app.py is a new build, not a patch to the existing omnikernel-orchestrator repo. If the user later wants the real omnikernel-orchestrator cockpit (once one exists there) to be the system of record instead, this module will need to be ported or the two reconciled.",
     "netx/signal_engine.py's /netx/webhook route accepts manually-posted test signals; no real broker/exchange or NetX production signal source is wired in yet (T5.3).",
-    "workflows/ark_failover_dispatch_v1.json has not been executed against a live n8n instance -- it is a definition file only, matching the existing convention of the other files in workflows/."
+    "workflows/ark_failover_dispatch_v1.json has not been executed against a live n8n instance -- it is a definition file only, matching the existing convention of the other files in workflows/.",
+    "control_plane/ was added directly to this branch (commits 89e0428..5ce3c5b, 2026-07-19) without updating this genome or todo_queue first, which is exactly the drift HANDOFF.md's protocol exists to prevent. Reconciled retroactively as T5.4/T5.5 -- future sessions/agents adding a module should update ARK-STATE.json in the same commit, not after the fact."
   ],
 
   "backend_router": {
