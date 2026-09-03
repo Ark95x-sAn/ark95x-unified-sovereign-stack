@@ -25,6 +25,7 @@ from netx.risk_calculator import RiskCalculator
 from passive_income_engine import PassiveIncomeEngine
 from ledger.command_ledger import CommandLedger
 from control_plane import build_default_control_plane
+from monitoring.health import run_health_check
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ark95x.cockpit")
@@ -110,6 +111,18 @@ app = FastAPI(title="ARK95X OmniNet Cockpit")
 @app.get("/health")
 async def health():
     return {"status": "healthy", "starting_capital_usd": STARTING_CAPITAL}
+
+
+@app.get("/monitoring/health")
+async def monitoring_health():
+    """Real health check -- ledger reachability plus best-effort TCP probes
+    of the docker-compose data stack -- reported through the control plane
+    as monitoring's heartbeat (docs/control-plane-pass-1.md invariant 5:
+    monitoring observes and alerts). Data-stack ports will legitimately
+    read False wherever docker-compose isn't running; that's honest
+    evidence, not a failure of this endpoint."""
+    report = run_health_check(engine=engine, control_plane=control_plane)
+    return report.to_dict()
 
 
 @app.get("/roi")
