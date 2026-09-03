@@ -1,7 +1,7 @@
 {
   "genome_id": "ark95x-command-ledger",
-  "genome_version": "0.9.0",
-  "updated_at": "2026-09-03T10:50:00Z",
+  "genome_version": "0.10.0",
+  "updated_at": "2026-09-03T11:10:00Z",
   "updated_by": "claude-sonnet-5",
   "mission": "Wire real money data (NetX signal -> risk calculator -> passive_income_engine -> OmniNet cockpit) into one provable ROI machine, with a credit-proof handoff protocol so any model can resume the build from this file alone.",
 
@@ -154,7 +154,13 @@
       "path": "scripts/prove_the_network.py",
       "status": "done",
       "phase": 5,
-      "note": "Re-runnable proof: drives the real cockpit app in-process to prove the authority gate blocks and then releases real money with a matching control-plane audit trail, then proves the failover router's cascade (Claude skipped -> Ollama picked up) and its write-back into a scratch genome file. 15/15 checks pass. `python3 scripts/prove_the_network.py`."
+      "note": "Re-runnable proof: drives the real cockpit app in-process to prove the authority gate blocks and then releases real money with a matching control-plane audit trail, then proves the failover router's cascade (Claude skipped -> Ollama picked up) and its write-back into a scratch genome file, plus (as of the auth fix below) that unauthenticated requests are rejected. `python3 scripts/prove_the_network.py`."
+    },
+    "cockpit_auth": {
+      "path": "cockpit/app.py (verify_token/X-Cockpit-Token) + control_plane/control_plane.py (uuid4 request_id)",
+      "status": "done",
+      "phase": 5,
+      "note": "Security fix, not a feature: a dedicated review (background agent, then independently re-verified by a second filtering pass per the security-review skill, confidence 9/10) found /fills, /approve/{request_id}, /pending, /control-plane, /netx/webhook, and /failover/dispatch had ZERO authentication, and control_plane.request_action()'s request_id was a predictable sequential counter (\"business_ops:1\", \"business_ops:2\", ...) -- meaning the 'financial actions require human approval' gate from T5.5 was decorative: anyone who could reach the port could queue AND approve their own request with no credential at all. Fixed: those 6 routes now require an X-Cockpit-Token header matching COCKPIT_ADMIN_TOKEN (env var; a random token is generated and logged once if unset -- no hardcoded default), and request_id now embeds a uuid4 (verified via a dedicated test that the old sequential format never appears). /health, /monitoring/health, /roi, and /ws/cockpit remain open as the read-only dashboard surface -- a deliberate scoping choice, not an oversight; revisit if /roi's real P&L data should also be gated. workflows/ark_failover_dispatch_v1.json's HTTP Request node updated to send the token from $env.COCKPIT_ADMIN_TOKEN; docker-compose.yml's n8n service now requires COCKPIT_ADMIN_TOKEN be set (no default) and documents that this, combined with N8N_BLOCK_ENV_ACCESS_IN_NODE=false, exposes the token (and DB_POSTGRESDB_PASSWORD/N8N_ENCRYPTION_KEY) to any node in any workflow on that n8n instance -- a real tradeoff flagged in-line, not hidden. Verified live over a real socket (curl, not just TestClient): no token -> 403, correct token -> 200. 9 new tests, 141 passing repo-wide."
     },
     "data_stack": {
       "path": "docker-compose.yml (postgres, mongodb, redis, qdrant, n8n services)",
@@ -209,6 +215,7 @@
   ],
 
   "known_gaps": [
+    "n8n's NODES_EXCLUDE=[] + N8N_BLOCK_ENV_ACCESS_IN_NODE=false (docker-compose.yml) genuinely expose DB_POSTGRESDB_PASSWORD/N8N_ENCRYPTION_KEY/COCKPIT_ADMIN_TOKEN to any $env expression in any workflow on that n8n instance, not just workflows/ark_failover_dispatch_v1.json's. A security review flagged this (confidence 5/10 on strict re-verification: real underlying issue, but overstated since n8n requires its own owner/auth setup before the editor is reachable at all, so the realistic attacker population is 'authenticated n8n users', not 'anyone on the network'). Not fixed in this pass -- if this instance is ever exposed beyond a single trusted operator, move secrets into n8n's credential store instead of $env and scope NODES_EXCLUDE narrower than '[]'.",
     "smart_home_bridge.py and a multi-PC coordinator are referenced in the original brief but are out of scope for the Command Ledger data flow (signal -> risk -> ledger -> cockpit) and are not being built under this genome unless explicitly requested.",
     "netx/, trading/, protocol/, integrations/ in this repo are empty __init__.py stubs slated for ARCHIVE or MERGE per MIGRATION_ROADMAP.md. netx/signal_engine.py and netx/risk_calculator.py are being added as new real files inside netx/ despite that roadmap note; the archive/merge decision should be revisited given this repo is now becoming the module's real home.",
     "cockpit/app.py is a new build, not a patch to the existing omnikernel-orchestrator repo. If the user later wants the real omnikernel-orchestrator cockpit (once one exists there) to be the system of record instead, this module will need to be ported or the two reconciled.",

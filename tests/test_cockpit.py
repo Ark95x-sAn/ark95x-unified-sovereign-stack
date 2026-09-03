@@ -12,6 +12,9 @@ from netx.risk_calculator import RiskCalculator
 from control_plane import build_default_control_plane
 
 
+TEST_TOKEN = "test-token-not-a-real-secret"
+
+
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     """Fresh engine/ledger per test, control plane OFF -- exercises the
@@ -27,7 +30,8 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(cockpit_app, "engine", engine)
     monkeypatch.setattr(cockpit_app, "ledger", ledger)
     monkeypatch.setattr(cockpit_app, "control_plane", None)
-    return TestClient(cockpit_app.app)
+    monkeypatch.setattr(cockpit_app, "ADMIN_TOKEN", TEST_TOKEN)
+    return TestClient(cockpit_app.app, headers={"X-Cockpit-Token": TEST_TOKEN})
 
 
 @pytest.fixture
@@ -47,7 +51,8 @@ def gated_client(tmp_path, monkeypatch):
     monkeypatch.setattr(cockpit_app, "engine", engine)
     monkeypatch.setattr(cockpit_app, "ledger", ledger)
     monkeypatch.setattr(cockpit_app, "control_plane", plane)
-    return TestClient(cockpit_app.app)
+    monkeypatch.setattr(cockpit_app, "ADMIN_TOKEN", TEST_TOKEN)
+    return TestClient(cockpit_app.app, headers={"X-Cockpit-Token": TEST_TOKEN})
 
 
 def test_health(client):
@@ -209,3 +214,46 @@ class TestFailoverDispatchEndpoint:
 
         result = client.post("/failover/dispatch").json()
         assert result == {"status": "no_pending_tasks"}
+
+
+class TestCockpitAuth:
+    """The fix for the auth bypass: state-mutating and pending-disclosure
+    routes reject requests with no or wrong X-Cockpit-Token, and the
+    control plane's own request_id is no longer sequentially guessable."""
+
+    @pytest.mark.parametrize("method,path,kwargs", [
+        ("post", "/netx/webhook", {"json": {"symbol": "BTCUSD", "side": "long", "entry_price": 100.0, "stop_price": 95.0}}),
+        ("post", "/fills", {"json": {"order_id": "x", "exit_price": 1.0}}),
+        ("get", "/pending", {}),
+        ("post", "/approve/whatever", {}),
+        ("get", "/control-plane", {}),
+        ("post", "/failover/dispatch", {}),
+    ])
+    def test_missing_token_is_rejected(self, gated_client, method, path, kwargs):
+        no_auth = TestClient(cockpit_app.app)
+        r = getattr(no_auth, method)(path, **kwargs)
+        assert r.status_code == 403
+
+    def test_wrong_token_is_rejected(self, gated_client):
+        wrong = TestClient(cockpit_app.app, headers={"X-Cockpit-Token": "not-the-right-token"})
+        r = wrong.get("/pending")
+        assert r.status_code == 403
+
+    def test_correct_token_is_accepted(self, gated_client):
+        r = gated_client.get("/pending")
+        assert r.status_code == 200
+
+    def test_request_ids_are_not_sequential(self, gated_client):
+        payload = {"symbol": "BTCUSD", "side": "long", "entry_price": 100.0, "stop_price": 95.0}
+        order1 = gated_client.post("/netx/webhook", json=payload).json()
+        order2 = gated_client.post("/netx/webhook", json=payload).json()
+        fill1 = gated_client.post("/fills", json={"order_id": order1["order_id"], "exit_price": 110.0}).json()
+        fill2 = gated_client.post("/fills", json={"order_id": order2["order_id"], "exit_price": 110.0}).json()
+        # Old behavior was "business_ops:1", "business_ops:2" -- trivially
+        # enumerable. Now each id carries an unguessable uuid4 component.
+        assert fill1["request_id"] != "business_ops:1"
+        assert fill2["request_id"] != "business_ops:2"
+        suffix1 = fill1["request_id"].split(":", 1)[1]
+        suffix2 = fill2["request_id"].split(":", 1)[1]
+        assert len(suffix1) >= 32 and len(suffix2) >= 32
+        assert suffix1 != suffix2

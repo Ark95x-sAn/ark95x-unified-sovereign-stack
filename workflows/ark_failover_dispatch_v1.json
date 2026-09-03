@@ -14,13 +14,19 @@
       "parameters": {
         "method": "POST",
         "url": "={{$env.COCKPIT_URL || 'http://localhost:8080'}}/failover/dispatch",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Cockpit-Token", "value": "={{$env.COCKPIT_ADMIN_TOKEN}}" }
+          ]
+        },
         "options": {}
       },
       "name": "Run_Failover_Router",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [450, 300],
-      "notes": "Calls POST /failover/dispatch on the cockpit, which runs router/failover.py's dispatch_next() in-process. Deliberately an HTTP call rather than an Execute Command node: n8n's official Docker image ships no python3 and doesn't have this repo mounted, and n8n v2 disables Execute Command by default for security (docs.n8n.io/2-0-breaking-changes/) -- this avoids both problems and works with the stock n8n image. The response body IS the dispatch result already (n8n auto-parses JSON responses), so no separate parse step is needed."
+      "notes": "Calls POST /failover/dispatch on the cockpit, which runs router/failover.py's dispatch_next() in-process. Deliberately an HTTP call rather than an Execute Command node: n8n's official Docker image ships no python3 and doesn't have this repo mounted, and n8n v2 disables Execute Command by default for security (docs.n8n.io/2-0-breaking-changes/) -- this avoids both problems and works with the stock n8n image. The response body IS the dispatch result already (n8n auto-parses JSON responses), so no separate parse step is needed. Sends X-Cockpit-Token from $env.COCKPIT_ADMIN_TOKEN -- the cockpit rejects this call with 403 without it (see cockpit/app.py's auth fix)."
     },
     {
       "parameters": {

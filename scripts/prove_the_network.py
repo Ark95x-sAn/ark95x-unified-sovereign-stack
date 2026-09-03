@@ -61,7 +61,19 @@ def part1_control_plane_gate():
         cockpit_app.engine = engine
         cockpit_app.ledger = ledger
         cockpit_app.control_plane = plane
-        client = TestClient(cockpit_app.app)
+        cockpit_app.ADMIN_TOKEN = "proof-script-token"
+        client = TestClient(cockpit_app.app, headers={"X-Cockpit-Token": "proof-script-token"})
+        unauth_client = TestClient(cockpit_app.app)
+
+        print("0. Confirm the money-moving routes reject requests with no/wrong token")
+        r = unauth_client.post("/netx/webhook", json={
+            "symbol": "BTCUSD", "side": "long", "entry_price": 100.0, "stop_price": 95.0,
+        })
+        check("unauthenticated /netx/webhook is rejected", r.status_code == 403, f"got {r.status_code}")
+        r = unauth_client.post("/fills", json={"order_id": "does-not-matter", "exit_price": 1.0})
+        check("unauthenticated /fills is rejected", r.status_code == 403, f"got {r.status_code}")
+        r = unauth_client.get("/pending")
+        check("unauthenticated /pending is rejected", r.status_code == 403, f"got {r.status_code}")
 
         print("1. Fire a real signal -> risk-sized order")
         order = client.post("/netx/webhook", json={

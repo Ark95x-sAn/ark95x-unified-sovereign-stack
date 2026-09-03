@@ -12,12 +12,24 @@ CONTROL_PLANE_ENABLED=false to fall back to immediate execution.
 Ledger persistence: set POSTGRES_URL (e.g. from the data stack's
 docker-compose postgres service) to store real ledger state in Postgres
 instead of a JSON file. Falls back to LEDGER_PERSIST_PATH when unset.
+
+Auth: every route that moves money, executes an approved control-plane
+action, or discloses pending-action state requires the X-Cockpit-Token
+header to match COCKPIT_ADMIN_TOKEN (mirrors flame/flamegate_tls.py's
+X-Flamegate-Token pattern). Without this, the control plane's "financial
+actions require human approval" gate was decorative -- anyone who could
+reach the port could queue *and* approve their own request, since
+/approve/{request_id} had no auth and control_plane's old sequential
+request_id was trivially guessable. If COCKPIT_ADMIN_TOKEN isn't set, a
+random token is generated at startup and logged once -- there is no
+built-in default token to fall back on unauthenticated.
 """
 import os
 import logging
+import secrets
 from typing import List, Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Header, Depends
 from pydantic import BaseModel
 
 from netx.signal_engine import Signal
@@ -39,6 +51,24 @@ POSTGRES_URL = os.getenv("POSTGRES_URL", "")
 DEFAULT_RISK_PCT = float(os.getenv("DEFAULT_RISK_PCT", "1.0"))
 CONTROL_PLANE_ENABLED = os.getenv("CONTROL_PLANE_ENABLED", "true").lower() != "false"
 ARK_STATE_PATH = os.getenv("ARK_STATE_PATH", "ARK-STATE.json")
+
+ADMIN_TOKEN = os.getenv("COCKPIT_ADMIN_TOKEN")
+if not ADMIN_TOKEN:
+    ADMIN_TOKEN = secrets.token_urlsafe(32)
+    logger.warning(
+        "COCKPIT_ADMIN_TOKEN not set -- generated a random token for this "
+        "process (will change on restart): %s -- set COCKPIT_ADMIN_TOKEN "
+        "explicitly for a stable token. Send it as the X-Cockpit-Token "
+        "header on /netx/webhook, /fills, /approve, /pending, "
+        "/control-plane, and /failover/dispatch.",
+        ADMIN_TOKEN,
+    )
+
+
+async def verify_token(x_cockpit_token: Optional[str] = Header(default=None)):
+    if not x_cockpit_token or not secrets.compare_digest(x_cockpit_token, ADMIN_TOKEN):
+        raise HTTPException(status_code=403, detail="Invalid or missing X-Cockpit-Token")
+    return x_cockpit_token
 
 
 class ConnectionManager:
@@ -135,7 +165,7 @@ async def roi():
 
 
 @app.post("/netx/webhook")
-async def netx_webhook(payload: SignalWebhookPayload):
+async def netx_webhook(payload: SignalWebhookPayload, _token: str = Depends(verify_token)):
     """NetX / n8n signal ingestion. Fires the full signal -> risk -> telemetry chain."""
     try:
         signal = Signal.from_webhook_payload(payload.model_dump(exclude_none=True))
@@ -146,7 +176,7 @@ async def netx_webhook(payload: SignalWebhookPayload):
 
 
 @app.post("/fills")
-async def report_fill(fill: FillRequest):
+async def report_fill(fill: FillRequest, _token: str = Depends(verify_token)):
     """Reports a closed position. With the control plane enabled (default),
     this is a FINANCIAL action -- it queues for human approval and does not
     move money until POST /approve/{request_id} is called. Disabled, it
@@ -159,7 +189,7 @@ async def report_fill(fill: FillRequest):
 
 
 @app.get("/pending")
-async def pending_actions():
+async def pending_actions(_token: str = Depends(verify_token)):
     """Actions queued for human approval -- the control plane's authority
     gate made visible."""
     if control_plane is None:
@@ -169,7 +199,7 @@ async def pending_actions():
 
 
 @app.post("/approve/{request_id}")
-async def approve_action(request_id: str):
+async def approve_action(request_id: str, _token: str = Depends(verify_token)):
     """A human approves a queued financial action; only now does the real
     ledger entry get recorded and reported back through the control plane."""
     if control_plane is None:
@@ -182,7 +212,7 @@ async def approve_action(request_id: str):
 
 
 @app.get("/control-plane")
-async def control_plane_snapshot():
+async def control_plane_snapshot(_token: str = Depends(verify_token)):
     """The authority/reporting state itself -- who's registered, what they
     can do, and what's queued. ARK-STATE.json stays authoritative; this is
     a read-only view."""
@@ -192,11 +222,14 @@ async def control_plane_snapshot():
 
 
 @app.post("/failover/dispatch")
-async def failover_dispatch():
+async def failover_dispatch(_token: str = Depends(verify_token)):
     """Runs router/failover.py's dispatch_next() over HTTP instead of a
     shell Execute Command node -- so n8n (or anything else) can trigger the
     credit-proof failover cascade via a plain HTTP Request node, without
-    needing python3, git, or a repo checkout inside the caller's runtime."""
+    needing python3, git, or a repo checkout inside the caller's runtime.
+    Requires X-Cockpit-Token like the other mutating routes: this triggers
+    real paid LLM API calls (Claude/Groq/Gemini) and writes ARK-STATE.json,
+    so it isn't something to leave open to anyone who can reach the port."""
     router = FailoverRouter(state_path=ARK_STATE_PATH)
     return await router.dispatch_next()
 

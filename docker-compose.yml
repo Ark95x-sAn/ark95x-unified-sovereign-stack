@@ -261,9 +261,18 @@ services:
       - NODES_EXCLUDE=[]
       # n8n v2 also blocks $env.* access from node expressions by default
       # (same security-hardening pass). workflows/ark_failover_dispatch_v1.json
-      # reads $env.COCKPIT_URL to build the dispatch URL -- no secrets flow
-      # through it, just a hostname -- so it's re-enabled here too.
+      # reads $env.COCKPIT_URL and $env.COCKPIT_ADMIN_TOKEN. The latter IS a
+      # real secret, and this flag exposes it (and every other env var on
+      # this container, e.g. DB_POSTGRESDB_PASSWORD/N8N_ENCRYPTION_KEY
+      # below) to any node expression in any workflow this n8n instance
+      # runs, not just this one -- a real tradeoff, not a hypothetical one.
+      # n8n requires its own owner/auth setup before the editor is usable
+      # at all, which limits who that is, but if this instance is ever
+      # exposed beyond a trusted operator, move the token into n8n's
+      # credential store (HTTP Header Auth credential type) instead of
+      # $env, and scope NODES_EXCLUDE below more narrowly than "[]".
       - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - COCKPIT_ADMIN_TOKEN=${COCKPIT_ADMIN_TOKEN:?set COCKPIT_ADMIN_TOKEN to the cockpit's real token -- no default}
       # Lets workflows/ark_failover_dispatch_v1.json's HTTP Request node
       # reach the cockpit running on the host (see extra_hosts below).
       # When the cockpit also runs in this compose network (not yet wired

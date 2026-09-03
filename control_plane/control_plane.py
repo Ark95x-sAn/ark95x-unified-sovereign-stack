@@ -7,6 +7,7 @@ narrow scopes, but they do not own global state and cannot self-approve.
 
 from __future__ import annotations
 
+import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, Optional
@@ -121,7 +122,10 @@ class ControlPlane:
             disposition = "queued_for_control_plane"
 
         request = {
-            "request_id": f"{agent_id}:{len(self._action_queue) + 1}",
+            # Unpredictable by design: a sequential id (e.g. "business_ops:1")
+            # would let anyone who can reach an approval endpoint guess or
+            # enumerate pending requests without ever calling list/read APIs.
+            "request_id": f"{agent_id}:{uuid.uuid4().hex}",
             "agent_id": agent_id,
             "action": action,
             "action_class": action_class,
