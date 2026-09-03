@@ -119,6 +119,11 @@ per-role breakdown.
 
 ### Cockpit API (`cockpit/app.py`, `:8080`)
 
+All routes below except `/health`, `/monitoring/health`, `/roi`, and
+`/ws/cockpit` require an `X-Cockpit-Token` header matching
+`COCKPIT_ADMIN_TOKEN` (a random token is generated and logged once at
+startup if you don't set one).
+
 | Endpoint | Method | Description |
 |---|---|---|
 | `/health` | GET | Basic liveness check |

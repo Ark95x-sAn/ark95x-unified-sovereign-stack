@@ -99,13 +99,19 @@ pytest tests/ -v
 flake8 . --max-line-length=120 --extend-ignore=E501,W503,E402,F401,E722,E127
 ```
 
-For the cockpit specifically, a manual live check (not just `TestClient`):
+For the cockpit specifically, a manual live check (not just `TestClient`).
+`/netx/webhook`, `/fills`, `/approve/{id}`, `/pending`, `/control-plane`, and
+`/failover/dispatch` require an `X-Cockpit-Token` header matching
+`COCKPIT_ADMIN_TOKEN` (a random one is generated and logged once if you
+don't set it) -- `/health`, `/monitoring/health`, `/roi`, and `/ws/cockpit`
+stay open as the read-only dashboard surface:
 
 ```bash
-python3 -m uvicorn cockpit.app:app --host 0.0.0.0 --port 8080 &
+COCKPIT_ADMIN_TOKEN=dev-token python3 -m uvicorn cockpit.app:app --host 0.0.0.0 --port 8080 &
 curl -X POST http://localhost:8080/netx/webhook -H "Content-Type: application/json" \
+  -H "X-Cockpit-Token: dev-token" \
   -d '{"symbol":"BTCUSD","side":"long","entry_price":100.0,"stop_price":95.0}'
-curl http://localhost:8080/roi   # should reflect the order you just sized
+curl http://localhost:8080/roi   # should reflect the order you just sized -- no token needed, read-only
 ```
 
 ## Control plane and data stack
