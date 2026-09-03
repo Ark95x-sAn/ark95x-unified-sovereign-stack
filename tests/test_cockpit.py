@@ -175,3 +175,37 @@ def test_websocket_receives_live_update_on_signal(client):
         assert event["kind"] == "telemetry_event"
         assert event["event_type"] == "leverage_update"
         assert event["broadcast"] is True
+
+
+class TestFailoverDispatchEndpoint:
+    """POST /failover/dispatch: the HTTP path n8n (or anything else) uses to
+    trigger router/failover.py's dispatch_next() without needing python3,
+    git, or a repo checkout in the caller's own runtime."""
+
+    def test_dispatches_next_pending_task(self, client, tmp_path, monkeypatch):
+        import json
+        state_path = tmp_path / "ARK-STATE.json"
+        state_path.write_text(json.dumps({
+            "updated_at": "2026-01-01T00:00:00Z", "updated_by": "test",
+            "todo_queue": [{"id": "P1", "phase": 99, "title": "x", "status": "pending", "depends_on": []}],
+        }))
+        monkeypatch.setattr(cockpit_app, "ARK_STATE_PATH", str(state_path))
+
+        # No ANTHROPIC_API_KEY/GROQ_API_KEY/GEMINI_API_KEY and no local Ollama
+        # in the test environment -- honestly reports no backend available,
+        # same as the router does standalone.
+        result = client.post("/failover/dispatch").json()
+        assert result["status"] in ("no_backend_available", "dispatched")
+        assert result["task_id"] == "P1"
+
+    def test_no_pending_tasks(self, client, tmp_path, monkeypatch):
+        import json
+        state_path = tmp_path / "ARK-STATE.json"
+        state_path.write_text(json.dumps({
+            "updated_at": "2026-01-01T00:00:00Z", "updated_by": "test",
+            "todo_queue": [{"id": "P1", "phase": 99, "title": "x", "status": "done", "depends_on": []}],
+        }))
+        monkeypatch.setattr(cockpit_app, "ARK_STATE_PATH", str(state_path))
+
+        result = client.post("/failover/dispatch").json()
+        assert result == {"status": "no_pending_tasks"}

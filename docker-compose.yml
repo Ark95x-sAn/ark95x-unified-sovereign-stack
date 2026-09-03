@@ -250,6 +250,25 @@ services:
       - N8N_HOST=0.0.0.0
       - N8N_PORT=5678
       - N8N_LISTEN_ADDRESS=0.0.0.0
+      # n8n v2 disables the Execute Command node by default (security
+      # hardening: https://docs.n8n.io/2-0-breaking-changes/). This repo's
+      # workflows/ark_failover_dispatch_v1.json still uses it for
+      # Commit_Genome_Update (git add/commit/push), with a fixed,
+      # non-interpolated command (no untrusted/webhook input reaches the
+      # shell), so it's re-enabled here. The dispatch node itself
+      # (Run_Failover_Router) was switched to an HTTP Request node against
+      # the cockpit instead, precisely to avoid needing this.
+      - NODES_EXCLUDE=[]
+      # n8n v2 also blocks $env.* access from node expressions by default
+      # (same security-hardening pass). workflows/ark_failover_dispatch_v1.json
+      # reads $env.COCKPIT_URL to build the dispatch URL -- no secrets flow
+      # through it, just a hostname -- so it's re-enabled here too.
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      # Lets workflows/ark_failover_dispatch_v1.json's HTTP Request node
+      # reach the cockpit running on the host (see extra_hosts below).
+      # When the cockpit also runs in this compose network (not yet wired
+      # up), point this at http://core:8000 or a dedicated cockpit service.
+      - COCKPIT_URL=${COCKPIT_URL:-http://host.docker.internal:8080}
       - N8N_PROTOCOL=http
       - WEBHOOK_URL=http://localhost:5678
       - GENERIC_TIMEZONE=America/Chicago
@@ -262,6 +281,12 @@ services:
       - N8N_ENCRYPTION_KEY=${N8N_API_KEY:-ark95x_n8n_encryption_key_32ch}
     volumes:
       - n8n-data:/home/node/.n8n
+    extra_hosts:
+      # Docker Desktop (Mac/Windows) resolves host.docker.internal
+      # automatically; native Linux Docker Engine does not, so it's added
+      # explicitly here (host-gateway is a special value Docker resolves
+      # to the host's real IP on the bridge network).
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy

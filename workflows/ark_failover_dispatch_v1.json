@@ -12,22 +12,15 @@
     },
     {
       "parameters": {
-        "options": {},
-        "command": "cd {{$env.ARK_REPO_PATH}} && python3 router/failover.py"
+        "method": "POST",
+        "url": "={{$env.COCKPIT_URL || 'http://localhost:8080'}}/failover/dispatch",
+        "options": {}
       },
       "name": "Run_Failover_Router",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
-      "position": [450, 300]
-    },
-    {
-      "parameters": {
-        "jsCode": "return [{ json: JSON.parse($input.first().json.stdout) }];"
-      },
-      "name": "Parse_Dispatch_Result",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [650, 300]
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300],
+      "notes": "Calls POST /failover/dispatch on the cockpit, which runs router/failover.py's dispatch_next() in-process. Deliberately an HTTP call rather than an Execute Command node: n8n's official Docker image ships no python3 and doesn't have this repo mounted, and n8n v2 disables Execute Command by default for security (docs.n8n.io/2-0-breaking-changes/) -- this avoids both problems and works with the stock n8n image. The response body IS the dispatch result already (n8n auto-parses JSON responses), so no separate parse step is needed."
     },
     {
       "parameters": {
@@ -111,9 +104,6 @@
       "main": [[{ "node": "Run_Failover_Router", "type": "main", "index": 0 }]]
     },
     "Run_Failover_Router": {
-      "main": [[{ "node": "Parse_Dispatch_Result", "type": "main", "index": 0 }]]
-    },
-    "Parse_Dispatch_Result": {
       "main": [[{ "node": "Check_Dispatch_Status", "type": "main", "index": 0 }]]
     },
     "Check_Dispatch_Status": {

@@ -25,6 +25,7 @@ from netx.risk_calculator import RiskCalculator
 from passive_income_engine import PassiveIncomeEngine
 from ledger.command_ledger import CommandLedger
 from control_plane import build_default_control_plane
+from router.failover import FailoverRouter
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ark95x.cockpit")
@@ -36,6 +37,7 @@ LEDGER_PERSIST_PATH = os.getenv("LEDGER_PERSIST_PATH", "data/ledger_state.json")
 POSTGRES_URL = os.getenv("POSTGRES_URL", "")
 DEFAULT_RISK_PCT = float(os.getenv("DEFAULT_RISK_PCT", "1.0"))
 CONTROL_PLANE_ENABLED = os.getenv("CONTROL_PLANE_ENABLED", "true").lower() != "false"
+ARK_STATE_PATH = os.getenv("ARK_STATE_PATH", "ARK-STATE.json")
 
 
 class ConnectionManager:
@@ -174,6 +176,16 @@ async def control_plane_snapshot():
     if control_plane is None:
         return {"control_plane_enabled": False}
     return {"control_plane_enabled": True, **control_plane.snapshot()}
+
+
+@app.post("/failover/dispatch")
+async def failover_dispatch():
+    """Runs router/failover.py's dispatch_next() over HTTP instead of a
+    shell Execute Command node -- so n8n (or anything else) can trigger the
+    credit-proof failover cascade via a plain HTTP Request node, without
+    needing python3, git, or a repo checkout inside the caller's runtime."""
+    router = FailoverRouter(state_path=ARK_STATE_PATH)
+    return await router.dispatch_next()
 
 
 @app.websocket("/ws/cockpit")
