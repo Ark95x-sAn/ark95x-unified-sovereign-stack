@@ -153,11 +153,26 @@ def default_backends() -> List[BackendAdapter]:
 
 
 class FailoverRouter:
-    """Dispatches the next pending ARK-STATE.json task to an available backend."""
+    """Dispatches the next pending ARK-STATE.json task to an available backend.
 
-    def __init__(self, state_path: str = DEFAULT_STATE_PATH, backends: Optional[List[BackendAdapter]] = None):
+    This is arc_x's real "route_agents"/"simulate" job (docs/control-plane-pass-1.md:
+    "ARC X ... Final dispatch and cross-agent priority"). When a control_plane is
+    supplied, every dispatch decision is requested and reported through it as
+    arc_x, under its `routing` authority scope -- routing is not in
+    control_plane.APPROVAL_REQUIRED_ACTION_CLASSES, so it auto-queues and proceeds
+    without blocking on a human, matching arc_x's role as the coordinator, not a
+    second approval gate.
+    """
+
+    def __init__(
+        self,
+        state_path: str = DEFAULT_STATE_PATH,
+        backends: Optional[List[BackendAdapter]] = None,
+        control_plane: Optional[Any] = None,
+    ):
         self.state_path = Path(state_path)
         self.backends = backends if backends is not None else default_backends()
+        self.control_plane = control_plane
 
     def load_state(self) -> Dict[str, Any]:
         return json.loads(self.state_path.read_text())
@@ -187,11 +202,19 @@ class FailoverRouter:
         state = self.load_state()
         task = self.find_next_task(state)
         if task is None:
+            self._report_arc_x(status="idle", payload={"result": "no_pending_tasks"})
             return {"status": "no_pending_tasks"}
 
         backend = await self.select_backend()
         if backend is None:
+            self._report_arc_x(status="no_backend", payload={"task_id": task["id"]})
             return {"status": "no_backend_available", "task_id": task["id"]}
+
+        # arc_x's real routing decision: which backend gets this task, and
+        # why (priority-ordered availability). Routing is in arc_x's
+        # authority scope and not approval-required, so this proceeds
+        # immediately -- it is evidence of the decision, not a block.
+        self._request_arc_x_route(task_id=task["id"], backend=backend.name)
 
         prompt = HANDOFF_PROMPT_TEMPLATE.format(
             task_id=task["id"], phase=task.get("phase"), title=task["title"]
@@ -200,6 +223,10 @@ class FailoverRouter:
             response = await backend.dispatch(prompt)
         except Exception as e:
             logger.error(f"Backend {backend.name} failed to dispatch task {task['id']}: {e}")
+            self._report_arc_x(
+                status="dispatch_failed",
+                payload={"task_id": task["id"], "backend": backend.name, "error": str(e)},
+            )
             return {
                 "status": "dispatch_failed",
                 "task_id": task["id"],
@@ -214,12 +241,35 @@ class FailoverRouter:
         self.save_state(state)
 
         logger.info(f"Task {task['id']} dispatched to {backend.name}")
+        self._report_arc_x(
+            status="routed",
+            payload={"task_id": task["id"], "backend": backend.name, "evidence_ref": task["id"]},
+        )
         return {
             "status": "dispatched",
             "task_id": task["id"],
             "backend": backend.name,
             "response": response,
         }
+
+    def _request_arc_x_route(self, task_id: str, backend: str) -> Optional[Dict[str, Any]]:
+        if self.control_plane is None:
+            return None
+        return self.control_plane.request_action(
+            agent_id="arc_x",
+            action=f"route_task:{task_id}",
+            action_class="routing",
+            payload={"task_id": task_id, "selected_backend": backend},
+        )
+
+    def _report_arc_x(self, status: str, payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        if self.control_plane is None:
+            return None
+        return self.control_plane.report(
+            agent_id="arc_x",
+            status=status,
+            payload={**payload, "observed_at": datetime.now(timezone.utc).isoformat()},
+        )
 
 
 async def main():
