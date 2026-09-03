@@ -1,7 +1,7 @@
 {
   "genome_id": "ark95x-command-ledger",
-  "genome_version": "0.6.0",
-  "updated_at": "2026-09-03T10:05:00Z",
+  "genome_version": "0.7.0",
+  "updated_at": "2026-09-03T10:30:00Z",
   "updated_by": "claude-sonnet-5",
   "mission": "Wire real money data (NetX signal -> risk calculator -> passive_income_engine -> OmniNet cockpit) into one provable ROI machine, with a credit-proof handoff protocol so any model can resume the build from this file alone.",
 
@@ -149,6 +149,18 @@
       "status": "done",
       "phase": 5,
       "note": "Re-runnable proof: drives the real cockpit app in-process to prove the authority gate blocks and then releases real money with a matching control-plane audit trail, then proves the failover router's cascade (Claude skipped -> Ollama picked up) and its write-back into a scratch genome file. 15/15 checks pass. `python3 scripts/prove_the_network.py`."
+    },
+    "data_stack": {
+      "path": "docker-compose.yml (postgres, mongodb, redis, qdrant, n8n services)",
+      "status": "done",
+      "phase": 5,
+      "note": "Brought up live 2026-09-03 via `docker compose up -d postgres mongodb redis qdrant n8n` -- all 5 healthy and verified with real commands (pg_isready, redis-cli ping, mongosh ping, qdrant /healthz, n8n /healthz), not just 'container running'. Found and fixed 4 real pre-existing bugs in docker-compose.yml along the way: (1) core service had `env_file: .env` spliced into the middle of its `ports:` list, breaking YAML parsing for the whole file; (2) n8n's DB_POSTGRESDB_DATABASE=n8n was never created by anything (only `sovereign` is, via postgres's POSTGRES_DB) -- n8n crash-looped with 'database n8n does not exist' until the database was created manually; (3) n8n defaults to binding IPv6 `::`, unavailable in network-restricted sandboxes -- added N8N_LISTEN_ADDRESS=0.0.0.0; (4) qdrant's healthcheck used `curl`, which the qdrant/qdrant image does not ship -- replaced with a bash /dev/tcp port probe. app services (core/dashboard/flamegate/comet-router/gate-unlocker/council/shadow-agent) and monitoring (searxng/prometheus/grafana) were left alone -- out of scope for 'data stack' and mostly reference unbuilt/stub application code per MIGRATION_ROADMAP.md."
+    },
+    "postgres_ledger_backend": {
+      "path": "passive_income_engine.py (postgres_url param, _pg_* methods) + cockpit/app.py (POSTGRES_URL env var)",
+      "status": "done",
+      "phase": 5,
+      "note": "PassiveIncomeEngine now takes an optional postgres_url; when set it creates ledger_state (single row: starting_balance/balance/breakeven_cost_usd) and ledger_entries tables in Postgres, restores from them on init (Postgres is authoritative over persist_path when both given), and writes every record_entry() to Postgres in addition to/instead of the JSON file. cockpit/app.py picks POSTGRES_URL over LEDGER_PERSIST_PATH automatically when set. Proved live 2026-09-03 against the real postgres container: ran the full control-plane-gated signal->fills->approve flow through a real uvicorn process, then queried Postgres directly with `docker exec ... psql` (outside the app entirely) and confirmed the exact real ledger_entries row and updated ledger_state.balance. Also proved durability: a brand-new PassiveIncomeEngine instance pointed at the same postgres_url restores the prior state exactly (ignoring the constructor's starting_balance argument), simulating a process restart. tests/test_passive_income_engine_postgres.py (3 tests) skips gracefully when no Postgres is reachable, so this repo's CI (which doesn't run docker-compose) stays green; run `docker compose up -d postgres` first to exercise them. requirements.txt gained psycopg2-binary."
     }
   },
 
@@ -157,7 +169,7 @@
     { "id": 2, "name": "Ledger Core", "status": "done", "deliverables": ["netx/signal_engine.py", "netx/risk_calculator.py", "passive_income_engine.py", "ledger/command_ledger.py", "tests/test_command_ledger.py", "lossless round-trip snapshot/restore test"] },
     { "id": 3, "name": "Live Cockpit Wiring", "status": "done", "deliverables": ["cockpit/app.py FastAPI + WebSocket on :8080", "real ROI ledger + leverage meter over WebSocket", "Aura telemetry reflecting real P&L"] },
     { "id": 4, "name": "Credit-Proof Failover Router", "status": "done", "deliverables": ["router/failover.py", "workflows/ark_failover_dispatch_v1.json", "HANDOFF.md"] },
-    { "id": 5, "name": "Human Review & Live Wiring", "status": "in_progress", "deliverables": ["human sign-off on merging draft PR #31", "n8n workflow live-tested against a real instance", "optional: real trading account wired behind netx/signal_engine.py", "control_plane/ single authority contract (done)", "business_ops wired into the ledger's financial-action gate, proved live (done)", "remaining 7 control-plane adapters wired to their own real actions (pending, T5.6)"] }
+    { "id": 5, "name": "Human Review & Live Wiring", "status": "in_progress", "deliverables": ["human sign-off on merging draft PR #31", "n8n workflow live-tested against a real instance", "optional: real trading account wired behind netx/signal_engine.py", "control_plane/ single authority contract (done)", "business_ops wired into the ledger's financial-action gate, proved live (done)", "data stack (postgres/mongodb/redis/qdrant/n8n) brought up live, ledger backed by real Postgres, proved live (done)", "remaining 7 control-plane adapters wired to their own real actions (pending, T5.6, delegated to a background agent)"] }
   ],
   "current_phase": 5,
 
@@ -180,7 +192,8 @@
     { "id": "T5.3", "phase": 5, "title": "If desired, wire an actual funded/paper trading account behind netx/signal_engine.py and cockpit/app.py's /netx/webhook so the ROI numbers reflect live external signals instead of manually-posted test signals", "status": "pending", "depends_on": ["T5.1"] },
     { "id": "T5.4", "phase": 5, "title": "Add control_plane/ (single authority/reporting contract over 8 ARK95X roles) -- added directly to this branch outside the todo_queue on 2026-07-19", "status": "done", "depends_on": [] },
     { "id": "T5.5", "phase": 5, "title": "Wire business_ops into ControlPlane.request_action()/report() for the highest-value, most consequential adapter: real money movement. Closing a position in ledger/command_ledger.py is now a 'financial' action gated by the control plane -- it queues for human approval and only executes (and reports back) via approve_pending_action(). Exposed through cockpit/app.py as /fills (queue), /pending, /approve/{id}, /control-plane. Proved live end-to-end 2026-09-03 -- see scripts/prove_the_network.py.", "status": "done", "depends_on": ["T5.4"] },
-    { "id": "T5.6", "phase": 5, "title": "Wire the remaining 7 adapters (arc_x, codex_security, memory_cortex, monitoring, github, n8n, devices) into ControlPlane.report()/request_action() at their own real integration points -- e.g. github reporting on PR/commit actions, n8n on workflow triggers, monitoring on health checks. business_ops -> command_ledger (T5.5) is the template; each adapter needs its own domain wiring, not a generic one-size-fits-all shim.", "status": "pending", "depends_on": ["T5.5"] }
+    { "id": "T5.6", "phase": 5, "title": "Wire the remaining 7 adapters (arc_x, codex_security, memory_cortex, monitoring, github, n8n, devices) into ControlPlane.report()/request_action() at their own real integration points -- e.g. github reporting on PR/commit actions, n8n on workflow triggers, monitoring on health checks. business_ops -> command_ledger (T5.5) is the template; each adapter needs its own domain wiring, not a generic one-size-fits-all shim.", "status": "pending", "depends_on": ["T5.5"] },
+    { "id": "T5.7", "phase": 5, "title": "Bring up the docker-compose data stack (postgres, mongodb, redis, qdrant, n8n) live and wire passive_income_engine.py to a real Postgres database instead of a JSON file", "status": "done", "depends_on": [] }
   ],
 
   "known_gaps": [

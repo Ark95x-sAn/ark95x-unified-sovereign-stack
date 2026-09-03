@@ -8,6 +8,10 @@ Financial actions (closing a position) are gated by the single control
 plane by default: /fills queues the request for human approval instead of
 moving money immediately, per control_plane's authority invariants. Set
 CONTROL_PLANE_ENABLED=false to fall back to immediate execution.
+
+Ledger persistence: set POSTGRES_URL (e.g. from the data stack's
+docker-compose postgres service) to store real ledger state in Postgres
+instead of a JSON file. Falls back to LEDGER_PERSIST_PATH when unset.
 """
 import os
 import logging
@@ -29,6 +33,7 @@ APP_PORT = int(os.getenv("COCKPIT_PORT", 8080))
 STARTING_CAPITAL = float(os.getenv("STARTING_CAPITAL_USD", "10000"))
 BREAKEVEN_COST_USD = float(os.getenv("BREAKEVEN_COST_USD", "0"))
 LEDGER_PERSIST_PATH = os.getenv("LEDGER_PERSIST_PATH", "data/ledger_state.json")
+POSTGRES_URL = os.getenv("POSTGRES_URL", "")
 DEFAULT_RISK_PCT = float(os.getenv("DEFAULT_RISK_PCT", "1.0"))
 CONTROL_PLANE_ENABLED = os.getenv("CONTROL_PLANE_ENABLED", "true").lower() != "false"
 
@@ -82,8 +87,13 @@ manager = ConnectionManager()
 engine = PassiveIncomeEngine(
     starting_balance=STARTING_CAPITAL,
     breakeven_cost_usd=BREAKEVEN_COST_USD,
-    persist_path=LEDGER_PERSIST_PATH,
+    persist_path=None if POSTGRES_URL else LEDGER_PERSIST_PATH,
+    postgres_url=POSTGRES_URL or None,
 )
+if POSTGRES_URL:
+    logger.info("Ledger persistence backend: Postgres")
+else:
+    logger.info(f"Ledger persistence backend: JSON file ({LEDGER_PERSIST_PATH})")
 risk_calculator = RiskCalculator()
 control_plane = build_default_control_plane() if CONTROL_PLANE_ENABLED else None
 ledger = CommandLedger(
