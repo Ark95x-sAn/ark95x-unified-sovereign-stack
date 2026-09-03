@@ -43,12 +43,16 @@ work described in step 4). See below.
 | `contracts/ark-state.schema.json` | Shared message contracts for the whole pipeline |
 | `netx/signal_engine.py` | `Signal` + `SignalBus`: NetX/n8n signal ingestion |
 | `netx/risk_calculator.py` | Position sizing: `capital * risk_pct/100 / stop_distance` |
-| `passive_income_engine.py` | Real ledger entries, balance, ROI, lossless snapshot/restore |
-| `ledger/command_ledger.py` | Wires signal -> risk -> ledger -> telemetry together |
-| `cockpit/app.py` | FastAPI + WebSocket cockpit on `:8080` (ROI ledger, leverage meter, Aura state) |
-| `router/failover.py` | Reads `todo_queue`, dispatches to Claude/Ollama/Groq/Gemini |
-| `workflows/ark_failover_dispatch_v1.json` | n8n workflow that runs the router on a schedule |
-| `tests/test_command_ledger.py`, `tests/test_cockpit.py`, `tests/test_failover.py` | Full test coverage, no `pytest-asyncio` required (async calls are wrapped in `asyncio.run()` inside plain `def test_...()` functions -- keep doing this so tests run under this repo's existing CI, which only installs `pytest`/`pytest-cov`) |
+| `passive_income_engine.py` | Real ledger entries, balance, ROI, lossless snapshot/restore. Optional `postgres_url` param persists to a real Postgres database instead of (or in addition to) the JSON file. |
+| `ledger/command_ledger.py` | Wires signal -> risk -> ledger -> telemetry together. Also holds `request_close_order()`/`approve_pending_action()` -- the control-plane-gated close-position flow (see below). |
+| `cockpit/app.py` | FastAPI + WebSocket cockpit on `:8080`. Routes: `/health`, `/monitoring/health`, `/roi`, `/netx/webhook`, `/fills`, `/pending`, `/approve/{request_id}`, `/control-plane`, `/failover/dispatch`, `/ws/cockpit`. |
+| `control_plane/control_plane.py` | Single authority/reporting contract over the 8 ARK95X roles. `APPROVAL_REQUIRED_ACTION_CLASSES` gates financial/destructive/deployment/etc. actions to human approval; `ARK-STATE.json` is the declared `AUTHORITATIVE_STATE_PATH`. |
+| `monitoring/health.py`, `memory_cortex/proposals.py`, `codex_security/scanner.py`, `devices/local_exec.py`, `github_adapter/repo_state.py`, `n8n/dispatch_adapter.py` | The other 7 control-plane role adapters, each wired to its own real integration point (see `ARK-STATE.json.modules.control_plane_remaining_adapters` for the full breakdown). |
+| `router/failover.py` | Reads `todo_queue`, dispatches to Claude/Ollama/Groq/Gemini. Optionally reports dispatch decisions through a `control_plane` under `arc_x`'s `routing` scope. Also reachable over HTTP via cockpit's `POST /failover/dispatch`. |
+| `workflows/ark_failover_dispatch_v1.json` | n8n workflow that runs the router (via an HTTP Request node against the cockpit, not a shell command) on a schedule. Live-tested against a real n8n instance -- see the caveats below. |
+| `docker-compose.yml` (`postgres`, `mongodb`, `redis`, `qdrant`, `n8n` services) | The live data stack backing all of the above. Bring it up with `docker compose up -d postgres mongodb redis qdrant n8n`. |
+| `scripts/prove_the_network.py` | Re-runnable end-to-end proof: drives the real cockpit in-process to prove the authority gate blocks then releases real money with a matching audit trail, then proves the failover cascade. `python3 scripts/prove_the_network.py`. |
+| `tests/` | Full test coverage (100+ tests across the ledger, cockpit, control plane, and every adapter -- see `tests/test_*.py`), no `pytest-asyncio` required (async calls are wrapped in `asyncio.run()` inside plain `def test_...()` functions -- keep doing this so tests run under this repo's existing CI, which only installs `pytest`/`pytest-cov`, per `.github/workflows/ci.yml`) |
 
 ## Running the failover router manually
 
@@ -68,12 +72,24 @@ Backend availability is environment-driven, checked in this priority order:
 | 4 | Gemini | `GEMINI_API_KEY` or `GOOGLE_API_KEY` is set | `GEMINI_API_KEY` / `GOOGLE_API_KEY`, `GEMINI_MODEL` (default `gemini-2.0-flash`) |
 
 The n8n workflow (`workflows/ark_failover_dispatch_v1.json`) runs this same
-script on an hourly heartbeat via an Execute Command node, then commits and
-pushes the updated `ARK-STATE.json` back to GitHub so every future session
--- regardless of which backend runs it -- sees the same state. It has not
-been live-tested against a running n8n instance; verify the
-`ARK_REPO_PATH` env var and Discord/Google Sheets credentials before
-enabling it.
+dispatch on an hourly heartbeat, then commits and pushes the updated
+`ARK-STATE.json` back to GitHub so every future session -- regardless of
+which backend runs it -- sees the same state. Its dispatch step
+(`Run_Failover_Router`) is an **HTTP Request node** calling
+`POST {COCKPIT_URL}/failover/dispatch` on the running cockpit -- not a
+shell `python3 router/failover.py` call -- because n8n's official Docker
+image ships no `python3` and has no repo checkout mounted. Only
+`Commit_Genome_Update` (git add/commit/push) still uses an Execute Command
+node.
+
+This workflow **has been live-tested** against a real n8n instance
+(`n8nio/n8n:latest` in the data stack, 2026-09-03): `Failover_Heartbeat ->
+Run_Failover_Router -> Check_Dispatch_Status` all ran successfully end to
+end. Two parts remain untested live: `Commit_Genome_Update` (needs a host
+with real git + repo access, which n8n's container doesn't have) and the
+Discord/Google Sheets notification nodes (need real credentials). See
+[Control plane and data stack](#control-plane-and-data-stack) below for how
+to bring up the n8n instance this was tested against.
 
 ## Verifying the pipeline still works after a change
 
@@ -92,6 +108,44 @@ curl -X POST http://localhost:8080/netx/webhook -H "Content-Type: application/js
 curl http://localhost:8080/roi   # should reflect the order you just sized
 ```
 
+## Control plane and data stack
+
+Phase 5 added two things a fresh session needs to know about before picking
+up where this build left off:
+
+- **`control_plane/control_plane.py`** is a single authority/reporting
+  contract sitting over the 8 ARK95X roles (`arc_x`, `codex_security`,
+  `memory_cortex`, `monitoring`, `github`, `n8n`, `devices`,
+  `business_ops`). No agent can override the plane or self-approve; any
+  action classed as `account_change`, `destructive`, `deployment`,
+  `financial`, `legal`, `public`, `security_sensitive`, or
+  `system_mutation` (see `APPROVAL_REQUIRED_ACTION_CLASSES`) is queued for
+  human approval instead of executing immediately. `ledger/command_ledger.py`
+  wires this into the highest-value action -- closing a position -- via
+  `request_close_order()`/`approve_pending_action()`, exposed through
+  `cockpit/app.py`'s `/fills`, `/pending`, `/approve/{id}`, and
+  `/control-plane` routes (`CONTROL_PLANE_ENABLED=true` by default). The
+  other 7 roles are wired to their own real integration points -- see
+  `ARK-STATE.json.modules.control_plane_remaining_adapters` and
+  `docs/control-plane-pass-1.md` for the full contract and per-role detail.
+  Proved live end to end by `scripts/prove_the_network.py` (15/15 checks).
+- **The data stack** (`postgres`, `mongodb`, `redis`, `qdrant`, `n8n` in
+  `docker-compose.yml`) is live and verified, not just defined:
+  ```bash
+  docker compose up -d postgres mongodb redis qdrant n8n
+  ```
+  `postgres` backs `passive_income_engine.py`'s optional `postgres_url`
+  ledger persistence (proved durable across a simulated restart); `n8n`
+  hosts `workflows/ark_failover_dispatch_v1.json`. `mongodb`/`redis`/`qdrant`
+  are up and TCP-probed by `/monitoring/health` but have no Command-Ledger
+  consumer wired to them yet.
+
+If you're resuming from `ARK-STATE.json.todo_queue`, `T5.4`-`T5.7` (control
+plane, the ledger's financial-action gate, the remaining 7 adapters, and
+the live data stack) are all `done` -- only `T5.1` (human review of PR #31)
+and `T5.3` (a real trading account behind `/netx/webhook`) are still
+`pending`.
+
 ## Known gaps (see `ARK-STATE.json.known_gaps` for the authoritative list)
 
 - `smart_home_bridge.py` and a multi-PC coordinator were mentioned in the
@@ -100,4 +154,15 @@ curl http://localhost:8080/roi   # should reflect the order you just sized
   `omnikernel-orchestrator` repo (which has no FastAPI/:8080/WebSocket
   cockpit, no Aura canvas, and no ROI ledger anywhere in it, verified by
   cloning and inspecting it directly).
-- The n8n workflow has not been executed against a live n8n instance.
+- No real broker/exchange or production NetX signal source is wired behind
+  `/netx/webhook` yet (`T5.3`, still pending) -- signals are posted
+  manually or by n8n for testing.
+- In `workflows/ark_failover_dispatch_v1.json`, the dispatch path itself
+  (`Failover_Heartbeat -> Run_Failover_Router -> Check_Dispatch_Status`) IS
+  live-tested (`T5.2`); `Commit_Genome_Update` and the Discord/Google Sheets
+  notification nodes are not.
+- `control_plane/` was added directly to this branch outside the
+  `todo_queue` (commits `89e0428..5ce3c5b`, 2026-07-19) before this genome
+  was updated to reflect it -- reconciled retroactively as `T5.4`/`T5.5`.
+  Future sessions adding a module should update `ARK-STATE.json` in the
+  same commit, not after the fact.
