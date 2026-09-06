@@ -1,5 +1,29 @@
 # ARK95X Unified Sovereign Stack
 
+## Verified integration increment — 2026-09-06
+
+The new [native receipt bridge](n95_native/README.md) adds signed technical
+observations, expiration/replay checks, a bounded polling loop and a draft handoff
+for the existing Network-95 Core schema. It does not establish physical device
+deployment. The legacy device mesh now preserves context until real delivery and
+does not seed devices as online. Treat the broader service claims below as the
+historical project description; live services still need target-specific proof.
+
+- [25 GitHub candidates and license review](docs/N95_TOP25_GITHUB.md)
+- [Three installation offers and the 9×9 capability map](docs/N95_SERVICE_PRODUCTS.md)
+- [Integration boundaries and next acceptance gates](docs/N95_INTEGRATION.md)
+- [Windows preflight commands](docs/N95_NATIVE_WINDOWS.md)
+
+Run the isolated demonstration with Python 3.11+ and a fresh private state folder
+outside this checkout:
+
+```sh
+python -m n95_native demo --state /tmp/n95-native-demo
+```
+
+This sends three synthetic identities through actual loopback HTTP and records
+their signed receipts. It is a one-host test, not proof of a three-device network.
+
 [![CI](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/actions/workflows/ci.yml/badge.svg)](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/) [![Docker](https://img.shields.io/badge/docker-compose-blue.svg)](https://docs.docker.com/compose/)
 
 > **All repositories. One united front. Total sovereign integration.**

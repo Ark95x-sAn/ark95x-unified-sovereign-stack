@@ -1,0 +1,50 @@
+{
+  "observed_at": "2026-09-06T03:49:03.016468+00:00",
+  "status": "LOCAL_INTEGRATION_VERIFIED_NOT_DEPLOYED",
+  "test_suite": {
+    "cases_passed": 34,
+    "subtests_passed": 6,
+    "failed": 0,
+    "scope": "focused bridge, handoff and legacy device mesh on Linux",
+    "observed_at": "2026-09-06T03:56:24.827852+00:00"
+  },
+  "synthetic_http_demo": {
+    "identities": 3,
+    "receipts": 3,
+    "actual_loopback_http": true,
+    "physical_nodes_verified": 0
+  },
+  "bounded_watch": {
+    "scope": "bounded telemetry only",
+    "requested_cycles": 2,
+    "attempted_cycles": 2,
+    "accepted_receipts": 2,
+    "failures": 0,
+    "completed": true,
+    "stop_reason": "cycle_limit"
+  },
+  "restart_reopen_audit": {
+    "verified": true,
+    "events": 5,
+    "head_sha256": "6965694cac13d43b6959913963762079a6ec33a1b3ca3c73cbde274b669095af",
+    "scope": "local hash-chain and node signatures; not tamperproof or externally anchored"
+  },
+  "core_schema_compatibility": {
+    "schema_accepted": true,
+    "mission_submitted": false,
+    "engine_sha256": "f535217e27f605614ec1167768c22d537a5a74f30e671087444776fe2a1bb386",
+    "normalized_mode": "draft"
+  },
+  "physical_deployment": false,
+  "windows_target_execution": "NOT_RUN",
+  "postgresql_acceptance": "NOT_RUN",
+  "model_execution": "NOT_RUN",
+  "commercial_demand": "UNTESTED",
+  "third_party_projects_installed": 0,
+  "hosted_windows_initial_run": {
+    "run_id": 34010115394,
+    "result": "3 test-fixture cleanup failures; 30 cases passed",
+    "correction": "Explicitly close raw SQLite test connections; production Store already closed them; added commit/rollback closure regression",
+    "rerun": "pending"
+  }
+}
