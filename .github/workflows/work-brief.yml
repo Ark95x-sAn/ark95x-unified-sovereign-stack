@@ -1,0 +1,83 @@
+name: Work brief verification
+on:
+  pull_request:
+    paths:
+      - 'n95_workflow/**'
+      - 'tools/N95-Work-Brief.ps1'
+      - 'tools/n95_value_check.py'
+      - 'tests/test_workflow*.py'
+      - 'tests/test_value_check.py'
+      - '.github/workflows/work-brief.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run bounded workflow checks
+        run: python -m unittest discover -s tests -p "test_workflow*.py" -v
+      - name: Run value evidence checks
+        run: python -m unittest discover -s tests -p "test_value_check.py" -v
+      - name: Parse Windows wrapper
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $parseTokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'tools/N95-Work-Brief.ps1'), [ref]$parseTokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count -gt 0) { $parseErrors | Out-String | Write-Error; exit 1 }
+      - name: Exercise Windows portable handoff and repeat run
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pythonExecutable = (Get-Command python.exe -CommandType Application).Source
+          $wrapper = Join-Path $PWD 'tools/N95-Work-Brief.ps1'
+          $fixtureRoot = Join-Path $env:RUNNER_TEMP ('n95-work-brief-' + [guid]::NewGuid().ToString('N'))
+          $sourceDirectory = Join-Path $fixtureRoot 'notes'
+          $resultDirectory = Join-Path $fixtureRoot 'results'
+          [void][System.IO.Directory]::CreateDirectory($sourceDirectory)
+          $sourceFile = Join-Path $sourceDirectory 'handoff.md'
+          $noteText = "Delivery notes`n- [ ] Confirm delivery [id:JOB1] [due:2026-09-10] [owner:Fixture]`n- [x] Write notes [id:JOB2]`n"
+          [System.IO.File]::WriteAllText($sourceFile, $noteText, [System.Text.UTF8Encoding]::new($false))
+          $beforeHash = (Get-FileHash -LiteralPath $sourceFile -Algorithm SHA256).Hash
+          $runnerArguments = @('-NoProfile', '-File', $wrapper, '-PythonExecutable', $pythonExecutable, '-InputDirectory', $sourceDirectory, '-OutputDirectory', $resultDirectory, '-AsOf', '2026-09-10')
+
+          $preflightLines = & powershell.exe @runnerArguments -CheckOnly
+          $preflightExit = $LASTEXITCODE
+          if ($preflightExit -ne 0) { throw "Preflight exited $preflightExit" }
+          $preflight = ($preflightLines -join "`n") | ConvertFrom-Json
+          if (-not $preflight.passed -or $preflight.status -ne 'PREREQUISITES_CHECKED_NO_WORKFLOW_RUN') { throw 'Preflight did not pass' }
+          if (Test-Path -LiteralPath $resultDirectory) { throw 'CheckOnly created a result directory' }
+
+          $firstLines = & powershell.exe @runnerArguments
+          $firstExit = $LASTEXITCODE
+          if ($firstExit -ne 0) { throw "First run exited $firstExit" }
+          $first = ($firstLines -join "`n") | ConvertFrom-Json
+          if (-not $first.ok -or $first.reused) { throw 'First run was not a new completed output' }
+          if ($first.content_id -notmatch '^[a-f0-9]{64}$') { throw 'Missing full content identifier' }
+          foreach ($fileName in @('brief.md', 'observations.json', 'manifest.json')) {
+            if (-not (Test-Path -LiteralPath (Join-Path $first.output_directory $fileName) -PathType Leaf)) { throw "Missing artifact: $fileName" }
+          }
+          $document = Get-Content -LiteralPath (Join-Path $first.output_directory 'observations.json') -Raw | ConvertFrom-Json
+          if (@($document.observations).Count -ne 2) { throw 'Expected two source task observations' }
+          if ($document.observations[0].source.line -ne 2 -or $document.observations[0].due -ne '2026-09-10') { throw 'Source reference or due date mismatch' }
+
+          $secondLines = & powershell.exe @runnerArguments
+          $secondExit = $LASTEXITCODE
+          if ($secondExit -ne 0) { throw "Repeat run exited $secondExit" }
+          $second = ($secondLines -join "`n") | ConvertFrom-Json
+          if (-not $second.ok -or -not $second.reused -or $second.content_id -ne $first.content_id) { throw 'Repeat did not verify and reuse identical output' }
+          $afterHash = (Get-FileHash -LiteralPath $sourceFile -Algorithm SHA256).Hash
+          if ($beforeHash -ne $afterHash) { throw 'Source bytes changed' }
+          Write-Output 'Hosted Windows fixture verified: prerequisite-only check, first run, source reference, unchanged input bytes, and identical result reuse. No physical customer installation is established.'
