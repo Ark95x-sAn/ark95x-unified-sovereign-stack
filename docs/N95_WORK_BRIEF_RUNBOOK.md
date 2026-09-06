@@ -50,7 +50,7 @@ $LASTEXITCODE
 
 `-CheckOnly` prints a JSON prerequisite result and creates no workflow output. It checks the runnable Python version, portable module, input inventory, folder separation, and date. A result with `passed: true` and exit code `0` permits the first real run. Exit code `2` means one or more prerequisites are missing or unverified. The output lists failed checks. A prerequisite pass does not prove that the source contents parse or that an output can be written.
 
-No PowerShell runtime is available in the current Linux build environment. This wrapper has been statically reviewed but has not been parsed or executed on Windows here. Hosted or physical Windows verification must be recorded separately; no physical customer deployment is verified by this guide.
+No PowerShell runtime is available in the current Linux build environment. The initial hosted Windows run successfully parsed this wrapper and passed both Python unit suites. Its handoff fixture failed before exercising the wrapper because the test harness selected multiple Python paths. The harness now selects the exact setup-python interpreter; the corrected hosted handoff run is pending. No physical customer deployment is verified by these checks.
 
 ## Run and read the result
 

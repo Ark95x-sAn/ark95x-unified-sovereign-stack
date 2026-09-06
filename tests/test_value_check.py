@@ -19,9 +19,12 @@ def fixture():
         "extra_customer_support_minutes": 0,
         "nonoverlapping_customer_evaluation_minutes": 0,
         "extra_customer_cost_usd": 5,
-        "paired_observations": [{"job_id": str(i), "best_free_alternative_seconds": 2400,
-            "workflow_total_seconds": 600, "comparable": True, "quality_passed": True,
-            "measurement_record": "synthetic-test-only"} for i in range(10)]
+        "paired_observations": [
+            {"job_id": str(i), "best_free_alternative_seconds": 2400,
+             "workflow_total_seconds": 600, "comparable": True, "quality_passed": True,
+             "measurement_record": "synthetic-test-only"}
+            for i in range(10)
+        ]
     }
 
 
@@ -39,11 +42,13 @@ class ValueChecks(unittest.TestCase):
         self.assertFalse(result["measurement_authenticity_verified"])
 
     def test_exact_price_is_not_more_than_price(self):
-        data = fixture(); data["extra_customer_cost_usd"] = 35
+        data = fixture()
+        data["extra_customer_cost_usd"] = 35
         self.assertEqual(evaluate(data)["verdict"], "DOES_NOT_EXCEED_PRICE")
 
     def test_subcent_comparison_retains_unrounded_evidence(self):
-        data = fixture(); data["extra_customer_cost_usd"] = "34.9999"
+        data = fixture()
+        data["extra_customer_cost_usd"] = "34.9999"
         result = evaluate(data)
         self.assertEqual(result["unrounded_time_value_after_price_usd"], "0.0001")
         self.assertEqual(result["verdict"], "REPORTED_TIME_VALUE_EXCEEDS_PRICE")
@@ -58,26 +63,33 @@ class ValueChecks(unittest.TestCase):
         for key, value in [("evidence_kind", "synthetic"), ("all_attempts_included", False),
                            ("installation_passed", "true"), ("customer_hourly_value_usd", None)]:
             with self.subTest(key=key):
-                data = fixture(); data[key] = value
+                data = fixture()
+                data[key] = value
                 self.assertEqual(evaluate(data)["verdict"], "INSUFFICIENT_EVIDENCE")
 
     def test_failed_quality_or_missing_record_blocks_value_claim(self):
         for key, value in [("quality_passed", False), ("comparable", False), ("measurement_record", "")]:
             with self.subTest(key=key):
-                data = fixture(); data["paired_observations"][0][key] = value
+                data = fixture()
+                data["paired_observations"][0][key] = value
                 self.assertEqual(evaluate(data)["verdict"], "INSUFFICIENT_EVIDENCE")
 
     def test_lost_time_counts_against_benefit(self):
-        data = fixture(); data["paired_observations"][0]["workflow_total_seconds"] = 24000
+        data = fixture()
+        data["paired_observations"][0]["workflow_total_seconds"] = 24000
         self.assertEqual(evaluate(data)["verdict"], "DOES_NOT_EXCEED_PRICE")
 
     def test_duplicate_jobs_and_nonfinite_values_rejected(self):
-        data = fixture(); data["paired_observations"].append(copy.deepcopy(data["paired_observations"][0]))
-        with self.assertRaises(EvidenceError): evaluate(data)
+        data = fixture()
+        data["paired_observations"].append(copy.deepcopy(data["paired_observations"][0]))
+        with self.assertRaises(EvidenceError):
+            evaluate(data)
         for value in [float("inf"), float("nan"), -1, True]:
             with self.subTest(value=value):
-                data = fixture(); data["paired_observations"][0]["workflow_total_seconds"] = value
-                with self.assertRaises(EvidenceError): evaluate(data)
+                data = fixture()
+                data["paired_observations"][0]["workflow_total_seconds"] = value
+                with self.assertRaises(EvidenceError):
+                    evaluate(data)
 
 
 if __name__ == "__main__":

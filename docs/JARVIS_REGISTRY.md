@@ -11,6 +11,7 @@
 - **Review result:** resolved cross-file no-ID identity merging, unflagged same-ID text conflict, FIFO-swap blocking risk, output overlap and resource amplification; resolved missing customer overhead and ambiguous value-calculator display. Directory replacement by an actor controlling ancestors remains outside the stable private-directory boundary.
 - **Verification:** 20 workflow and 9 value tests passed locally. The independent frozen holdout passed 13 cases after retaining two initial failures; exact source references and unchanged originals were checked. Hosted Windows/Linux verification belongs to the draft PR run and does not prove customer installation.
 - **Test commands:** `python -m unittest discover -s tests -p "test_workflow*.py" -v`; `python -m unittest discover -s tests -p "test_value_check.py" -v`.
+- **Hosted first-run correction:** Windows unit checks and PowerShell parsing passed; the Windows test harness selected multiple installed Python paths and failed argument binding. The harness now selects the exact setup-python path. Existing lint also required formatting corrections in the new value tests. No extractor or calculator behavior changed. Hosted rerun pending.
 - **Next move:** obtain nine separate external evaluator responses for the same frozen evidence; then a bounded no-charge customer pilot with matched baseline/time/quality records. Customer-value and sales gate remains HOLD.
 
 ## 2026-09-06 — N95 native integration increment

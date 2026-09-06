@@ -41,7 +41,8 @@ jobs:
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          $pythonExecutable = (Get-Command python.exe -CommandType Application).Source
+          $pythonExecutable = Join-Path $env:pythonLocation 'python.exe'
+          if (-not (Test-Path -LiteralPath $pythonExecutable -PathType Leaf)) { throw 'setup-python interpreter not found' }
           $wrapper = Join-Path $PWD 'tools/N95-Work-Brief.ps1'
           $fixtureRoot = Join-Path $env:RUNNER_TEMP ('n95-work-brief-' + [guid]::NewGuid().ToString('N'))
           $sourceDirectory = Join-Path $fixtureRoot 'notes'

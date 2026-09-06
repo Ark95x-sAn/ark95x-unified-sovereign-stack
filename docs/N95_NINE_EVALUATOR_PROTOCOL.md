@@ -24,6 +24,12 @@ Give each evaluator the same frozen evidence packet and universal command below.
 | R8 | Commercial scope and honest positioning | Does the $100 offer describe a bounded installed result without promising autonomous agents, three-device deployment, unlimited support, guaranteed savings or clinical capability? Compare what is delivered with free alternatives. Check the 15-minute/seven-day support promise and 1.25-hour labor assumption against measured evidence; do not invent demand, margin or sales. |
 | R9 | Evidence quality and AI/independence claims | Reconcile each readiness claim with the packet's code version, fixtures, logs and outputs. Distinguish planned, built, tested, deployed, purchased and customer-accepted states. Check model-identity reporting and whether separate evaluations are actually documented. Reject treating deterministic extraction as model reasoning or nine votes as proof of customer value. |
 
+## Every evaluator must also answer the $100 question
+
+In addition to the assigned lens, every reviewer must answer: **Does the supplied evidence establish that the intended customer receives more value than the $100 fee after all customer costs, compared with the best adequate free alternative?**
+
+Return a separate `customer_value_at_100` object in the JSON response with `verdict` (`PASS`, `FAIL`, or `INSUFFICIENT_EVIDENCE`), `basis`, `customer_measurements`, `total_customer_costs_considered`, `best_free_alternative`, and `next_decisive_measurement`. A positive technical review alone cannot support a value PASS. Missing timing/acceptance evidence is insufficient evidence, not proof that the product is worthless. Include an optional clearly labelled personal purchase opinion separately; it is not measured customer value.
+
 ## Freeze one review packet
 
 The packet should contain:
@@ -179,6 +185,14 @@ This is an output template, not populated review evidence. Replace placeholders 
     "os_tools": null,
     "measured_comparison": null,
     "incremental_value_supported": null
+  },
+  "customer_value_at_100": {
+    "verdict": "INSUFFICIENT_EVIDENCE",
+    "basis": null,
+    "customer_measurements": [],
+    "total_customer_costs_considered": [],
+    "best_free_alternative": null,
+    "next_decisive_measurement": null
   },
   "commercial_observations": {
     "scope_consistent": null,
