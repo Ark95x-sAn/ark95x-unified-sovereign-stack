@@ -1,5 +1,6 @@
 """Adversarial checks for the isolated receipt transport (no physical device claims)."""
 import copy
+from contextlib import closing
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from pathlib import Path
@@ -124,7 +125,7 @@ class NativeBridgeTests(unittest.TestCase):
         self.assertEqual(snapshot["nodes"]["GM700"]["expires_at"], self.now + MAX_TTL)
 
     def test_status_audit_and_node_evidence_use_same_cross_connection_snapshot(self):
-        with sqlite3.connect(self.store.db) as db:
+        with closing(sqlite3.connect(self.store.db)) as db, db:
             db.execute("PRAGMA journal_mode=WAL")
         other_writer = Store(self.state)
         original_audit = self.store._audit
@@ -154,7 +155,7 @@ class NativeBridgeTests(unittest.TestCase):
 
     def test_hash_corruption_is_detected_before_append_or_restart(self):
         self.store.accept(self.envelope(), now=self.now)
-        with sqlite3.connect(self.store.db) as db:
+        with closing(sqlite3.connect(self.store.db)) as db, db:
             db.execute("UPDATE events SET chain_hash = ?", ("0" * 64,))
         with self.assertRaises(Rejected):
             self.store.audit()
@@ -165,10 +166,30 @@ class NativeBridgeTests(unittest.TestCase):
 
     def test_nonce_and_payload_tampering_detected(self):
         self.store.accept(self.envelope(), now=self.now)
-        with sqlite3.connect(self.store.db) as db:
+        with closing(sqlite3.connect(self.store.db)) as db, db:
             db.execute("UPDATE events SET nonce = ?", ("not-the-real-nonce",))
         with self.assertRaises(Rejected):
             self.store.audit()
+
+    def test_store_connection_closes_after_commit_and_exceptional_rollback(self):
+        with self.store.connect() as committed:
+            committed.execute("CREATE TABLE connection_cleanup_probe (value INTEGER)")
+            committed.execute("INSERT INTO connection_cleanup_probe VALUES (1)")
+        with self.assertRaises(sqlite3.ProgrammingError):
+            committed.execute("SELECT 1")
+
+        with self.assertRaisesRegex(RuntimeError, "fixture rollback"):
+            with self.store.connect() as rolled_back:
+                rolled_back.execute("INSERT INTO connection_cleanup_probe VALUES (2)")
+                raise RuntimeError("fixture rollback")
+        with self.assertRaises(sqlite3.ProgrammingError):
+            rolled_back.execute("SELECT 1")
+
+        with self.store.connect() as reader:
+            values = [row[0] for row in reader.execute("SELECT value FROM connection_cleanup_probe")]
+        self.assertEqual(values, [1])
+        with self.assertRaises(sqlite3.ProgrammingError):
+            reader.execute("SELECT 1")
 
     def test_actual_http_three_node_demo_has_explicit_synthetic_scope(self):
         result = demo(self.state)

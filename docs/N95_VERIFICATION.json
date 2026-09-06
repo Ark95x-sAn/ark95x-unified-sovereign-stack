@@ -2,10 +2,11 @@
   "observed_at": "2026-09-06T03:49:03.016468+00:00",
   "status": "LOCAL_INTEGRATION_VERIFIED_NOT_DEPLOYED",
   "test_suite": {
-    "cases_passed": 33,
+    "cases_passed": 34,
     "subtests_passed": 6,
     "failed": 0,
-    "scope": "focused bridge, handoff and legacy device mesh on Linux"
+    "scope": "focused bridge, handoff and legacy device mesh on Linux",
+    "observed_at": "2026-09-06T03:56:24.827852+00:00"
   },
   "synthetic_http_demo": {
     "identities": 3,
@@ -39,5 +40,11 @@
   "postgresql_acceptance": "NOT_RUN",
   "model_execution": "NOT_RUN",
   "commercial_demand": "UNTESTED",
-  "third_party_projects_installed": 0
+  "third_party_projects_installed": 0,
+  "hosted_windows_initial_run": {
+    "run_id": 34010115394,
+    "result": "3 test-fixture cleanup failures; 30 cases passed",
+    "correction": "Explicitly close raw SQLite test connections; production Store already closed them; added commit/rollback closure regression",
+    "rerun": "pending"
+  }
 }
