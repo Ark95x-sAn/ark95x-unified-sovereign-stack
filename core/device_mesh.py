@@ -2,7 +2,8 @@
 ARK95X Device Mesh
 ==================
 Maps 9 physical devices to their operational roles and handles context
-handoff logic across the sovereign device fleet.
+handoff preparation across the sovereign device fleet. This registry does
+not implement a transport or authenticate physical devices.
 
 Each device has:
     - id, name, roles[], status (online/offline/standby)
@@ -13,13 +14,14 @@ Each device has:
 
 from __future__ import annotations
 
+import math
 import time
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
 from loguru import logger
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 
 # ---------------------------------------------------------------------------
@@ -78,16 +80,29 @@ class DeviceNode(BaseModel):
     active_context: str | None = Field(
         None, description="Current task/context running on this device"
     )
+    _heartbeat_observed_at: float | None = PrivateAttr(default=None)
 
     def heartbeat(self) -> None:
-        """Update last seen timestamp."""
+        """Record a signal observed locally, not authenticated device proof.
+
+        A receiver must call this after observing a heartbeat. Configuration,
+        status changes and prepared handoffs must not manufacture this signal.
+        The monotonic observation is deliberately absent from serialized data.
+        """
         self.last_seen = datetime.now(timezone.utc).isoformat()
-        if self.status == DeviceStatus.OFFLINE:
-            self.status = DeviceStatus.ONLINE
+        self._heartbeat_observed_at = time.monotonic()
+        self.status = DeviceStatus.ONLINE
+
+    def has_recent_heartbeat(self, timeout_seconds: float) -> bool:
+        """Check freshness of this process's local heartbeat observation."""
+        if self._heartbeat_observed_at is None:
+            return False
+        age = time.monotonic() - self._heartbeat_observed_at
+        return 0 <= age <= timeout_seconds
 
 
 class ContextHandoff(BaseModel):
-    """Represents a context transfer between two devices."""
+    """A prepared transfer request; it is not a delivery receipt."""
 
     source_device: str
     target_device: str
@@ -96,7 +111,7 @@ class ContextHandoff(BaseModel):
     timestamp: str = Field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
-    sync_protocol: SyncProtocol = SyncProtocol.CLOUD_SYNC
+    sync_protocol: SyncProtocol | None = None
     status: str = "pending"
 
 
@@ -110,7 +125,7 @@ DEVICE_FLEET: dict[str, DeviceNode] = {
         name="PC Win11 Pro",
         platform="windows_11_pro",
         roles=["primary_command", "docker_host", "ollama_gpu", "development"],
-        status=DeviceStatus.ONLINE,
+        status=DeviceStatus.STANDBY,
         primary_model_access=[
             "claude_pro", "chatgpt_pro", "codex", "grok_xai",
             "perplexity_comet", "ollama_llama3", "ollama_deepseek",
@@ -180,7 +195,7 @@ DEVICE_FLEET: dict[str, DeviceNode] = {
         name="iPhone 12",
         platform="ios",
         roles=["communication", "2fa", "notifications", "quick_capture"],
-        status=DeviceStatus.ONLINE,
+        status=DeviceStatus.STANDBY,
         primary_model_access=[
             "chatgpt_pro", "claude_pro", "perplexity_comet",
         ],
@@ -306,10 +321,16 @@ DEVICE_FLEET: dict[str, DeviceNode] = {
 
 
 class DeviceMesh:
-    """Manages the sovereign device fleet and context handoffs."""
+    """Tracks local observations and prepares, but cannot deliver, handoffs."""
 
-    def __init__(self) -> None:
-        self.devices = DEVICE_FLEET.copy()
+    def __init__(self, heartbeat_timeout_seconds: float = 60.0) -> None:
+        if not math.isfinite(heartbeat_timeout_seconds) or heartbeat_timeout_seconds <= 0:
+            raise ValueError("heartbeat_timeout_seconds must be finite and positive")
+        self.heartbeat_timeout_seconds = heartbeat_timeout_seconds
+        self.devices = {
+            device_id: device.model_copy(deep=True)
+            for device_id, device in DEVICE_FLEET.items()
+        }
         self.handoff_log: list[ContextHandoff] = []
         logger.info(f"DeviceMesh initialized with {len(self.devices)} devices")
 
@@ -320,24 +341,39 @@ class DeviceMesh:
         return list(self.devices.values())
 
     def list_online(self) -> list[DeviceNode]:
-        return [d for d in self.devices.values() if d.status == DeviceStatus.ONLINE]
+        """Return ONLINE nodes with fresh local, unauthenticated observations."""
+        return [d for d in self.devices.values() if self._is_routable(d)]
+
+    def _is_routable(self, device: DeviceNode) -> bool:
+        return (
+            device.status == DeviceStatus.ONLINE
+            and device.has_recent_heartbeat(self.heartbeat_timeout_seconds)
+        )
+
+    def record_heartbeat(self, device_id: str) -> DeviceNode | None:
+        """Record a received signal locally; this does not verify device identity."""
+        device = self.devices.get(device_id)
+        if device:
+            device.heartbeat()
+        return device
 
     def list_by_role(self, role: str) -> list[DeviceNode]:
         return [d for d in self.devices.values() if role in d.roles]
 
     def set_status(self, device_id: str, status: DeviceStatus) -> DeviceNode | None:
+        """Set recorded state without manufacturing a heartbeat or reachability."""
         device = self.devices.get(device_id)
         if device:
             device.status = status
-            if status == DeviceStatus.ONLINE:
-                device.heartbeat()
+            if status != DeviceStatus.ONLINE:
+                device._heartbeat_observed_at = None
             logger.info(f"Device {device_id} status → {status.value}")
         return device
 
     def get_failover_chain(self, device_id: str, max_depth: int = 5) -> list[str]:
         """Get the failover chain for a device (avoids cycles)."""
         chain: list[str] = []
-        visited: set[str] = set()
+        visited: set[str] = {device_id}
         current = device_id
 
         for _ in range(max_depth):
@@ -359,7 +395,12 @@ class DeviceMesh:
         context: str,
         task_id: str | None = None,
     ) -> ContextHandoff:
-        """Transfer context from one device to another."""
+        """Prepare a context handoff without modifying either device's state.
+
+        No transport is implemented. This method cannot report completion,
+        prove target reachability, or release source context. A future delivery
+        implementation must obtain a real transport receipt before doing so.
+        """
         source = self.devices.get(source_id)
         target = self.devices.get(target_id)
 
@@ -368,10 +409,10 @@ class DeviceMesh:
         if not target:
             raise ValueError(f"Target device not found: {target_id}")
 
-        # Find common sync protocol
-        common_protocols = set(source.sync_bridges) & set(target.sync_bridges)
-        protocol = (
-            list(common_protocols)[0] if common_protocols else SyncProtocol.CLOUD_SYNC
+        # A common declared bridge is a proposal, not a working transport.
+        protocol = next(
+            (bridge for bridge in source.sync_bridges if bridge in target.sync_bridges),
+            None,
         )
 
         handoff = ContextHandoff(
@@ -380,70 +421,71 @@ class DeviceMesh:
             context_payload=context,
             task_id=task_id,
             sync_protocol=protocol,
-            status="completed",
+            status="transport_not_implemented",
         )
-
-        # Update device contexts
-        source.active_context = None
-        target.active_context = context
-        target.heartbeat()
 
         self.handoff_log.append(handoff)
         logger.info(
-            f"Context handoff: {source_id} → {target_id} via {protocol.value}"
+            f"Context handoff prepared: {source_id} → {target_id}; "
+            f"bridge={protocol.value if protocol else 'none'}; transport not implemented"
         )
 
         return handoff
 
     def auto_failover(self, device_id: str) -> DeviceNode | None:
-        """Automatically failover to the next available device."""
+        """Prepare a failover request; return None because no transfer occurred."""
         device = self.devices.get(device_id)
-        if not device or not device.failover_to:
+        if not device or not device.failover_to or not device.active_context:
             return None
 
         failover_chain = self.get_failover_chain(device_id)
         for target_id in failover_chain:
             target = self.devices.get(target_id)
-            if target and target.status != DeviceStatus.OFFLINE:
-                if device.active_context:
-                    self.handoff_context(
-                        device_id, target_id, device.active_context
-                    )
-                logger.info(f"Auto-failover: {device_id} → {target_id}")
-                return target
+            if target and self._is_routable(target):
+                self.handoff_context(device_id, target_id, device.active_context)
+                logger.info(
+                    f"Failover prepared: {device_id} → {target_id}; no migration occurred"
+                )
+                return None
 
         logger.warning(f"No available failover target for {device_id}")
         return None
 
     def find_best_device_for_model(self, model_id: str) -> DeviceNode | None:
-        """Find the best online device that can access a given model."""
+        """Find a fresh observed ONLINE device with declared model access.
+
+        The registry does not verify that the model is installed or accessible.
+        """
         candidates = [
             d for d in self.devices.values()
-            if d.status == DeviceStatus.ONLINE
+            if self._is_routable(d)
             and model_id in d.primary_model_access
         ]
-        if not candidates:
-            # Try standby devices
-            candidates = [
-                d for d in self.devices.values()
-                if d.status == DeviceStatus.STANDBY
-                and model_id in d.primary_model_access
-            ]
         return candidates[0] if candidates else None
 
     def mesh_status(self) -> dict[str, Any]:
         """Return full mesh status summary."""
         devices = self.list_devices()
+        online_ids = {device.id for device in self.list_online()}
+        offline_count = sum(1 for d in devices if d.status == DeviceStatus.OFFLINE)
         return {
             "total_devices": len(devices),
-            "online": sum(1 for d in devices if d.status == DeviceStatus.ONLINE),
-            "offline": sum(1 for d in devices if d.status == DeviceStatus.OFFLINE),
-            "standby": sum(1 for d in devices if d.status == DeviceStatus.STANDBY),
+            "online": len(online_ids),
+            "offline": offline_count,
+            "standby": len(devices) - len(online_ids) - offline_count,
+            "heartbeat_evidence": "local_observation_only_not_authenticated",
+            "transport_implemented": False,
             "total_handoffs": len(self.handoff_log),
             "devices": {
                 d.id: {
                     "name": d.name,
-                    "status": d.status.value,
+                    "status": (
+                        DeviceStatus.STANDBY.value
+                        if d.status == DeviceStatus.ONLINE and d.id not in online_ids
+                        else d.status.value
+                    ),
+                    "recorded_status": d.status.value,
+                    "last_seen": d.last_seen,
                     "roles": d.roles,
                     "model_count": len(d.primary_model_access),
                     "failover_to": d.failover_to,
