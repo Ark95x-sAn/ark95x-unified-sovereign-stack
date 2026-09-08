@@ -1,0 +1,127 @@
+[
+  {
+    "case_id": "RR-001",
+    "input": {"first_name": "Avery", "last_name": "North", "email": "avery.north@example.com", "phone": "641-555-0101", "opportunity_type": "real_estate", "property_address": "101 Oak Street", "source": "referral", "estimated_value": 125000, "urgency_days": 5},
+    "expected": {"valid": true, "score_band": "priority", "min_score": 95, "max_score": 100, "draft_contains": ["Avery", "real estate"]}
+  },
+  {
+    "case_id": "RR-002",
+    "input": {"first_name": "Morgan", "last_name": "Fields", "email": "morgan.fields@example.com", "opportunity_type": "grant_service", "property_address": "Rural Business Grant", "source": "inbound", "estimated_value": 25000, "urgency_days": 21},
+    "expected": {"valid": true, "score_band": "priority", "min_score": 75, "max_score": 100, "draft_contains": ["Morgan", "grant service"]}
+  },
+  {
+    "case_id": "RR-003",
+    "input": {"company": "Prairie Capital Example", "email": "capital@example.com", "phone": "641-555-0103", "opportunity_type": "investor", "source": "existing_client", "estimated_value": 300000, "urgency_days": 30},
+    "expected": {"valid": true, "score_band": "priority", "min_score": 90, "max_score": 100, "draft_contains": ["Prairie Capital Example", "investor"]}
+  },
+  {
+    "case_id": "RR-004",
+    "input": {"first_name": "Jordan", "last_name": "Lee", "phone": "641-555-0104", "opportunity_type": "property_management", "property_address": "44 Cedar Avenue", "source": "web", "estimated_value": 12000, "urgency_days": 45},
+    "expected": {"valid": true, "score_band": "review", "min_score": 55, "max_score": 90, "draft_contains": ["Jordan", "property management"]}
+  },
+  {
+    "case_id": "RR-005",
+    "input": {"first_name": "Taylor", "last_name": "Stone", "email": "taylor.stone@example.com", "opportunity_type": "ai_automation", "property_address": "Intake Automation", "source": "repeat", "estimated_value": 8000, "urgency_days": 14},
+    "expected": {"valid": true, "score_band": "review", "min_score": 60, "max_score": 74, "draft_contains": ["Taylor", "AI automation"]}
+  },
+  {
+    "case_id": "RR-006",
+    "input": {"company": "Example Farm Cooperative", "email": "ops.farm@example.com", "opportunity_type": "grant_service", "source": "manual", "estimated_value": 100000, "urgency_days": 90},
+    "expected": {"valid": true, "score_band": "review", "min_score": 70, "max_score": 74, "draft_contains": ["Example Farm Cooperative", "grant service"]}
+  },
+  {
+    "case_id": "RR-007",
+    "input": {"first_name": "Casey", "last_name": "Brooks", "phone": "641-555-0107", "opportunity_type": "real_estate", "property_address": "7 Pine Lane", "source": "manual", "estimated_value": 5000, "urgency_days": 120},
+    "expected": {"valid": true, "score_band": "nurture", "min_score": 40, "max_score": 49, "draft_contains": ["Casey", "real estate"]}
+  },
+  {
+    "case_id": "RR-008",
+    "input": {"first_name": "Riley", "last_name": "West", "email": "riley.west@example.com", "phone": "641-555-0108", "opportunity_type": "other", "property_address": "General Consultation", "source": "web", "estimated_value": 1000, "urgency_days": 60},
+    "expected": {"valid": true, "score_band": "nurture", "min_score": 40, "max_score": 49, "draft_contains": ["Riley", "other"]}
+  },
+  {
+    "case_id": "RR-009",
+    "input": {"company": "Northwind Example LLC", "email": "northwind@example.com", "opportunity_type": "ai_automation", "source": "inbound", "estimated_value": 50000, "urgency_days": 3},
+    "expected": {"valid": true, "score_band": "priority", "min_score": 85, "max_score": 100, "draft_contains": ["Northwind Example LLC", "AI automation"]}
+  },
+  {
+    "case_id": "RR-010",
+    "input": {"first_name": "Jamie", "last_name": "Park", "phone": "641-555-0110", "opportunity_type": "investor", "source": "referral", "estimated_value": 15000, "urgency_days": 30},
+    "expected": {"valid": true, "score_band": "review", "min_score": 70, "max_score": 74, "draft_contains": ["Jamie", "investor"]}
+  },
+  {
+    "case_id": "RR-011",
+    "input": {"first_name": "Cameron", "last_name": "Bell", "email": "cameron.bell@example.com", "opportunity_type": "property_management", "property_address": "22 Lake Road", "source": "manual", "estimated_value": 3000, "urgency_days": 365},
+    "expected": {"valid": true, "score_band": "nurture", "min_score": 40, "max_score": 49, "draft_contains": ["Cameron", "property management"]}
+  },
+  {
+    "case_id": "RR-012",
+    "input": {"company": "Main Street Example Inc", "email": "mainstreet@example.com", "phone": "641-555-0112", "opportunity_type": "real_estate", "property_address": "300 Main Street", "source": "existing_client", "estimated_value": 75000, "urgency_days": 8},
+    "expected": {"valid": true, "score_band": "priority", "min_score": 85, "max_score": 100, "draft_contains": ["Main Street Example Inc", "real estate"]}
+  },
+  {
+    "case_id": "RR-013",
+    "input": {"first_name": "Skyler", "last_name": "Grant", "email": "skyler.grant@example.com", "opportunity_type": "grant_service", "source": "web", "estimated_value": 9000, "urgency_days": 75},
+    "expected": {"valid": true, "score_band": "review", "min_score": 50, "max_score": 75, "draft_contains": ["Skyler", "grant service"]}
+  },
+  {
+    "case_id": "RR-014",
+    "input": {"first_name": "Drew", "last_name": "Quinn", "phone": "641-555-0114", "opportunity_type": "ai_automation", "source": "manual", "estimated_value": 0, "urgency_days": 20},
+    "expected": {"valid": true, "score_band": "nurture", "min_score": 40, "max_score": 49, "draft_contains": ["Drew", "AI automation"]}
+  },
+  {
+    "case_id": "RR-015",
+    "input": {"company": "Regional Example Partners", "email": "regional@example.com", "opportunity_type": "investor", "source": "inbound", "estimated_value": 1000000, "urgency_days": 1},
+    "expected": {"valid": true, "score_band": "priority", "min_score": 90, "max_score": 100, "draft_contains": ["Regional Example Partners", "investor"]}
+  },
+  {
+    "case_id": "RR-016",
+    "input": {"first_name": "Harper", "last_name": "Ives", "email": "harper.ives@example.com", "opportunity_type": "other", "source": "manual", "estimated_value": 0, "urgency_days": 400},
+    "expected": {"valid": true, "score_band": "nurture", "min_score": 20, "max_score": 40, "draft_contains": ["Harper", "other"]}
+  },
+  {
+    "case_id": "RR-017",
+    "input": {"first_name": "Parker", "last_name": "Cole", "email": "parker.cole@example.com", "phone": "641-555-0117", "opportunity_type": "property_management", "property_address": "18 Elm Drive", "source": "repeat", "estimated_value": 20000, "urgency_days": 10},
+    "expected": {"valid": true, "score_band": "priority", "min_score": 80, "max_score": 100, "draft_contains": ["Parker", "property management"]}
+  },
+  {
+    "case_id": "RR-018",
+    "input": {"company": "Iowa Example Works", "phone": "641-555-0118", "opportunity_type": "ai_automation", "source": "web", "estimated_value": 35000, "urgency_days": 60},
+    "expected": {"valid": true, "score_band": "review", "min_score": 60, "max_score": 85, "draft_contains": ["Iowa Example Works", "AI automation"]}
+  },
+  {
+    "case_id": "RR-019",
+    "input": {"first_name": "Reese", "last_name": "Hart", "email": "reese.hart@example.com", "opportunity_type": "real_estate", "property_address": "55 River Road", "source": "manual", "estimated_value": 200000, "urgency_days": 100},
+    "expected": {"valid": true, "score_band": "review", "min_score": 60, "max_score": 85, "draft_contains": ["Reese", "real estate"]}
+  },
+  {
+    "case_id": "RR-020",
+    "input": {"first_name": "Alex", "last_name": "Young", "email": "alex.young@example.com", "phone": "641-555-0120", "opportunity_type": "grant_service", "source": "referral", "estimated_value": 50000, "urgency_days": 25},
+    "expected": {"valid": true, "score_band": "priority", "min_score": 85, "max_score": 100, "draft_contains": ["Alex", "grant service"]}
+  },
+  {
+    "case_id": "RR-021",
+    "input": {"first_name": "Invalid", "last_name": "Email", "email": "not-an-email", "opportunity_type": "real_estate", "source": "manual", "estimated_value": 1000, "urgency_days": 30},
+    "expected": {"valid": false}
+  },
+  {
+    "case_id": "RR-022",
+    "input": {"first_name": "Missing", "last_name": "Contact", "opportunity_type": "grant_service", "source": "manual", "estimated_value": 1000, "urgency_days": 30},
+    "expected": {"valid": false}
+  },
+  {
+    "case_id": "RR-023",
+    "input": {"first_name": "Avery", "last_name": "North", "email": "AVERY.NORTH@EXAMPLE.COM", "phone": "(641) 555-0101", "opportunity_type": "real_estate", "property_address": "101 Oak Street", "source": "referral", "estimated_value": 125000, "urgency_days": 5},
+    "expected": {"valid": true, "score_band": "priority", "min_score": 95, "max_score": 100, "draft_contains": ["Avery", "real estate"], "duplicate_of": "RR-001"}
+  },
+  {
+    "case_id": "RR-024",
+    "input": {"first_name": "Avery", "last_name": "North", "email": "avery.north@example.com", "phone": "641-555-0101", "opportunity_type": "grant_service", "property_address": "Community Grant", "source": "referral", "estimated_value": 20000, "urgency_days": 45},
+    "expected": {"valid": true, "score_band": "review", "min_score": 70, "max_score": 74, "draft_contains": ["Avery", "grant service"]}
+  },
+  {
+    "case_id": "RR-025",
+    "input": {"first_name": "Long", "last_name": "Range", "email": "long.range@example.com", "opportunity_type": "other", "property_address": "Future Idea", "source": "manual", "estimated_value": 0, "urgency_days": 1000},
+    "expected": {"valid": true, "score_band": "nurture", "min_score": 20, "max_score": 40, "draft_contains": ["Long", "other"]}
+  }
+]

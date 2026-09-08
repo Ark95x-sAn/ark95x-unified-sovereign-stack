@@ -1,0 +1,105 @@
+{
+  "policy_id": "revenue-radar-control-plane",
+  "version": "2026-07-23.v1",
+  "default_mode": "dry_run",
+  "source_of_truth": {
+    "level_1": "sqlite",
+    "level_2_plus": "postgresql"
+  },
+  "states": [
+    "CAPTURED",
+    "NORMALIZED",
+    "DUPLICATE_REVIEW",
+    "SCORED",
+    "DRAFTED",
+    "PENDING_APPROVAL",
+    "APPROVED",
+    "REJECTED",
+    "HELD",
+    "SENDING",
+    "SIMULATED",
+    "HANDED_OFF",
+    "FAILED",
+    "RECONCILE",
+    "OUTCOME_RECORDED",
+    "CALIBRATION_REVIEW"
+  ],
+  "protocols": [
+    "RR-P01_INTAKE",
+    "RR-P02_EVIDENCE",
+    "RR-P03_IDENTITY_DEDUPLICATION",
+    "RR-P04_SCORING",
+    "RR-P05_DRAFTING",
+    "RR-P06_APPROVAL",
+    "RR-P07_HANDOFF",
+    "RR-P08_OUTCOME",
+    "RR-P09_INCIDENT",
+    "RR-P10_LEARNING"
+  ],
+  "approval": {
+    "required_for": [
+      "external_message",
+      "spending",
+      "contract",
+      "legal_filing",
+      "credential_change",
+      "sensitive_disclosure",
+      "data_deletion"
+    ],
+    "hash_fields": [
+      "opportunity_id",
+      "destination",
+      "channel",
+      "subject",
+      "body",
+      "actor",
+      "approved_at"
+    ],
+    "agent_self_approval": false,
+    "invalidate_on_payload_change": true
+  },
+  "external_handoff": {
+    "requires_approval_hash_match": true,
+    "requires_idempotency_key": true,
+    "webhook_acceptance_equals_delivery": false,
+    "automatic_retry_limit": 0,
+    "ambiguous_state": "RECONCILE"
+  },
+  "evidence": {
+    "required_fields": [
+      "source",
+      "observed_at",
+      "owner",
+      "confidence"
+    ],
+    "separate_fact_inference_generated_content": true,
+    "fabrication_policy": "STOP"
+  },
+  "stop_conditions": [
+    "UNRESOLVED_ELECTRICAL_SAFETY",
+    "UNKNOWN_DATA_SOURCE",
+    "FABRICATED_INFORMATION",
+    "APPROVAL_HASH_MISMATCH",
+    "POSSIBLE_DUPLICATE_DELIVERY",
+    "CREDENTIAL_EXPOSURE",
+    "SENSITIVE_BOUNDARY_VIOLATION",
+    "DATA_CORRUPTION",
+    "RESTORE_FAILURE"
+  ],
+  "phase_gates": {
+    "local_calibration": {
+      "required_field_completeness_min": 0.95,
+      "correct_routing_min": 0.9,
+      "unauthorized_actions_max": 0,
+      "substantial_rewrite_rate_max": 0.2,
+      "gold_set_cases_min": 25
+    },
+    "production": {
+      "backup_restore_test": true,
+      "provider_delivery_callback": true,
+      "private_network_only": true,
+      "incident_owner_assigned": true
+    }
+  }
+}
+
