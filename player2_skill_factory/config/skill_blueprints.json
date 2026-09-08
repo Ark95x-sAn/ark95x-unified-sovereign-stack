@@ -1,0 +1,133 @@
+{
+  "version": "1.0",
+  "model_lanes": [
+    {
+      "id": "codex",
+      "role": "builder",
+      "safe_mode": "workspace-write",
+      "use_for": [
+        "build",
+        "patch",
+        "deploy",
+        "test"
+      ]
+    },
+    {
+      "id": "claude",
+      "role": "auditor",
+      "safe_mode": "workspace",
+      "use_for": [
+        "audit",
+        "refactor",
+        "architecture",
+        "documentation"
+      ]
+    },
+    {
+      "id": "ollama",
+      "role": "local_reasoner",
+      "safe_mode": "plan",
+      "use_for": [
+        "local reasoning",
+        "routing",
+        "summaries"
+      ]
+    },
+    {
+      "id": "hermes",
+      "role": "symbolic_compiler",
+      "safe_mode": "plan",
+      "use_for": [
+        "strategy translation",
+        "symbolic language to system objects"
+      ]
+    },
+    {
+      "id": "github",
+      "role": "source_of_truth",
+      "safe_mode": "official_api",
+      "use_for": [
+        "repo metadata",
+        "issues",
+        "pull requests",
+        "evidence"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "id": "github_pull_map",
+      "target": "github",
+      "triggers": [
+        "github",
+        "pull",
+        "repo",
+        "mirror"
+      ],
+      "safe_mode": "read_only"
+    },
+    {
+      "id": "repo_to_skill_generator",
+      "target": "python",
+      "triggers": [
+        "skill",
+        "generator",
+        "segments"
+      ],
+      "safe_mode": "workspace"
+    },
+    {
+      "id": "operations_score_engine",
+      "target": "python",
+      "triggers": [
+        "score",
+        "priority",
+        "highest value",
+        "time money"
+      ],
+      "safe_mode": "workspace"
+    },
+    {
+      "id": "trading_research_translator",
+      "target": "python",
+      "triggers": [
+        "trading",
+        "algo",
+        "flametrace",
+        "map elites"
+      ],
+      "safe_mode": "research_only"
+    },
+    {
+      "id": "player2_router",
+      "target": "python",
+      "triggers": [
+        "player 2",
+        "autopilot",
+        "automation",
+        "operator"
+      ],
+      "safe_mode": "workspace"
+    },
+    {
+      "id": "proof_gate",
+      "target": "python",
+      "triggers": [
+        "proof",
+        "evidence",
+        "manifest"
+      ],
+      "safe_mode": "read_only"
+    }
+  ],
+  "symbolic_compiler": {
+    "aura": "context_state_signature",
+    "consciousness": "system_awareness_from_repos_logs_tasks",
+    "pulse": "scheduled_check",
+    "field": "workspace_repos_logs",
+    "creation": "generated_assets",
+    "cern_down": "external_source_unavailable_local_first_fallback",
+    "proof": "hashes_logs_manifests"
+  },
+  "operations_score_formula": "(impact * confidence * urgency) - (risk + complexity + cost)"
+}
