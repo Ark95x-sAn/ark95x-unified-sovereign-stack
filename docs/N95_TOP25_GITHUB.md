@@ -1,5 +1,7 @@
 # Network-95: 25 GitHub candidates across capability classes
 
+> Current harvesting gate: [2026-09-13 preparation](#harvest-preparation--2026-09-13). Earlier adoption labels remain historical recommendations; reserve/reject and the existing Core dependency order govern current intake.
+
 This is a curated suitability review observed on 2026-09-06, not a worldwide ranking or a production bill of materials. Selection priorities: local operation, observable correctness, license clarity, supported device fit, integration burden and demonstrated need. No upstream source code was copied into the new bridge. These projects are reviewed candidates; installation is a separate step.
 
 **Canonical integration decision:** keep the existing Network-95 Core mission engine and C1–C6 queue. PostgreSQL remains the next production-state dependency in that queue; the later/now labels in the research below describe individual adoption costs, not permission to replace that queue with a new SQLite authority. The new bridge uses SQLite only as a transport receipt spool.
@@ -220,3 +222,144 @@ Project license and function were checked on each repository above. Additional d
 - Headscale release assets checked: https://github.com/juanfont/headscale/releases/tag/v0.29.3
 
 GitHub connector returned exact license content for n8n (blob SHA `f85f59baa906530c26cee26e0c9ddd6bd5f86dbd`) and Mosquitto (blob SHA `aae2e8ccf529cef6b058f98ede72090f6ae92721`). Release assets for restic, SOPS, OPA, and Headscale were read from the GitHub REST release metadata. Versions listed here record observations, not a production version pin or a security clearance.
+
+<!-- N95-HARVEST-2026-09-13:BEGIN -->
+## Harvest preparation — 2026-09-13
+
+```yaml
+mission: N95-HARVEST-PREP
+role: Black
+mode: research_and_documentation
+flow: [discover, verify, read, reserve_or_reject]
+canonical_page: docs/N95_TOP25_GITHUB.md
+protocol: docs/REPO_EXTRACTION_PROTOCOL.md
+registry: docs/JARVIS_REGISTRY.md
+architecture_baseline_commit: a409b793f90d927b5baa30b46108c0752173ffcd
+architecture_review: STATIC_COMPARISON_COMPLETE_WITH_GAPS
+live_verification: NOT_RUN
+dependency_installation: NOT_PERFORMED
+device_admission: UNKNOWN
+execution_authority_added: false
+terminal_decisions: [reserve, reject]
+```
+
+### Category map and extractive patterns
+
+Category IDs preserve the nine existing Jarvis layers. Cross-cutting device constraints apply to every layer. Each pattern is a review target; reserve is a research disposition only.
+
+| ID / existing layer | Extractive pattern | Existing destination / dependency | Required acceptance evidence | Disposition |
+|---|---|---|---|---|
+| C01 Brain | Intent → typed mission → bounded attempts → checked result; inspect routing, checkpoint and failure paths | Existing Core; GM700; preserve C1–C6 sequence [S0] | One authoritative mission ID across retry/restart; no parallel mission authority | reserve |
+| C02 Inference | Model identity → API request schema → output shape → timeout/error receipt [S2] | RTX worker through Core; C3 after C1/C2 | Fresh authorized model response; dimensions and finite values observed; independent repeat | reserve |
+| C03 Memory | Source bytes → hash → source locator → derived chunks → retrieval → cited answer | Core evidence index; optional pgvector/Qdrant only after corpus and retrieval baseline | Every answer claim resolves to retained source; stale/deleted source excluded; no retrieval result becomes authority | reserve |
+| C04 Automation | Trigger → idempotency key → transactional claim → bounded retry → result | Existing Core scheduler; C1–C3; Node-RED/n8n/Temporal remain conditional candidates | Duplicate trigger and worker crash do not duplicate the external effect; attempt/result linked to same mission | reserve |
+| C05 Tools | Repository → allowlisted files → path/symbol map → bounded source slice; typed read-only adapter [S3/S5] | Existing adapter boundary; C4; use plain file reads before adding dependencies | Full source retrievable at pinned revision; input/output contract checked; denied action remains denied | reserve |
+| C06 Dashboard | Receipt → timestamp/freshness → status projection → source drilldown | Existing Core API; Surface review; C5 | Missing/stale receipt displays UNKNOWN/STALE; installed and verified have distinct states | reserve |
+| C07 Security | Identity → scope → policy decision → authenticated request → replay/expiry check [S0] | Existing Core policy + native bridge; no self-promotion | Wrong identity, stale receipt, replay conflict and scope escalation rejected; an independent observer confirms | reserve |
+| C08 Data | Document → structured export → source/page/table locator; mission key → database constraints [S1/S4] | PostgreSQL authoritative state; transport SQLite remains a spool; document worker follows C4 | Required fields, page/row provenance and units preserved; duplicate keys rejected; restore reconstructs state | reserve |
+| C09 Domain | Approved business question → authorized input schema → evidence-linked fields → reviewable result | First approved business-folder-to-brief workflow; C5/C6 | Selected brief is checked against original documents; domain action authority remains separate | reserve |
+
+### Domain and node fit
+
+| Boundary | Result of static comparison | Still required |
+|---|---|---|
+| GM700 control/state | Matches `N95_INTEGRATION.md`: existing Core + PostgreSQL + authenticated gateway | Actual Core source locator, version/schema pin; transactions, restart and restore receipts |
+| RTX compute | Matches bounded worker role; no new orchestrator | Authenticated endpoint, measured hardware/model fit, scoped execution receipt |
+| Surface Pro X | Matches browser command/review role | ARM64 client fit; reads the same Core state; no inferred local server compatibility |
+| Business/research | Extraction supports the selected source-linked operational brief | Approved sample corpus and an answer-quality fixture |
+| Real estate/finance | Use the same evidence schema with domain-specific units, dates and review | Defined read-only use case; no research record authorizes signing, filing, payment or trading |
+| Legacy shell/roles | Preserve current names and boundaries; this pass remains Black throughout | Exact Prime Fire / Ran / Sentinel / Body gate implementation bindings are absent from the inspected source set; do not invent aliases or replace authority |
+| Learning | Derived procedures remain candidates until independently verified | Replay evidence, retained baseline, measurable improvement and rollback; no automatic policy/model promotion |
+
+### Source receipts
+
+Inspection date: 2026-09-13 UTC. Revision pins identify the bytes reviewed; they are not approved release versions. Recent commits are a maintenance signal only. No complete vulnerability audit or transitive-license clearance is claimed.
+
+| ID | Repository and revision | Material read | Evidence scope |
+|---|---|---|---|
+| S0 | [Ark95x-sAn/ark95x-unified-sovereign-stack](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/tree/a409b793f90d927b5baa30b46108c0752173ffcd) · `a409b793f90d927b5baa30b46108c0752173ffcd` | [docs/N95_INTEGRATION.md](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/blob/a409b793f90d927b5baa30b46108c0752173ffcd/docs/N95_INTEGRATION.md), [n95_native/core_handoff.py](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/blob/a409b793f90d927b5baa30b46108c0752173ffcd/n95_native/core_handoff.py) | Existing boundaries + code read; no execution |
+| S1 | [postgres/postgres](https://github.com/postgres/postgres/tree/8c7a74c3239ce29940582643533a190721b395c0) · `8c7a74c3239ce29940582643533a190721b395c0` | [doc/src/sgml/ddl.sgml](https://github.com/postgres/postgres/blob/8c7a74c3239ce29940582643533a190721b395c0/doc/src/sgml/ddl.sgml), [COPYRIGHT](https://github.com/postgres/postgres/blob/8c7a74c3239ce29940582643533a190721b395c0/COPYRIGHT) | Constraints documentation + license read; development revision, not production pin |
+| S2 | [ollama/ollama](https://github.com/ollama/ollama/tree/53fed26112817f7c55f664efb9e3f65f06cab7db) · `53fed26112817f7c55f664efb9e3f65f06cab7db` | [api/types.go](https://github.com/ollama/ollama/blob/53fed26112817f7c55f664efb9e3f65f06cab7db/api/types.go), [LICENSE](https://github.com/ollama/ollama/blob/53fed26112817f7c55f664efb9e3f65f06cab7db/LICENSE) | Request/response code + runtime license read; model terms separate |
+| S3 | [yamadashy/repomix](https://github.com/yamadashy/repomix/tree/4788909d62d6f6236627a9ba464ab8f8b9ad1c94) · `4788909d62d6f6236627a9ba464ab8f8b9ad1c94` | [README.md](https://github.com/yamadashy/repomix/blob/4788909d62d6f6236627a9ba464ab8f8b9ad1c94/README.md), [LICENSE](https://github.com/yamadashy/repomix/blob/4788909d62d6f6236627a9ba464ab8f8b9ad1c94/LICENSE) | README + package.json + license read; functionality described, not tested |
+| S4 | [docling-project/docling](https://github.com/docling-project/docling/tree/5ea6490ffdc57b2fd7de5cc436f2d0a22f2214d4) · `5ea6490ffdc57b2fd7de5cc436f2d0a22f2214d4` | [README.md](https://github.com/docling-project/docling/blob/5ea6490ffdc57b2fd7de5cc436f2d0a22f2214d4/README.md), [LICENSE](https://github.com/docling-project/docling/blob/5ea6490ffdc57b2fd7de5cc436f2d0a22f2214d4/LICENSE) | README + pyproject.toml + license read; functionality described, not tested |
+| S5 | [modelcontextprotocol/python-sdk](https://github.com/modelcontextprotocol/python-sdk/tree/9972c21aa42054fb1450c5fc614761ed11847ec6) · `9972c21aa42054fb1450c5fc614761ed11847ec6` | [README.md](https://github.com/modelcontextprotocol/python-sdk/blob/9972c21aa42054fb1450c5fc614761ed11847ec6/README.md), [LICENSE](https://github.com/modelcontextprotocol/python-sdk/blob/9972c21aa42054fb1450c5fc614761ed11847ec6/LICENSE) | README + pyproject.toml + license read; v2 examples, not tested |
+
+Additional architecture material read at the baseline: [AGENTS.md](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/blob/a409b793f90d927b5baa30b46108c0752173ffcd/AGENTS.md), [deployment blueprint](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/blob/a409b793f90d927b5baa30b46108c0752173ffcd/JARVIS_DEPLOYMENT_BLUEPRINT.md), [registry](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/blob/a409b793f90d927b5baa30b46108c0752173ffcd/docs/JARVIS_REGISTRY.md), [extraction protocol](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/blob/a409b793f90d927b5baa30b46108c0752173ffcd/docs/REPO_EXTRACTION_PROTOCOL.md), [Windows audit](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/blob/a409b793f90d927b5baa30b46108c0752173ffcd/docs/N95_NATIVE_WINDOWS.md), [device mesh](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/blob/a409b793f90d927b5baa30b46108c0752173ffcd/core/device_mesh.py), [stack ledger](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/blob/a409b793f90d927b5baa30b46108c0752173ffcd/docs/STACK_LEDGER.md), and [CI workflow](https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack/blob/a409b793f90d927b5baa30b46108c0752173ffcd/.github/workflows/ci.yml).
+
+### Five priority reserves
+
+Ranks order preparation value; they do not change Core's execution dependency order. Tests below are proposed acceptance criteria and have not run.
+
+| Rank / ID | Source-derived pattern | Dependencies / license | Bounded test and pass criterion | Reason reserved |
+|---|---|---|---|---|
+| 1 / R01 | PostgreSQL NOT NULL + UNIQUE mission/idempotency identity and FOREIGN KEY evidence links [S1] | Existing Core schema, supported PostgreSQL release, authenticated writer; PostgreSQL license notices | In a disposable database, submit one key concurrently and retry after restart: one mission; all evidence references valid; conflicting payload rejected; rollback leaves no partial record | C1 prerequisite. Constraints alone do not guarantee exactly-once external effects |
+| 2 / R02 | Digest-bound draft evidence and explicit non-authority flags [S0] | Reuse `n95_native/core_handoff.py`; actual Core source needed | Changed observation bytes fail digest validation; unchanged packet remains draft; no dispatch, physical identity or node promotion inferred | Existing component can be reused; independent physical transport verification still missing |
+| 3 / R03 | Embedding request/response contract [S2] | Exact RTX endpoint, model identity/digest, scoped application authentication; Ollama MIT runtime; model license separate | Approved fixed input → one vector with exactly 768 finite numeric values for the selected Nomic Embed Text acceptance. No padding/truncation or requested output dimension to manufacture success. Independent White makes a fresh request; invalid-port attempt records failure | C3 / Mission 011 acceptance target supplied by operator; upstream API supports embeddings but does not prove this model/endpoint works |
+| 4 / R04 | Source packing with explicit inclusions, provenance and optional structural compression [S3] | Observed package 1.18.0 requires Node >=22; Tree-sitter/Secretlint dependencies; MIT notices; reuse ordinary file reads first | On a small public fixture, record bytes/tokens before/after and 5 fixed code questions; 5/5 answers must cite original pinned source. Measure reduction rather than assume it. Retain full code for behavior checks | New source candidate. Compression is documented as experimental and removes implementation details; do not execute remote repo configs or treat secret scanning as a guarantee |
+| 5 / R05 | Structured document export with original-source linkage [S4] | Manifest at pin names `docling-slim` 2.126.0, Python >=3.10,<4; chosen format/model extras and hardware fit; code MIT, model terms separate | Three approved synthetic documents covering text, table and scan; 10 predefined fields with correct value/unit/date and source location, zero unsupported fields; measure errors/resources | New source candidate for C4/C5. Slim/core package and OCR/model choices must be resolved; README claims are not measured extraction accuracy |
+
+MCP [S5] remains a C05 reserve supporting R04/R05 only when a real app boundary requires it. Pinned README describes stable v2 and `from mcp.server import MCPServer`; v1 examples require migration or an explicit compatible v1 dependency. Python >=3.10 is declared. A successful tool listing or structured response alone does not prove authentication, scoped authorization or business completion.
+
+### Rejections and blocked assumptions
+
+| ID | Candidate or inference | Decision | Evidence / condition to reopen |
+|---|---|---|---|
+| X01 | Install every project in the catalogue | reject | Conflicts with existing minimum stack and C1–C6 dependency sequence; reopen one candidate for a named unmet need |
+| X02 | Use a second orchestrator/vector store/SQLite spool as mission authority | reject | `N95_INTEGRATION.md` and `core_handoff.py` preserve one Core authority |
+| X03 | Verify behavior from a compressed source pack alone | reject | Repomix explicitly removes implementation details; re-open original pinned files and relevant tests |
+| X04 | Installed/listed/reachable/signed means working | reject | Native audit measures limited prerequisites; key possession is not physical identity; receipt is not independent verification |
+| X05 | Historical ledger growth/value/deployment assertions as current evidence | reject | Ledger claims lack matching fresh execution/measurement receipts in the inspected evidence; retain as historical claims until substantiated |
+| X06 | Green generic CI proves tests and container health passed | reject | Existing `ci.yml` uses `pytest ... || true` and `curl ... || echo`; a green run can hide failure. Strict native workflow is separate and no run was verified here |
+| X07 | Copy an upstream README install command into desktop execution | reject | Runtime/permission/resource/release prerequisites must be resolved first; research does not admit a physical node |
+| X08 | Treat old “use now” / “later” adoption labels as execution permission | reject | Current harvesting terminal decisions are reserve/reject; Core PostgreSQL is a required next dependency, not an optional later substitute |
+
+### Admission and missing evidence
+
+| Gate | Rule | Observed status in this pass |
+|---|---|---|
+| Physical desktop admission | Fresh free-space reading on the designated target volume must be >=200 GB. Record raw bytes and unit. Below threshold or unknown → STOP / RETURN; no cleanup, cleanup planning, install or optimization on that target | UNKNOWN; no desktop inspected. Cloud source research/documentation is not desktop admission |
+| Node trust | discovered → authenticated → healthy → capability-tested → independently verified | No new device state established |
+| Source provenance | owner/repo + exact revision + file locator + observed date + license + claim/evidence distinction | Six source records populated above; transitive dependency review incomplete |
+| Existing Core | Locate authoritative implementation and schema before proposing a replacement | Missing from inspected checkout; adapter references external `src/n95_ops/engine.py` |
+| Role bindings | Preserve Black review / Orange execution / independent White / Green recording of accepted learning | No agent implementation or operational authority created by role labels |
+| API acceptance | `/api/tags` proves only a listing; actual model call and fresh independent output check required | NOT_RUN |
+| Writeback | Append under this page, retain prior review history, use guarded commit, log changed files | Verify exact persisted content before reporting saved |
+| Weekly preparation | Monday morning, America/Chicago; source/read/fit/delta pass; max five worthwhile reserves; retain reject reasons | Scheduler status comes from automation receipt, not this declaration |
+
+### Compact extraction record
+
+```json
+{
+  "schema": "n95.harvest.v1",
+  "mission_id": "N95-HARVEST-PREP",
+  "record_id": "Rxx",
+  "role": "Black",
+  "category_id": "Cxx",
+  "source": {
+    "repository": "owner/repo",
+    "revision": null,
+    "path": null,
+    "locator": null,
+    "observed_at_utc": null,
+    "license": null,
+    "evidence_kind": "documentation_or_code_read"
+  },
+  "claim": null,
+  "observed_evidence": null,
+  "pattern": {"input": null, "transform": null, "output": null},
+  "architecture": {"existing_module": null, "node_role": null, "core_dependency": null},
+  "dependencies": [],
+  "unknowns": [],
+  "data_and_permission_scope": null,
+  "first_test": {"fixture": null, "pass_criterion": null, "result": "NOT_RUN"},
+  "decision": "reserve",
+  "reason": null,
+  "reopen_condition": null,
+  "white_verification_receipt": null,
+  "runtime_verified": false
+}
+```
+
+Required nulls are unresolved evidence, never successful checks. A reserve may retain explicit blockers; a reject must state why and what new evidence could reopen it. Research provenance can be logged immediately; verified learning requires White acceptance.
+
+<!-- N95-HARVEST-2026-09-13:END -->

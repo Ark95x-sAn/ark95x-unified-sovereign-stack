@@ -53,3 +53,15 @@ Include now when the component is local-first, easy to test, documented, and dir
 Include later when the component is useful but not needed for the minimum stack.
 
 Reject when the component is redundant, unclear, unsafe, unmaintained, or outside the architecture.
+
+## 2026-09-13 — GitHub harvest preparation
+
+- **Crew / role:** Black; source discovery, verification, reading and static architecture review. Independent White did not run.
+- **Repository/tool:** existing unified stack; GitHub read/write connector; pinned source inspection for PostgreSQL, Ollama, Repomix, Docling and MCP Python SDK.
+- **Jarvis layers:** all nine existing categories mapped; five priority reserves; eight rejections with reopening conditions.
+- **Action taken:** appended extraction patterns, source ledger, architecture crosswalk, bounded acceptance criteria, admission rules and record schema under the existing `docs/N95_TOP25_GITHUB.md`; added harvesting mode to the existing extraction protocol.
+- **Files changed:** `docs/N95_TOP25_GITHUB.md`, `docs/REPO_EXTRACTION_PROTOCOL.md`, `docs/JARVIS_REGISTRY.md`.
+- **Risk label:** Yellow documentation write authorized by operator's request to append/fold into the existing page. No upstream code imported; no physical-device action or installation performed.
+- **Review result:** STATIC_COMPARISON_COMPLETE_WITH_GAPS. Core source/schema locator, target telemetry, authenticated RTX execution and fresh independent verification remain unresolved. Compression omits behavior; MCP v1/v2 examples differ; Docling extras/model terms need review. Historical ledger assertions and masked generic CI failures are not accepted as runtime evidence.
+- **Test command:** none; documentation-only pass. Validate preserved original text, nine unique category IDs, five reserve IDs, eight rejection IDs, immutable source links and exact writeback contents. All proposed capability tests remain NOT_RUN.
+- **Next move:** Monday harvesting preparation through this page; prioritize R01 Core transaction identity, then existing evidence handoff and RTX acceptance in C1–C6 order. A scheduler declaration alone is not evidence of an enabled task.
