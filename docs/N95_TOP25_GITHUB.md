@@ -324,7 +324,7 @@ MCP [S5] remains a C05 reserve supporting R04/R05 only when a real app boundary 
 | Role bindings | Preserve Black review / Orange execution / independent White / Green recording of accepted learning | No agent implementation or operational authority created by role labels |
 | API acceptance | `/api/tags` proves only a listing; actual model call and fresh independent output check required | NOT_RUN |
 | Writeback | Append under this page, retain prior review history, use guarded commit, log changed files | Verify exact persisted content before reporting saved |
-| Weekly preparation | Monday morning, America/Chicago; source/read/fit/delta pass; max five worthwhile reserves; retain reject reasons | Scheduler status comes from automation receipt, not this declaration |
+| Weekly preparation | Monday morning, America/Chicago; source/read/fit/delta pass; max five worthwhile reserves; retain reject reasons | ENABLED per scheduler receipt 2026-09-13; first scheduled 2026-09-14, approximately 08:00 Central; no run recorded |
 
 ### Compact extraction record
 
