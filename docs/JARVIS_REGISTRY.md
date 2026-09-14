@@ -67,3 +67,15 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Next move:** Monday harvesting preparation through this page; prioritize R01 Core transaction identity, then existing evidence handoff and RTX acceptance in C1–C6 order. A scheduler declaration alone is not evidence of an enabled task.
 
 - **Scheduling receipt, 2026-09-13:** N95 GitHub Harvest created and enabled for Monday mornings around 08:00 America/Chicago, starting 2026-09-14. GitHub read access was checked successfully before creation. No scheduled execution has run yet.
+
+## 2026-09-14 — GitHub harvest delta
+
+- **Crew / role:** Black; discover, verify, read, reserve/reject; no independent White run.
+- **Repository / tool:** GitHub source and documentation review; existing unified stack baseline `f9dae118f19babb54717ab8fb20e1cc36a4b7277`.
+- **Layers / changes:** C08 Data with C07/C05/C09 cross-links; R06 backup-chain rejection/restore acceptance added, R05 DOCX content-control handling and missing page provenance refined, X09–X10 unsupported inferences rejected. Five existing upstream heads checked; no new catalogue.
+- **Files changed:** `docs/N95_TOP25_GITHUB.md`, `docs/JARVIS_REGISTRY.md`; prior entries preserved.
+- **Risk / scope:** Yellow documentation write only. Source examples and fixtures read, not run; no package install, model pull, device action, deployment, workflow dispatch or private-data publication.
+- **Review result:** pinned PostgreSQL code/fixture and released Docling v2.127.0 code/fixture/manifests/license inspected; current Core source/binding and target telemetry remain UNKNOWN. All candidate tests NOT_RUN, White receipt absent.
+- **Validation:** exact prior-content preservation, immutable source locators and read-back comparison of both documentation files. No runtime test command.
+- **Write execution control:** documentation commit includes `[skip ci]` to avoid the repository's push-triggered installs/container runs under this research-only mandate. No workflow or protection configuration changed; skipped checks are not passes. [GitHub behavior reference](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs).
+- **Next move:** identify the existing Core storage implementation and selected supported PostgreSQL backup strategy; retain C1→C2→C3→C4→C5→C6 order. R05's next later fixture checks wrapped DOCX cells and preserves unknown page provenance.

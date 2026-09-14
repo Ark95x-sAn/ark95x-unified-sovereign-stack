@@ -362,4 +362,67 @@ MCP [S5] remains a C05 reserve supporting R04/R05 only when a real app boundary 
 
 Required nulls are unresolved evidence, never successful checks. A reserve may retain explicit blockers; a reject must state why and what new evidence could reopen it. Research provenance can be logged immediately; verified learning requires White acceptance.
 
+
+### Harvest delta — 2026-09-14
+
+| Run evidence | Observation |
+|---|---|
+| Role / flow | Black throughout: discover → verify → read → reserve/reject |
+| Existing-state baseline | `f9dae118f19babb54717ab8fb20e1cc36a4b7277`; required five governance/catalogue files plus README and deployment blueprint read; architecture unchanged |
+| Scope | Five existing upstream sources checked against S1–S5; three advanced, two unchanged; no new catalogue or source-tree import |
+| New value | One new reserve R06; existing R05 refined for released DOCX behavior and missing page provenance; two rejected inferences |
+| Execution / admission | Capability tests NOT_RUN; independent White NOT_RUN; physical free space UNKNOWN; no target admitted, cleaned, planned for cleanup, installed or executed |
+| Authority | Core/PostgreSQL remains the only mission authority; GM700 control, RTX worker, Surface review; C1 precedes C2–C6 |
+
+#### Source deltas and pins
+
+| Source | Prior → inspected revision | Date / maintenance evidence | Decision scope |
+|---|---|---|---|
+| postgres/postgres | S1 `8c7a74c3239ce29940582643533a190721b395c0` → `6547a2f6cccf8cfbfdd91a0b278bb65f0b00bdd2` | 22 commits in compared range; backup-chain rejection change `724477d67e2307fbaea3452e8b78b87572f2ea02`, 2026-09-14 13:33:03 UTC | reserve R06 test pattern; development-source observation, not an approved installed version |
+| docling-project/docling | S4 `5ea6490ffdc57b2fd7de5cc436f2d0a22f2214d4` → `014e8e357b24aa9d5113317fa454df8a70de9aeb` | [v2.127.0 release](https://github.com/docling-project/docling/releases/tag/v2.127.0), published 2026-09-14 08:57:03 UTC, not marked draft/prerelease; tag resolves to inspected revision | refine R05, no duplicate candidate. Diff since S4 is version/changelog/lock metadata; reported parser fixes were already in S4 source, not newly written since the previous review |
+| yamadashy/repomix | S3 `4788909d62d6f6236627a9ba464ab8f8b9ad1c94` → `6c5ead0d2b83911d4284be9f3424e7381ae44763` | Six commits; last 2026-09-13 06:38:37 UTC; workflow pins, browser type dependency and development lockfile updates | reject new extraction-lift inference; R04 unchanged |
+| ollama/ollama | S2 → unchanged `53fed26112817f7c55f664efb9e3f65f06cab7db` | Same inspected head, last commit 2026-09-11 | No new reserve; R03 stays NOT_RUN |
+| modelcontextprotocol/python-sdk | S5 → unchanged `9972c21aa42054fb1450c5fc614761ed11847ec6` | Same inspected head, last commit 2026-09-07 | No new reserve; version-specific v1/v2 restriction unchanged |
+
+#### Reserve R06 — backup compatibility before restore
+
+| Field | Evidence / proposed application |
+|---|---|
+| Category | C08 Data; secondary C07 Security |
+| Named unmet need | C2 requires a restorable GM700 mission ledger; a successful backup command is insufficient |
+| Observed code | [pg_combinebackup.c](https://github.com/postgres/postgres/blob/6547a2f6cccf8cfbfdd91a0b278bb65f0b00bdd2/src/bin/pg_combinebackup/pg_combinebackup.c) `check_control_files` now exits with an error where it previously warned and continued: some earlier backups have checksums off while the final backup has them on. The reverse direction remains accepted. This is not a blanket rejection of every mixed chain |
+| Documentation / fixture read | [limitations](https://github.com/postgres/postgres/blob/6547a2f6cccf8cfbfdd91a0b278bb65f0b00bdd2/doc/src/sgml/ref/pg_combinebackup.sgml); [024_combinebackup_mixed.pl](https://github.com/postgres/postgres/blob/6547a2f6cccf8cfbfdd91a0b278bb65f0b00bdd2/src/test/modules/test_checksums/t/024_combinebackup_mixed.pl). Fixture asserts the disallowed chain is refused, then restores an allowed reverse chain and checks readable relations. It is gated by PG_TEST_EXTRA checksum selection; test presence does not establish a test run |
+| Extracted input → transform → output | Backup chain + system identity + per-backup checksum state → compatibility/integrity checks → explicit reject OR restore candidate; actual restored ledger validation is a separate required result |
+| Existing integration seam | Existing `n95_native/core_handoff.py::prepare` can carry digest-bound draft observations only; C2 storage acceptance belongs to the external Core. No backup executor or Core storage module was found in this checkout; binding remains UNKNOWN rather than inventing one |
+| Dependencies / license | Exact supported PostgreSQL version and chosen backup method; complete chain/manifest/WAL, disposable restore destination and restricted database credentials. [COPYRIGHT](https://github.com/postgres/postgres/blob/6547a2f6cccf8cfbfdd91a0b278bb65f0b00bdd2/COPYRIGHT) read: PostgreSQL license, retain notices. Upstream change says backpatch-through 19; applicability to a selected release is not established. Do not replace a supported release with development HEAD |
+| Black inference | Extend the C2 acceptance checklist with version/configuration compatibility and independent restored-data checks; no need to introduce incremental backup if the chosen deployment uses another verified strategy |
+| Proposed bounded test | After C1 and separate execution authorization: one disposable three-record mission/evidence fixture; compatible backup restores all three IDs, payload digests and foreign-key relationships. A chain with the disallowed checksum transition is rejected, never reported restored. Source backups remain unchanged; capture process status and fresh SQL observations |
+| Limits / permissions | Synthetic records only, no production restores or checksum-setting changes. No production use of fixture `--no-sync`; avoid hard-link restore paths that can mutate source backups. Chain compatibility does not prove each backup intact |
+| Decision / next gate | reserve; first resolve actual Core storage source, PostgreSQL version and backup strategy. Result NOT_RUN; White receipt absent |
+
+#### R05 refinement — released DOCX cell handling, structural provenance
+
+| Field | Evidence / proposed application |
+|---|---|
+| Category | C08 Data; secondary C05 Tools / C09 Domain |
+| Named unmet need | C4/C5 business-folder-to-brief must not silently drop dates or associate a value with the wrong table header |
+| Observed code | [msword_backend.py](https://github.com/docling-project/docling/blob/014e8e357b24aa9d5113317fa454df8a70de9aeb/docling/backend/msword_backend.py) `_row_cells` unwraps `w:sdt/w:sdtContent` while retaining cell order. [Tests](https://github.com/docling-project/docling/blob/014e8e357b24aa9d5113317fa454df8a70de9aeb/tests/test_backend_msword.py) cover first/middle/multiple wrapped cells and a one-cell layout table. These tests were read, not executed |
+| Provenance finding | [Golden JSON](https://github.com/docling-project/docling/blob/014e8e357b24aa9d5113317fa454df8a70de9aeb/tests/data/docx/groundtruth/docx_sdt_table_cells.docx.json) contains table row/column offsets, empty `prov` arrays and `pages: {}`. It does not establish rendered-page coordinates |
+| Extracted input → transform → output | Approved DOCX bytes → preserve wrapped cells and grid positions → values with document digest, structural table/row/column locator and explicit page UNKNOWN |
+| Existing integration seam | Existing `n95_native/core_handoff.py` is a technical draft-observation boundary, not a document parser. C4 document worker remains unimplemented in the inspected checkout. Route a future bounded worker through the existing Core; GM700 records mission/evidence, RTX is optional compute, Surface reviews results |
+| Version / dependencies | [Meta-package manifest](https://github.com/docling-project/docling/blob/014e8e357b24aa9d5113317fa454df8a70de9aeb/packages/docling/pyproject.toml) identifies `docling==2.127.0` → `docling-slim[standard]==2.127.0`; Python >=3.10,<4.0. [Root manifest](https://github.com/docling-project/docling/blob/014e8e357b24aa9d5113317fa454df8a70de9aeb/pyproject.toml) lists `format-docx` with python-docx >=1.2,<2. Resolve the minimal complete dependency set before packaging; do not assume the standard bundle is minimal |
+| License / data limits | [MIT license](https://github.com/docling-project/docling/blob/014e8e357b24aa9d5113317fa454df8a70de9aeb/LICENSE) read; retain notices. Model/OCR and dependency terms remain separate. Start with synthetic local DOCX; no remote model/service calls, external image retrieval or broader filesystem access authorized |
+| Proposed bounded test | Four 2×4 fixtures: no wrapper; first column wrapped; middle column wrapped; both wrapped. All 16 data values must retain the correct header/column. One additional 1×1 wrapped fixture must retain its text. Every output points to original document bytes and structural locator; unprovided pages stay UNKNOWN |
+| Blocker / decision | reserve as R05 refinement. Minimal dependency/package fit, actual worker and local execution evidence absent. If page-number citations are required, obtain a separately verified layout/render mapping; do not invent pages. Result NOT_RUN; White receipt absent |
+
+#### Rejected inferences and deduplication
+
+| ID | Inference | Decision / reopening evidence |
+|---|---|---|
+| X09 | Repomix's six new commits demonstrate better source compression/extraction | reject. [Compared patch](https://github.com/yamadashy/repomix/compare/4788909d62d6f6236627a9ba464ab8f8b9ad1c94...6c5ead0d2b83911d4284be9f3424e7381ae44763) changes workflow pins, browser types and development lockfiles, including js-yaml 4.3.1→4.3.2. No extraction implementation or benchmark changed in that range. Reopen for a relevant implementation change or measured fixture result; this is not a claim that dependency maintenance lacks security value |
+| X10 | Docling structural table offsets establish page-number provenance | reject. The inspected golden JSON has empty page/provenance collections. Reopen only with a verified page mapping; structural citations remain a distinct usable output |
+| Dedup | Newly published Docling release implies all listed fixes landed after S4 | reject that chronology. The one-commit comparison changes release metadata and locks, not parser source. Preserve S4 provenance; new value is the release pin and newly inspected failure/fixture details |
+
+Other category decisions remain unchanged; no quota-filling reserves. R01 Core transaction identity still precedes R06/C2 and R05/C4–C5 execution. No live capability, installed software, revenue result or independent verification was established.
+
 <!-- N95-HARVEST-2026-09-13:END -->
