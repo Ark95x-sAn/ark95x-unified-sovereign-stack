@@ -79,3 +79,16 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Validation:** exact prior-content preservation, immutable source locators and read-back comparison of both documentation files. No runtime test command.
 - **Write execution control:** documentation commit includes `[skip ci]` to avoid the repository's push-triggered installs/container runs under this research-only mandate. No workflow or protection configuration changed; skipped checks are not passes. [GitHub behavior reference](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs).
 - **Next move:** identify the existing Core storage implementation and selected supported PostgreSQL backup strategy; retain C1→C2→C3→C4→C5→C6 order. R05's next later fixture checks wrapped DOCX cells and preserves unknown page provenance.
+
+## 2026-09-21 — GitHub harvest delta
+
+- **Crew / role:** Black; discover, verify, read, reserve/reject. Independent White did not run.
+- **Repository / baseline:** existing unified stack `01cb2442757370a32b1a560bf298d6f466b9522b`; five governed files read first, then README, deployment blueprint and `n95_native/core_handoff.py`.
+- **Named unmet need:** fail-closed source harvesting and C1 mission/evidence constraints under untrusted repository metadata, least-privilege role boundaries and exact-version assumptions.
+- **Layers / decisions:** C08/C07 R01 refined for PostgreSQL RI permission/cache failure coverage; C05/C07 R04 refined for Repomix v1.18.1 Git-config non-execution and shell/YAML preservation. X11–X14 reject read-only-means-non-executing, post-tag Docling/MCP fix attribution, and Ollama-hardening-means-working inferences.
+- **Files changed:** `docs/N95_TOP25_GITHUB.md`, `docs/JARVIS_REGISTRY.md`; sole catalogue and earlier provenance preserved.
+- **Risk / scope:** Yellow documentation write only. No install, runtime execution, model pull, deployment, workflow dispatch, device action, cleanup, account/permission change, message or private-data publication.
+- **Review result:** STATIC_COMPARISON_COMPLETE_WITH_GAPS. Exact pins, code, tests, manifests, licenses and releases read. Existing Core storage source/version, extractor and Ollama adapter bindings, target free space, device/model fit and White evidence remain UNKNOWN.
+- **Validation:** guarded file-SHA write, unique delta heading, marker preservation and post-write read-back. All capability tests NOT_RUN.
+- **Write execution control:** documentation commits use `[skip ci]`; no workflow or repository settings changed. A skipped workflow is not a pass.
+- **Next move:** select the supported PostgreSQL release and role matrix for the R01 disposable test; keep R04 uninstalled until its malicious-config and semantic-preservation fixture can run after C1–C3. Do not admit any physical target without a fresh >=200 GB reading.
