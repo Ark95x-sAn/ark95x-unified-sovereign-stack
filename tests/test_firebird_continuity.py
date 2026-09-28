@@ -1,6 +1,9 @@
 import sqlite3
 import unittest
-from firebird_continuity import SCHEMA, enqueue, pulse, FEATURES
+try:
+    from companions.firebird_continuity import SCHEMA, enqueue, pulse, FEATURES
+except ModuleNotFoundError:
+    from firebird_continuity import SCHEMA, enqueue, pulse, FEATURES
 
 class QueueTests(unittest.TestCase):
     def setUp(self):
