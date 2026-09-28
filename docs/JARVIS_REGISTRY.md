@@ -92,3 +92,17 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Validation:** guarded file-SHA write, unique delta heading, marker preservation and post-write read-back. All capability tests NOT_RUN.
 - **Write execution control:** documentation commits use `[skip ci]`; no workflow or repository settings changed. A skipped workflow is not a pass.
 - **Next move:** select the supported PostgreSQL release and role matrix for the R01 disposable test; keep R04 uninstalled until its malicious-config and semantic-preservation fixture can run after C1–C3. Do not admit any physical target without a fresh >=200 GB reading.
+
+## 2026-09-28 — GitHub harvest delta
+
+- **Crew / role:** Black; discover, verify, read, reserve/reject. Independent White did not run.
+- **Repository / baseline:** existing unified stack 55670eb0c78345cd9b84835430673f92907649b8; five governed files read first, then README, deployment blueprint and n95_native/core_handoff.py.
+- **Named unmet need:** fail-closed C4/C5 business-folder-to-source-linked-brief intake with format-scoped DOCX parsing and preserved list/table ordering.
+- **Layers / decision:** C08/C05/C09 R05 refined against docling-project/docling v2.130.0 at 92fc74c36bbd20db9838d7665d38900e5c958319. The release contains the deferred optional docling_parse import guard and DOCX list-after-table fix, satisfying X12's source-level reopening condition without erasing its v2.129.0 rejection. PostgreSQL, Repomix, Ollama and MCP observations produced no new reserve.
+- **Existing mapping:** no document worker exists; n95_native/core_handoff.py::prepare remains only a digest-bound draft envelope. GM700 retains the sole Core/PostgreSQL mission authority, RTX remains bounded and unnecessary for this DOCX-only path, and Surface remains the C6 review node.
+- **Risk / scope:** Yellow documentation write only. No install, runtime execution, model pull, deployment, workflow dispatch, device action, cleanup, account/permission change, message or private-data publication. Free space remained UNKNOWN, so no physical target was admitted.
+- **Dependency boundary:** docling-slim 2.130.0 requires Python >=3.10,<4; DOCX uses python-docx >=1.2,<2. PDF parser, standard, OCR, VLM and model extras remain separate and unadmitted; transitive/model license review remains open.
+- **Review result:** STATIC_COMPARISON_COMPLETE_WITH_GAPS. Upstream code, tests, golden fixture, manifest, changelog and license were read at exact revisions. The R05 positive/negative fixture, Core binding, dependency closure and White evidence remain NOT_RUN/UNKNOWN.
+- **Validation:** guarded file-SHA writes, unique delta headings, catalogue marker and prior provenance preservation, then read-back of both files. A skipped workflow is not a pass.
+- **Write execution control:** documentation commits use [skip ci]; no workflow or repository settings changed.
+- **Next move:** after C1–C3 and target/dependency authorization, run the bounded DOCX list–table–resumed-list plus missing-PDF-extra test; require digest/locator preservation and keep page provenance UNKNOWN when absent.
