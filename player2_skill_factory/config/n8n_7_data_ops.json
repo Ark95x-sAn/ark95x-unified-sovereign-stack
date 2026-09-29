@@ -1,0 +1,148 @@
+{
+  "version": "1.0",
+  "name": "n8n 7 Data Operations Layer",
+  "purpose": "Use n8n as the workflow operations bus for seven high-value data lanes feeding Player 2.",
+  "orchestrator": {
+    "id": "n8n",
+    "role": "workflow_bus",
+    "default_mode": "human-approved activation",
+    "safe_boundary": "no secrets in repo; credentials stay in n8n credential vault or local environment variables"
+  },
+  "data_lanes": [
+    {
+      "id": "github_repo_intake",
+      "priority": 100,
+      "source": "GitHub official API or gh CLI",
+      "data": [
+        "repositories",
+        "branches",
+        "issues",
+        "pull_requests",
+        "workflow_runs"
+      ],
+      "destination": "player2_skill_factory SQLite backend and evidence manifests",
+      "trigger": "manual, scheduled, or PR event",
+      "safe_mode": "official_api_read_first",
+      "player2_use": "Generate skills, detect repo gaps, build next development task"
+    },
+    {
+      "id": "local_pc_inventory",
+      "priority": 95,
+      "source": "Windows 11 Pro PowerShell inventory scripts",
+      "data": [
+        "hardware_summary",
+        "gpu_cpu_ram",
+        "installed_tools",
+        "running_services",
+        "available_shells"
+      ],
+      "destination": "local evidence folder and resource score engine",
+      "trigger": "manual or scheduled",
+      "safe_mode": "read_only_inventory",
+      "player2_use": "Route workloads to the right compute lane without guessing"
+    },
+    {
+      "id": "logs_proof_ingest",
+      "priority": 92,
+      "source": "workspace logs, generated outputs, proof manifests",
+      "data": [
+        "errors",
+        "healthcheck_results",
+        "file_hashes",
+        "generated_skills",
+        "task_results"
+      ],
+      "destination": "player2.db evidence/tasks tables",
+      "trigger": "after every run",
+      "safe_mode": "workspace_read_only",
+      "player2_use": "Learning loop, bug ranking, proof gates"
+    },
+    {
+      "id": "trading_research_signals",
+      "priority": 88,
+      "source": "research/backtest files only",
+      "data": [
+        "signals",
+        "fitness_scores",
+        "drawdown_notes",
+        "strategy_variants",
+        "risk_flags"
+      ],
+      "destination": "operations scoring translator",
+      "trigger": "manual research run",
+      "safe_mode": "research_only_no_live_trading",
+      "player2_use": "Convert algorithmic scoring concepts into operations priority scoring"
+    },
+    {
+      "id": "real_estate_ops_data",
+      "priority": 86,
+      "source": "user-provided portfolio docs, task logs, approved local files",
+      "data": [
+        "properties",
+        "rent_roll_tasks",
+        "maintenance_tasks",
+        "lender_packet_tasks",
+        "deadline_flags"
+      ],
+      "destination": "tasks and evidence tables",
+      "trigger": "manual import only",
+      "safe_mode": "local_files_only_unless_approved",
+      "player2_use": "Turn real-estate work into executable next actions"
+    },
+    {
+      "id": "legal_case_ops_data",
+      "priority": 84,
+      "source": "user-provided legal docs, docket notes, attorney task logs",
+      "data": [
+        "deadlines",
+        "filings",
+        "evidence_items",
+        "attorney_tasks",
+        "open_questions"
+      ],
+      "destination": "tasks and proof manifests",
+      "trigger": "manual import only",
+      "safe_mode": "assistive_organization_not_legal_advice",
+      "player2_use": "Organize case operations, deadlines, and evidence without making legal claims"
+    },
+    {
+      "id": "content_social_signal_intake",
+      "priority": 78,
+      "source": "official APIs, exports, or user-provided data only",
+      "data": [
+        "posts",
+        "topics",
+        "engagement_metrics",
+        "audience_questions",
+        "campaign_tasks"
+      ],
+      "destination": "content task queue and strategy notes",
+      "trigger": "manual, scheduled, or approved API event",
+      "safe_mode": "no_scraping_no_spam_no_credential_harvesting",
+      "player2_use": "Create content and outreach tasks from approved signal data"
+    }
+  ],
+  "n8n_workflow_template": {
+    "nodes": [
+      "Trigger",
+      "Credentialed Source Node",
+      "Normalize JSON",
+      "Player2 Score Function",
+      "SQLite/Postgres Write",
+      "Proof Manifest Write",
+      "Human Review Gate",
+      "Optional Dispatch"
+    ],
+    "dispatch_policy": "Only workspace-safe or human-approved actions can execute automatically"
+  },
+  "stage_gates": [
+    "source_auth_check",
+    "data_minimization",
+    "normalize",
+    "score",
+    "store",
+    "proof",
+    "human_review",
+    "dispatch"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "repositories": [
+    {
+      "name": "central-command-ops",
+      "full_name": "Ark95x-sAn/central-command-ops",
+      "clone_url": "https://github.com/Ark95x-sAn/central-command-ops.git",
+      "segment": "00-command-bus",
+      "lane": "operations",
+      "purpose": "Federated command, defense, operations, audit, and communication architecture"
+    },
+    {
+      "name": "flametrace-evolution-trading",
+      "full_name": "Ark95x-sAn/flametrace-evolution-trading",
+      "clone_url": "https://github.com/Ark95x-sAn/flametrace-evolution-trading.git",
+      "segment": "05-trading-research",
+      "lane": "research",
+      "purpose": "Research/backtest-only algorithm pattern transfer into operations scoring"
+    },
+    {
+      "name": "ark95x-unified-sovereign-stack",
+      "full_name": "Ark95x-sAn/ark95x-unified-sovereign-stack",
+      "clone_url": "https://github.com/Ark95x-sAn/ark95x-unified-sovereign-stack.git",
+      "segment": "09-deployment",
+      "lane": "unified",
+      "purpose": "Full-stack integration point"
+    },
+    {
+      "name": "intelligence-gathering-system",
+      "full_name": "Ark95x-sAn/intelligence-gathering-system",
+      "clone_url": "https://github.com/Ark95x-sAn/intelligence-gathering-system.git",
+      "segment": "01-github-pull",
+      "lane": "data",
+      "purpose": "Signal intake and intelligence source indexing"
+    },
+    {
+      "name": "ark95x-omnikernel-orchestrator",
+      "full_name": "Ark95x-sAn/ark95x-omnikernel-orchestrator",
+      "clone_url": "https://github.com/Ark95x-sAn/ark95x-omnikernel-orchestrator.git",
+      "segment": "07-player2-autopilot",
+      "lane": "orchestration",
+      "purpose": "Adaptive scheduling and Player 2 orchestration patterns"
+    }
+  ]
+}
