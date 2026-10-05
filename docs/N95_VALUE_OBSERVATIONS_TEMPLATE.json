@@ -1,0 +1,17 @@
+{
+  "price_usd": 100,
+  "evidence_kind": null,
+  "observation_window": null,
+  "all_attempts_included": null,
+  "same_quality_target": null,
+  "customer_acceptance_recorded": null,
+  "customer_hourly_value_agreed": null,
+  "installation_passed": null,
+  "customer_hourly_value_usd": null,
+  "customer_setup_minutes": null,
+  "extra_customer_support_minutes": null,
+  "nonoverlapping_customer_evaluation_minutes": null,
+  "extra_customer_cost_usd": null,
+  "paired_observations": [],
+  "_instructions": "Use actual customer observations only. Each row: unique job_id, best_free_alternative_seconds, workflow_total_seconds (all prep/review/correction/retries/fallback), comparable bool, quality_passed bool, measurement_record locator. Account once for all customer overhead. Keep records private. No automatic authenticity verification."
+}
