@@ -1,8 +1,8 @@
 # Net95X Console · fixture prototype
 
-A responsive Expo / React Native Web interface for the Network‑95 operations design. It demonstrates **Command → Queue → Proof → Agency → Review** on a phone or a Windows browser. The Surface Pro X and GM700 can view the web prototype; native Windows packaging is a separate project.
+A browser-only React Native Web interface for the Network‑95 operations design. It demonstrates **Command → Queue → Proof → Agency → Review** on the GM700, Surface Pro X, or a phone browser.
 
-Navigation is local screen state for the fixture: there are no deep links or browser back-stack routes. The phone layout uses safe-area insets for system bars and the bottom navigation.
+Navigation is local screen state for the fixture: there are no deep links or browser back-stack routes. The HTML shell uses browser safe-area insets to keep the phone layout clear of system bars.
 
 ## Run
 
@@ -13,7 +13,11 @@ npm ci
 npm run web
 ```
 
-Open the local address printed by Expo. For the Android preview, use `npm run android` with an available emulator or connected device. `npm test` exercises the pure local mission guard; `npm run typecheck` checks the UI; `EXPO_NO_TELEMETRY=1 EXPO_OFFLINE=1 npx expo export --platform web` produces a static web bundle.
+Open `http://127.0.0.1:5173` on the machine running Vite. The development server binds to localhost only. For a static browser build, use `npm run build`; `npm run preview` serves it on localhost. `npm test` exercises the pure local mission guard and `npm run typecheck` checks the UI.
+
+The Surface Pro X can use the built files through a separately configured local network server later. This prototype does not expose a network service by default.
+
+The app imports React Native primitives, which Vite aliases to React Native Web. `src/react-native-web.d.ts` describes only the browser primitives this fixture uses; native mobile builds require their own toolchain and types.
 
 ## Walkthrough
 
