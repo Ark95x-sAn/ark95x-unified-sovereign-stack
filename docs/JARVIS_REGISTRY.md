@@ -120,3 +120,17 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Validation:** guarded file-SHA writes, unique delta headings, catalogue marker and prior provenance preservation, exact source pins, then read-back of both files. A skipped workflow is not a pass.
 - **Write execution control:** documentation commits use [skip ci]; no workflow or repository settings changed.
 - **Next move:** after C1–C3, run R05-A in a disposable network-denied fixture and S5-A on a v2.3-only loopback transport. Require explicit failure receipts, later-request usability, no ambient file reads or orphan process/stream, and no submitted Core mission.
+
+## 2026-10-05 — Sintra context and offline credit planning
+
+- **Crew / role:** Codex source reader, builder, logger, and self-checker. No separately invoked reviewer or Helper.
+- **Repository/tool:** existing unified stack, base `092918af13c9e0270b63e7482dd6490f30dce9cf`; GitHub connector; official Sintra/xAI documentation read on this date.
+- **Jarvis layers:** Memory for curated hosted context; Tools for the offline planner and bounded handoff; Domain for a business artifact; existing Core retains orchestration authority.
+- **Action taken:** prepared one native Brain import/readback path, an optional public-research return, and a dependency-free planner that applies a 20-credit daily ceiling plus actual monthly pacing, used credits, pending work, and reserve. No Sintra API is fabricated.
+- **Files changed:** `tools/sintra_credit_gate.py`, `tests/test_sintra_credit_gate.py`, `templates/sintra_business_context.md`, `docs/SINTRA_HANDOFF.md`, `.github/workflows/sintra-planning.yml`, `README.md`, this registry.
+- **Risk label:** Yellow scoped code, documentation, and verification configuration in a proposed branch. No private operator records, model/API calls, new application credentials, connected-account access, device admission, deployment, or trades.
+- **Review result:** source and local behavior checks complete; independent review NOT_RUN. Planner makes no network calls and cannot enforce a native platform cap. Sintra account balance, import, accurate Helper retrieval, usage receipt, and Core return remain unverified. No live cross-platform memory is claimed.
+- **Test command:** `python -m unittest discover -s tests -p test_sintra_credit_gate.py -v`.
+- **Observed local result:** 12 focused tests passed in the remote task workspace, including missing usage, pool pacing, reserve, ceiling, pending work, invalid values, task estimate, and CLI behavior. Hosted tests have their own later receipt; existing generic CI's masked pytest result is not used as proof.
+- **Verification configuration:** dedicated least-privilege planner workflow, no application secrets or deployment job; failures propagate. It is proposed with this branch, not a standing task on an operator PC.
+- **Next move:** review the proposed change, then perform one explicit native knowledge import, accurate readback, artifact return, and usage reconciliation in the intended Sintra workspace. Preserve existing Core C1–C6 order for physical integration.

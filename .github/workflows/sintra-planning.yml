@@ -1,0 +1,27 @@
+name: Sintra planning verification
+
+on:
+  pull_request:
+    paths:
+      - 'tools/sintra_credit_gate.py'
+      - 'tests/test_sintra_credit_gate.py'
+      - 'templates/sintra_business_context.md'
+      - 'docs/SINTRA_HANDOFF.md'
+      - '.github/workflows/sintra-planning.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  planner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify offline planner behavior
+        run: python -m unittest discover -s tests -p test_sintra_credit_gate.py -v
+
