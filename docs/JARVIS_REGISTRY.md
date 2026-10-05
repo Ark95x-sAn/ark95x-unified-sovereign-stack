@@ -106,3 +106,17 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Validation:** guarded file-SHA writes, unique delta headings, catalogue marker and prior provenance preservation, then read-back of both files. A skipped workflow is not a pass.
 - **Write execution control:** documentation commits use [skip ci]; no workflow or repository settings changed.
 - **Next move:** after C1–C3 and target/dependency authorization, run the bounded DOCX list–table–resumed-list plus missing-PDF-extra test; require digest/locator preservation and keep page provenance UNKNOWN when absent.
+
+## 2026-10-05 — GitHub harvest delta
+
+- **Crew / role:** Black; discover, verify, read, reserve/reject. Independent White did not run.
+- **Repository / baseline:** existing unified stack 092918af13c9e0270b63e7482dd6490f30dce9cf; five governed files read first, then README, deployment blueprint and n95_native/core_handoff.py.
+- **Named unmet need:** C4/C5 source-linked folder intake must preserve evidence identity and fail explicitly on ambient file access, oversized transport events and cancellation.
+- **Layers / decisions:** C08/C07/C05/C09 R05 refined against docling-project/docling v2.133.0 at b0315ea356298e4659c9727e9f5191dd2001860a for default-deny local image references in re-ingested Docling JSON. C05/C04/C07 S5 refined against modelcontextprotocol/python-sdk v2.3.0 at 2118f14f8a19bc158d8a1cf90af58d85d187f849 for cancellable Windows command resolution and bounded SSE events. X13 remains historically correct for v2.2.0; its release condition is met only at source-reserve level. PostgreSQL, Repomix and Ollama produced no new reserve.
+- **Existing mapping:** no document worker or MCP adapter exists. n95_native/core_handoff.py::prepare remains only a digest-bound draft envelope. GM700 retains the sole Core/PostgreSQL mission authority; RTX stays bounded; Surface remains C5 review; C1–C6 order is unchanged.
+- **Risk / scope:** Yellow documentation write only. No install, runtime execution, model pull, deployment, workflow dispatch, device action, cleanup, account/permission change, message or private-data publication. Free space remained UNKNOWN, so no physical target was admitted.
+- **Dependency boundary:** Docling slim JSON behavior is separate from DOCX/PDF/OCR/VLM/model extras; MCP examples are v2.3.0 only. Python/dependency ranges and MIT licenses were recorded; transitive and model terms remain open.
+- **Review result:** STATIC_COMPARISON_COMPLETE_WITH_GAPS. Exact release commits, code, tests, manifests, changelogs/docs and licenses were read. R05-A and S5-A, Core bindings, worker/adapter implementations, dependency closure and White evidence remain NOT_RUN/UNKNOWN.
+- **Validation:** guarded file-SHA writes, unique delta headings, catalogue marker and prior provenance preservation, exact source pins, then read-back of both files. A skipped workflow is not a pass.
+- **Write execution control:** documentation commits use [skip ci]; no workflow or repository settings changed.
+- **Next move:** after C1–C3, run R05-A in a disposable network-denied fixture and S5-A on a v2.3-only loopback transport. Require explicit failure receipts, later-request usability, no ambient file reads or orphan process/stream, and no submitted Core mission.
