@@ -1,0 +1,3 @@
+Sample pilot scope — fictional fixture
+
+A pilot could include a request intake form, a repair queue, and a weekly status report. The sample scope prohibits outbound messages during the demonstration.
