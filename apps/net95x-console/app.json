@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Net95X Console",
+    "slug": "net95x-console",
+    "version": "0.1.0",
+    "orientation": "default",
+    "userInterfaceStyle": "dark",
+    "web": {
+      "bundler": "metro",
+      "name": "Net95X Console"
+    },
+    "experiments": {
+      "tsconfigPaths": true
+    }
+  }
+}
