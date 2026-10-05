@@ -4,9 +4,9 @@
 
 ## The operating model
 
-The Windows 11 app on **#15 GM700** is the proposed control surface over existing software. It owns the single mission register, permission decisions, source index, adapter routing, and durable receipts. It does not replace Windows or grant itself operating system privileges. **#16 RTX 2080 gaming PC** is an optional bounded compute worker, preserving gaming priority. **#17 Surface Pro X** is the mobile capture and human review surface. An unavailable device reports `UNKNOWN/OFFLINE`; it does not silently become another source of truth.
+The Windows 11 app on **#15 GM700** is the proposed control surface over existing software. It should present the existing Core's single mission register, permission decisions, source index, adapter routing, and durable receipts, without creating a second mission authority. It does not replace Windows or grant itself operating system privileges. **#16 RTX 2080 gaming PC** is an optional bounded compute worker, preserving gaming priority. **#17 Surface Pro X** is the mobile capture and human review surface. An unavailable device reports `UNKNOWN/OFFLINE`; it does not silently become another source of truth.
 
-The first useful end-to-end mission is a **sample supplied business document/folder → source-linked brief → independent check → Surface review receipt**. The screens and data in `apps/net95x-console` demonstrate that lifecycle with fixtures. The existing native bridge has loopback/synthetic receipts; neither that bridge nor this interface proves physical pairing, live model dispatch, or a deployed three-device mesh.
+The first useful end-to-end mission is a **sample supplied business document/folder → source-linked brief → local source-reference check → review acknowledgement receipt**. The screens and data in `apps/net95x-console` demonstrate that lifecycle with fixtures. An independent reviewer and real Surface decision remain future integrations. The existing native bridge has loopback/synthetic receipts; neither that bridge nor this interface proves physical pairing, live model dispatch, or a deployed three-device mesh.
 
 ```mermaid
 flowchart TD
@@ -14,7 +14,7 @@ flowchart TD
     G --> E["Source index and permission gate"]
     E --> L["Local document worker / Ollama #13"]
     E -. "scoped proposal, future adapter" .-> C["Cloud specialist crew"]
-    L --> V["Independent verification"]
+    L --> V["Source-reference guard and future independent review"]
     C -. "source IDs and uncertainty" .-> V
     V --> R["Receipt and Surface review"]
     E -. "optional bounded job" .-> X["RTX 2080 #16"]
@@ -40,7 +40,7 @@ Each product has its own account and conversation history. Net95X should store a
 | 9 | Perplexity | Research with explicit citations and freshness. | Selected answer, links, retrieval time, uncertainty. |
 | 10 | ChatGPT Pro | Synthesize competing research and draft decisions for review. | User-selected conversation/export and artifact IDs, not automatic private history. |
 | 11A | Codex A | Build a scoped implementation in a branch or local workspace. | Repository, commit/PR, tests and diff. |
-| 11B | Codex B | Review A's work independently against requirements and evidence. | Findings and review receipt, separate from builder claims. |
+| 11B | Codex B | Review A's work independently against requirements and evidence when assigned. | Findings and review receipt, separate from builder claims. |
 | 12 | ChatGPT Dot | Capture voice or quick intent if available on the chosen client. | Selected transcript, explicit timestamp and consent. |
 | 13 | Ollama | Run private local inference on admitted source material. | Local model/version, prompt template ID, result digest, token/runtime receipt. |
 | 14 | Office Agent | Create or refine editable Word, Excel, and PowerPoint deliverables from a verified brief. | File/version link, source mapping, review decision; preview and tenant eligibility need validation. |
@@ -75,16 +75,16 @@ Board title: **Net95X — one mission, three devices, specialist crew**. Make si
 | 5. Proof / GM700 | Draft brief; source IDs; verifier result; action receipt; current status | No “complete” without all four. |
 | 6. Learning | Measured time/cost; accepted lesson; replay before promotion | Improvements remain proposals until tested. |
 
-Connect **Surface intake → GM700 task → permission gate → local extraction → source-linked brief → Codex B check → receipt → Surface review** with solid arrows labeled *fixture demonstration*. Draw dashed arrows from router to specialist adapters, returning **output + source ID + uncertainty**. Connect proof → learning → router as **tested improvement**. Legend: solid = demonstrated in fixture; dashed = proposed; amber = account/device validation needed. Do not depict histories as imported or devices as online.
+Connect **sample intake → fixture task → permission gate → fixture extraction → source-linked brief → local reference guard → simulated receipt/review** with solid arrows labeled *fixture demonstration*. Draw dashed arrows from router to specialist adapters, including Codex B's future independent check, returning **output + source ID + uncertainty**. Connect proof → learning → router as **tested improvement**. Legend: solid = demonstrated in fixture; dashed = proposed; amber = account/device validation needed. Do not depict histories as imported or devices as online.
 
 The walkthrough ribbon reads: `S-001 sample business folder → capture objective → index sample record → local extraction proposal → draft brief → verify claims and source IDs → Surface review → save fixture receipt`. End card: `DONE when draft, source IDs, verifier result and task status agree`. A separate `DIS-00` review hold and outbound `REV-002` freeze stay visible as guards, not as executable buttons.
 
 ## Three builds in order
 
 1. **Mission control and provenance:** one task register, J95 intake, adapter manifest, history/source index, budget/permission gate, and receipts on GM700. Verify C1–C3 before adding live dispatch.
-2. **Source-linked brief factory:** admit a supplied folder, parse and cite records, draft a brief, independently verify claims, and collect Surface review. Start with a bounded format fixture; then validate C4–C6 on actual Windows devices.
+2. **Source-linked brief factory:** admit a supplied folder, parse and cite records, draft a brief, independently verify claims, and collect Surface review. Start with a bounded format fixture. The existing integration sequence requires a supported connector at C4, real folder-to-brief plus recovery at C5, and measured paid pilots at C6.
 3. **Device and crew cockpit:** show paired device health, job eligibility, specialist cost/provenance, approvals and recovery. Add RTX and cloud routes only after measured proofs. Preserve the existing outbound and case filing holds.
 
 ## Acceptance boundary
 
-The prototype succeeds when a reviewer can run the fixture, trace the source IDs into a draft, see a separate verification outcome and a receipt, inspect the reverse-order device map (#17 → #16 → #15), and understand exactly which connections are still planned. Physical telemetry, production account access, local model execution, live history exports, and a completed MockFlow board require separate verification.
+The prototype succeeds when a reviewer can run the fixture, trace the source IDs into a draft, see the local source-reference guard and a simulated review receipt, inspect the reverse-order device map (#17 → #16 → #15), and understand exactly which connections are still planned. Independent verification, physical telemetry, production account access, local model execution, live history exports, and a completed MockFlow board require separate verification.
