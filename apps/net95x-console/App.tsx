@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { advanceMission, attemptExternalSend, createMission, phaseLabels, phaseOrder, sources, type Mission, type Phase } from './src/mission';
 
 type Screen = 'Command' | 'Queue' | 'Proof' | 'Agency' | 'Review';
@@ -86,8 +85,7 @@ function SideNav({ current, setScreen }: { current: Screen; setScreen: (screen: 
 }
 
 function BottomNav({ current, setScreen }: { current: Screen; setScreen: (screen: Screen) => void }) {
-  const insets = useSafeAreaInsets();
-  return <View style={[s.bottomNav, { height: 67 + insets.bottom, paddingBottom: insets.bottom }]}>{NAV.map((item) => <Pressable key={item.name} accessibilityRole="button" onPress={() => setScreen(item.name)} style={s.bottomItem}>
+  return <View style={s.bottomNav}>{NAV.map((item) => <Pressable key={item.name} accessibilityRole="button" onPress={() => setScreen(item.name)} style={s.bottomItem}>
     <Text style={[s.bottomGlyph, current === item.name && { color: C.teal }]}>{item.glyph}</Text><Text style={[s.bottomLabel, current === item.name && { color: C.white }]}>{item.name}</Text>
   </Pressable>)}</View>;
 }
@@ -173,15 +171,14 @@ function Review({ mission, onReview, setScreen }: { mission: Mission; onReview: 
   </>;
 }
 
-function Console() {
+export default function App() {
   const [screen, setScreen] = useState<Screen>('Command');
   const [mission, setMission] = useState<Mission>(createMission);
   const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const compact = width < 860;
   const advance = () => setMission((current) => advanceMission(current));
   const review = () => setMission((current) => advanceMission(current, true));
-  return <View style={[s.app, { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }]}>
+  return <View style={s.app}>
     {!compact && <SideNav current={screen} setScreen={setScreen} />}
     <View style={s.main}><View style={s.topbar}><View><Text style={s.topbarEyebrow}>NETWORK‑95 / OPERATOR WORKSPACE</Text><Text style={s.topbarTitle}>{screen}</Text></View><View style={s.topbarRight}><View style={s.topbarDot} /><Text style={s.topbarStatus}>FIXTURE MODE</Text>{!compact && <Text style={s.topbarSession}>SESSION · LOCAL DEMO</Text>}</View></View>
       <ScrollView contentContainerStyle={[s.content, compact && s.contentCompact]}>
@@ -195,10 +192,6 @@ function Console() {
       {compact && <BottomNav current={screen} setScreen={setScreen} />}
     </View>
   </View>;
-}
-
-export default function App() {
-  return <SafeAreaProvider style={{ flex: 1, backgroundColor: C.ink }}><Console /></SafeAreaProvider>;
 }
 
 const s = StyleSheet.create({
