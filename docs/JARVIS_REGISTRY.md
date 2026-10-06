@@ -120,3 +120,16 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Validation:** guarded file-SHA writes, unique delta headings, catalogue marker and prior provenance preservation, exact source pins, then read-back of both files. A skipped workflow is not a pass.
 - **Write execution control:** documentation commits use [skip ci]; no workflow or repository settings changed.
 - **Next move:** after C1–C3, run R05-A in a disposable network-denied fixture and S5-A on a v2.3-only loopback transport. Require explicit failure receipts, later-request usability, no ambient file reads or orphan process/stream, and no submitted Core mission.
+
+## 2026-10-06 — Team operations and realistic system audit
+
+- **Crew:** root coordinator/builder; two distinct read-only source reviewers; a separate final artifact review is recorded in the PR.
+- **Repository/baseline:** existing unified stack at `c153e0a66329673bb44c5203c0b54911c9905fe3`; seven repository trees inspected, three examined in depth.
+- **Layers:** orchestration, tools, state, inference, observability and security boundaries.
+- **Action:** added an evidence-labeled team workspace, prioritized source findings, proposed owner/acceptance board, non-dispatchable task template and exact system graph. Existing Core authority, registry and C1–C6 sequence retained.
+- **Files changed:** root README, this registry and `docs/team-operations/`.
+- **Risk:** Yellow documentation/diagram preparation; GitHub branch and draft PR authorized by the operator request. No deployment, device command, permission change, runtime installation, private-record copy or scheduler change.
+- **Review result:** concrete source gaps documented; hardware and adapters remain unverified. Candidate docs do not repair runtime code.
+- **Test command:** `python -m unittest discover -s tests -p test_native_bridge.py -v` — 16 tests passed in 1.574 seconds on Linux; synthetic scope only. Combined pytest invocation blocked by missing pytest; other suites and Windows execution not run.
+- **Write control:** documentation commit uses `[skip ci]`; skipped checks are not passes.
+- **Next move:** authenticated GM700 preflight and GPU receipt, then C1 Core binding and one scoped end-to-end workflow. Working storage floor reported by operator is 52 GB; historical 200 GB entries remain historical. Raw bytes and GB/GiB must be explicit before enforcing a numerical gate.
