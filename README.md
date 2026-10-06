@@ -141,3 +141,9 @@ MIT - Network-95 LLC | Nordskog Properties LLC
 ---
 
 **ARK95X | Sovereign Architect | Winnebago County, Iowa**
+## Sintra business-context planning — 2026-10-05
+
+[Sintra handoff runbook](docs/SINTRA_HANDOFF.md) adds an offline 20-credit daily
+ceiling calculator, a reusable Brain context template, and focused verification.
+Account import, native Helper execution, and device deployment remain separate
+checks. See the runbook for current platform limits and the first test command.
