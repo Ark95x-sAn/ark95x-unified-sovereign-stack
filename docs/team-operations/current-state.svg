@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1180" viewBox="0 0 1680 1180" role="img" aria-labelledby="title desc">
+<title id="title">Network-95 current state: code foundation, device execution unverified</title>
+<desc id="desc">GitHub source and a tested synthetic telemetry bridge are observed. The existing Core binding, physical Windows hosts and worker execution paths remain unverified. Sixteen synthetic tests passed. No physical host was reached.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0a1526"/><stop offset="1" stop-color="#07101c"/></linearGradient><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#617792"/></marker></defs>
+<rect width="1680" height="1180" fill="url(#bg)"/>
+<style>text{font-family:Arial,Helvetica,sans-serif}.title{font-size:48px;font-weight:700;fill:#f3f7ff}.sub{font-size:21px;fill:#a4b7ce}.eyebrow{font-size:16px;font-weight:700;letter-spacing:3px;fill:#79a0cd}.ctitle{font-size:25px;font-weight:700;fill:#eef5ff}.body{font-size:19px;fill:#bac9dc}.tag{font-size:14px;font-weight:700;letter-spacing:1px}.edge{fill:none;stroke:#617792;stroke-width:2.4;marker-end:url(#arrow)}.dash{stroke-dasharray:8 7}.elabel{font-size:15px;fill:#91a5c0}</style>
+<text x="64" y="50" class="eyebrow">SOVERN  /  OSK. KNOX  /  06 OCT 2026</text>
+<text x="64" y="110" class="title">NETWORK-95 · CURRENT STATE</text>
+<text x="64" y="150" class="sub">Code foundation established. Physical device execution remains unverified.</text>
+<rect x="590" y="195" width="500" height="140" rx="16" fill="#101e31" stroke="#293b54"/>
+<rect x="590" y="213" width="4" height="104" rx="2" fill="#9baee4"/>
+<text x="614" y="227" class="tag" fill="#9baee4">OWNER</text>
+<text x="614" y="265" class="ctitle">Ben · human authority</text>
+<text x="614" y="303" class="body">Priority, scope and consequential decisions</text>
+<rect x="590" y="380" width="500" height="166" rx="16" fill="#101e31" stroke="#293b54"/>
+<rect x="590" y="398" width="4" height="130" rx="2" fill="#59cdb0"/>
+<text x="614" y="412" class="tag" fill="#59cdb0">ACTIVE SESSION ONLY</text>
+<text x="614" y="450" class="ctitle">Dot / Knox · coordination</text>
+<text x="614" y="488" class="body">One aim • bounded workers • checked output</text>
+<text x="614" y="516" class="body">No resident dispatcher proved</text>
+<rect x="64" y="380" width="470" height="166" rx="16" fill="#101e31" stroke="#293b54"/>
+<rect x="64" y="398" width="4" height="130" rx="2" fill="#59cdb0"/>
+<text x="88" y="412" class="tag" fill="#59cdb0">OBSERVED</text>
+<text x="88" y="450" class="ctitle">GitHub · source workspace</text>
+<text x="88" y="488" class="body">30 repos listed • 7 trees inspected</text>
+<text x="88" y="516" class="body">3 repos reviewed in detail</text>
+<rect x="1146" y="380" width="470" height="166" rx="16" fill="#101e31" stroke="#293b54"/>
+<rect x="1146" y="398" width="4" height="130" rx="2" fill="#f28383"/>
+<text x="1170" y="412" class="tag" fill="#f28383">REPAIR REQUIRED</text>
+<text x="1170" y="450" class="ctitle">Command prototypes</text>
+<text x="1170" y="488" class="body">Placeholder success and delivery paths</text>
+<text x="1170" y="516" class="body">Task permissions and CI gaps</text>
+<rect x="64" y="625" width="470" height="182" rx="16" fill="#101e31" stroke="#293b54"/>
+<rect x="64" y="643" width="4" height="146" rx="2" fill="#59cdb0"/>
+<text x="88" y="657" class="tag" fill="#59cdb0">SYNTHETIC TESTED</text>
+<text x="88" y="695" class="ctitle">Native receipt bridge</text>
+<text x="88" y="733" class="body">16 tests passed on Linux</text>
+<text x="88" y="761" class="body">Signed telemetry + durable receipts</text>
+<text x="88" y="789" class="body">No job execution or physical-host proof</text>
+<rect x="590" y="625" width="500" height="182" rx="16" fill="#101e31" stroke="#293b54"/>
+<rect x="590" y="643" width="4" height="146" rx="2" fill="#e9b866"/>
+<text x="614" y="657" class="tag" fill="#e9b866">BINDING UNVERIFIED</text>
+<text x="614" y="695" class="ctitle">Existing Network-95 Core</text>
+<text x="614" y="733" class="body">Retain the existing mission authority</text>
+<text x="614" y="761" class="body">Prove transactions, identity and recovery</text>
+<text x="614" y="789" class="body">No second mission queue</text>
+<rect x="1146" y="625" width="470" height="220" rx="16" fill="#101e31" stroke="#293b54"/>
+<rect x="1146" y="643" width="4" height="184" rx="2" fill="#e9b866"/>
+<text x="1170" y="657" class="tag" fill="#e9b866">REPORTED · UNVERIFIED</text>
+<text x="1170" y="695" class="ctitle">Windows 11 fleet</text>
+<text x="1170" y="733" class="body">GM700: RTX 5070 Ti 16 GB</text>
+<text x="1170" y="761" class="body">Separate MSI / RTX 2080 worker</text>
+<text x="1170" y="789" class="body">Surface Pro X: review console</text>
+<text x="1170" y="817" class="body">Current host receipts: missing</text>
+<path d="M840 335 L840 380" class="edge"/>
+<text x="855" y="364" class="elabel">sets scope</text>
+<path d="M534 463 L590 463" class="edge"/>
+<text x="548" y="450" class="elabel">read</text>
+<path d="M299 546 L299 625" class="edge"/>
+<text x="318" y="589" class="elabel">contains inspected code</text>
+<path d="M840 546 L840 625" class="edge dash"/>
+<text x="860" y="589" class="elabel">future mission binding</text>
+<path d="M534 716 L590 716" class="edge dash"/>
+<text x="538" y="697" class="elabel">draft only</text>
+<path d="M1090 716 L1146 716" class="edge dash"/>
+<text x="1073" y="692" class="elabel">private route</text>
+<path d="M1381 546 L1381 625" class="edge dash"/>
+<text x="1400" y="589" class="elabel">future adapter</text>
+<rect x="64" y="885" width="1552" height="96" rx="14" fill="#2a2024" stroke="#6c4650"/>
+<text x="90" y="920" class="tag" fill="#f7a4a4">THE MISSING PROOF</text>
+<text x="90" y="953" class="ctitle">One authorized task → real Windows worker → verified output → durable receipt → restart recovery</text>
+<rect x="64" y="1012" width="370" height="94" rx="12" fill="#12233a" stroke="#29415e"/>
+<text x="82" y="1043" class="tag" fill="#7dacdf">01  HOST EVIDENCE</text>
+<text x="82" y="1075" class="body">Identity, free bytes, GPU, services</text>
+<rect x="458" y="1012" width="370" height="94" rx="12" fill="#12233a" stroke="#29415e"/>
+<text x="476" y="1043" class="tag" fill="#7dacdf">02  CORE + IDENTITY</text>
+<text x="476" y="1075" class="body">One state owner and scoped access</text>
+<rect x="852" y="1012" width="370" height="94" rx="12" fill="#12233a" stroke="#29415e"/>
+<text x="870" y="1043" class="tag" fill="#7dacdf">03  REAL WORKER</text>
+<text x="870" y="1075" class="body">One measured model / tool task</text>
+<rect x="1246" y="1012" width="370" height="94" rx="12" fill="#12233a" stroke="#29415e"/>
+<text x="1264" y="1043" class="tag" fill="#7dacdf">04  VERIFIED RESULT</text>
+<text x="1264" y="1075" class="body">Sources, replay and recovery</text>
+<text x="64" y="1148" class="elabel">SOLID = inspected source relationship     DASHED = proposed / unverified runtime link</text>
+<text x="1146" y="1148" class="elabel">Static audit snapshot · not live telemetry</text>
+</svg>

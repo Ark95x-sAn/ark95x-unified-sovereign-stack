@@ -141,3 +141,7 @@ MIT - Network-95 LLC | Nordskog Properties LLC
 ---
 
 **ARK95X | Sovereign Architect | Winnebago County, Iowa**
+
+## Team operations audit — 2026-10-06
+
+[Open the Network-95 team workspace](docs/team-operations/README.md) for the current-state graph, source findings, proposed owner/acceptance board and task packet. This is a documentation increment, not a device deployment.

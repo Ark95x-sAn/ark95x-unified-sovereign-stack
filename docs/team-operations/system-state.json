@@ -1,0 +1,202 @@
+{
+  "schema_version": "1.0",
+  "snapshot_date": "2026-10-06",
+  "scope": "STATIC_SOURCE_AUDIT_NOT_LIVE_TELEMETRY",
+  "baseline_commit": "c153e0a66329673bb44c5203c0b54911c9905fe3",
+  "mission_authority": "Existing Network-95 Core; current deployed binding unverified",
+  "counts": {
+    "repositories_listed": 30,
+    "repository_trees_inspected": 7,
+    "repositories_with_detailed_code_review": 3,
+    "source_review_workers": 2,
+    "physical_hosts_reached": 0
+  },
+  "states": {
+    "SOURCE_INSPECTED": "Implementation was read; no runtime deployment inference.",
+    "SYNTHETIC_TESTED": "Bounded fixture passed on the Linux audit host.",
+    "REPORTED_UNVERIFIED": "Operator report; current physical-host receipt missing.",
+    "SPECIFIED_UNVERIFIED": "Architecture or role only; adapter execution not proved.",
+    "FINDING_OPEN": "Source defect observed; remediation not implemented in this docs increment."
+  },
+  "components": [
+    {
+      "id": "github",
+      "label": "GitHub source",
+      "state": "SOURCE_INSPECTED",
+      "proof": "Authenticated repository inventory and pinned source reads"
+    },
+    {
+      "id": "native_bridge",
+      "label": "Native telemetry bridge",
+      "state": "SYNTHETIC_TESTED",
+      "tests_passed": 16,
+      "test_environment": "Linux; synthetic loopback identities; temporary SQLite state",
+      "capability": "telemetry only",
+      "dispatches_jobs": false
+    },
+    {
+      "id": "command",
+      "label": "Legacy command prototypes",
+      "state": "FINDING_OPEN",
+      "gap_ids": [
+        "OPS-01",
+        "OPS-02",
+        "OPS-03"
+      ]
+    },
+    {
+      "id": "core",
+      "label": "Existing Core authority",
+      "state": "SPECIFIED_UNVERIFIED",
+      "deployed_binding_verified": false,
+      "gap_ids": [
+        "OPS-04",
+        "OPS-09"
+      ]
+    },
+    {
+      "id": "gm700",
+      "label": "GM700 / SOLARISX",
+      "state": "REPORTED_UNVERIFIED",
+      "reported_gpu": "RTX 5070 Ti 16 GB",
+      "reported_ram_gb": 32,
+      "current_free_bytes": null,
+      "live_connection_verified": false
+    },
+    {
+      "id": "rtx2080",
+      "label": "Separate MSI / RTX2080",
+      "state": "REPORTED_UNVERIFIED",
+      "current_ram_bytes": null,
+      "live_connection_verified": false
+    },
+    {
+      "id": "surface",
+      "label": "Surface Pro X review console",
+      "state": "REPORTED_UNVERIFIED",
+      "live_connection_verified": false
+    },
+    {
+      "id": "allies",
+      "label": "External agent adapters",
+      "state": "SPECIFIED_UNVERIFIED",
+      "worker_roster_is_runtime": false
+    }
+  ],
+  "gaps": [
+    {
+      "id": "OPS-01",
+      "priority": "P1",
+      "owner_role": "Builder + White",
+      "status": "OPEN",
+      "title": "Truthful task and delivery outcomes",
+      "depends_on": []
+    },
+    {
+      "id": "OPS-02",
+      "priority": "P1",
+      "owner_role": "Security owner",
+      "status": "OPEN",
+      "title": "Authenticated task boundary",
+      "depends_on": []
+    },
+    {
+      "id": "OPS-03",
+      "priority": "P1",
+      "owner_role": "Build owner",
+      "status": "OPEN",
+      "title": "Fail-closed CI",
+      "depends_on": []
+    },
+    {
+      "id": "OPS-04",
+      "priority": "P1",
+      "owner_role": "Core owner",
+      "status": "OPEN",
+      "title": "Canonical Core binding and transactions",
+      "depends_on": []
+    },
+    {
+      "id": "OPS-05",
+      "priority": "P1",
+      "owner_role": "Local operator",
+      "status": "BLOCKED_CONNECTION",
+      "title": "Fresh Windows host and GPU receipts",
+      "depends_on": []
+    },
+    {
+      "id": "OPS-06",
+      "priority": "P1",
+      "owner_role": "Local operator + White",
+      "status": "OPEN",
+      "title": "Scoped identity and private transport",
+      "depends_on": [
+        "OPS-02",
+        "OPS-04",
+        "OPS-05"
+      ]
+    },
+    {
+      "id": "OPS-07",
+      "priority": "P2",
+      "owner_role": "Inference owner",
+      "status": "OPEN",
+      "title": "One measured local model task",
+      "depends_on": [
+        "OPS-05"
+      ]
+    },
+    {
+      "id": "OPS-08",
+      "priority": "P2",
+      "owner_role": "Workflow owner",
+      "status": "OPEN",
+      "title": "Folder-to-brief result with verified recovery",
+      "depends_on": [
+        "OPS-01",
+        "OPS-04",
+        "OPS-06",
+        "OPS-07",
+        "OPS-09"
+      ]
+    },
+    {
+      "id": "OPS-09",
+      "priority": "P2",
+      "owner_role": "Recovery owner",
+      "status": "OPEN",
+      "title": "Restore and reconcile authoritative state",
+      "depends_on": [
+        "OPS-04"
+      ]
+    },
+    {
+      "id": "OPS-10",
+      "priority": "P1",
+      "owner_role": "Repository owner",
+      "status": "OPEN",
+      "title": "Public data boundary review",
+      "depends_on": []
+    }
+  ],
+  "board_is_executable": false,
+  "owner_acceptance_observed": false,
+  "schedules_created": 0,
+  "devices_enrolled": 0,
+  "tests": {
+    "native_bridge": {
+      "command": "python -m unittest discover -s tests -p test_native_bridge.py -v",
+      "result": "PASS",
+      "tests": 16,
+      "seconds": 1.574
+    },
+    "combined_pytest": {
+      "result": "BLOCKED_MISSING_PYTEST",
+      "packages_installed": false
+    },
+    "physical_windows": {
+      "result": "NOT_RUN"
+    }
+  },
+  "next_proof": "Authenticated GM700 session returns current read-only preflight and GPU evidence; bind to the actual host privately."
+}

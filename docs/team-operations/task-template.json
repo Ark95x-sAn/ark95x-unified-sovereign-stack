@@ -1,0 +1,42 @@
+{
+  "template_version": "1.0",
+  "status": "TEMPLATE_NOT_DISPATCHABLE",
+  "mission_id": null,
+  "task_id": null,
+  "parent_task_id": null,
+  "revision": null,
+  "coordinator": "Dot / OSK. Knox",
+  "worker_session_id": null,
+  "aim": null,
+  "entity": null,
+  "source_refs": [],
+  "input_sha256": null,
+  "permitted_actions": [],
+  "allowed_targets": [],
+  "data_class": null,
+  "authority_ref": null,
+  "authority_expires_at": null,
+  "dependencies": [],
+  "acceptance": [],
+  "limits": {
+    "max_new_spend": 0,
+    "max_attempts": 1,
+    "max_runtime_seconds": null,
+    "max_concurrency": 1
+  },
+  "idempotency_key": null,
+  "cancellation_ref": null,
+  "output_destination": null,
+  "receipt": {
+    "accepted_at": null,
+    "started_at": null,
+    "finished_at": null,
+    "status": "NOT_DISPATCHED",
+    "output_sha256": null,
+    "execution_ref": null,
+    "error": null,
+    "reviewer_session_id": null,
+    "reviewed_artifact_sha256": null,
+    "verification_ref": null
+  }
+}
