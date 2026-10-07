@@ -6,11 +6,12 @@ Part of ARK95X Command Center | Network-95 LLC
 """
 import asyncio
 import logging
-import random
+from uuid import uuid4
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
+from . import _blocked, _invoke_handler, _not_implemented, _summarize_outcomes
 
 logger = logging.getLogger("ark95x.vibecoder")
 
@@ -91,38 +92,57 @@ class VibeCoderAgent:
         self.agent_id = f"vibecoder-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
         self.projects = {}
         self.inspiration_bank = []
-        self.metrics = {"prototypes_built": 0, "code_generated_lines": 0, "creative_solutions": 0}
+        self.metrics = {"prototypes_built": 0, "code_generated_lines": 0,
+                        "creative_solutions": 0, "prototypes_reported": 0}
         logger.info(f"VibeCoderAgent initialized | mode={mode.value} | id={self.agent_id}")
 
     async def vibe_create(self, description, output_format=OutputFormat.CODE):
+        if not isinstance(description, str) or not description.strip():
+            return _blocked("Description must be a nonempty string.")
+        if not isinstance(output_format, OutputFormat):
+            return _blocked("Output format must be an OutputFormat value.")
         logger.info(f"VIBE CREATE | {description[:80]} | format={output_format.value}")
         project = VibeProject(
-            name=f"vibe-{datetime.utcnow().strftime('%H%M%S')}",
+            name=f"vibe-{uuid4().hex}",
             description=description,
             vibe=self.mode.value,
             output_format=output_format,
         )
         self.projects[project.name] = project
-        result = await self._generate(project)
-        project.status = "complete"
-        self.metrics["prototypes_built"] += 1
-        return result
+        project.status = "running"
+        try:
+            outcome = await _invoke_handler(self._generate, project)
+            project.status = outcome["status"]
+            if project.status == "reported":
+                self.metrics["prototypes_reported"] += 1
+            return {**outcome, "project_id": project.name}
+        except asyncio.CancelledError:
+            project.status = "cancelled"
+            raise
 
     async def rapid_build(self, specs):
+        if not isinstance(specs, (list, tuple)):
+            return _blocked("Specs must be a list or tuple of dictionaries.")
         self.mode = VibeMode.RAPID
         logger.info(f"RAPID BUILD | {len(specs)} components")
         results = []
         for spec in specs:
+            if not isinstance(spec, dict):
+                results.append(_blocked("Each spec must be a dictionary."))
+                continue
             r = await self.vibe_create(spec.get("description", ""), spec.get("format", OutputFormat.CODE))
             results.append(r)
-        return {"mode": "rapid", "built": len(results), "results": results}
+        return {**_summarize_outcomes(results), "mode": "rapid", "built": 0}
 
     async def flow_state(self, problem):
+        if not isinstance(problem, str) or not problem.strip():
+            return _blocked("Problem must be a nonempty string.")
         self.mode = VibeMode.FLOW
         logger.info(f"FLOW STATE | {problem[:100]}")
-        creative = await self._skill_creative_solve(problem)
-        prototype = await self._skill_rapid_proto(problem)
-        return {"mode": "flow", "creative_solution": creative, "prototype": prototype}
+        creative = await _invoke_handler(self._skill_creative_solve, problem)
+        prototype = await _invoke_handler(self._skill_rapid_proto, problem)
+        return {**_summarize_outcomes([creative, prototype]), "mode": "flow",
+                "creative_solution": creative, "prototype": prototype}
 
     async def _generate(self, project):
         handler_map = {
@@ -133,26 +153,29 @@ class VibeCoderAgent:
             OutputFormat.DASHBOARD: self._skill_dashboard,
             OutputFormat.DOCUMENT: self._skill_nl_to_code,
         }
-        handler = handler_map.get(project.output_format, self._skill_nl_to_code)
+        handler = handler_map.get(project.output_format)
+        if handler is None:
+            return _blocked("Unknown output format.")
         return await handler(project.description)
 
-    async def _skill_nl_to_code(self, target): return {"action": "code_generated", "target": str(target)[:100]}
-    async def _skill_ui_gen(self, target): return {"action": "ui_generated", "components": []}
-    async def _skill_rapid_proto(self, target): return {"action": "prototype_built", "target": str(target)[:100]}
-    async def _skill_api_scaffold(self, target): return {"action": "api_scaffolded", "endpoints": []}
-    async def _skill_dashboard(self, target): return {"action": "dashboard_built", "panels": []}
-    async def _skill_workflow(self, target): return {"action": "workflow_designed", "nodes": []}
-    async def _skill_creative_solve(self, target): return {"action": "creative_solution", "approaches": []}
-    async def _skill_code_remix(self, target): return {"action": "code_remixed", "improvements": []}
-    async def _skill_prompt_eng(self, target): return {"action": "prompt_optimized", "target": str(target)[:100]}
-    async def _skill_data_viz(self, target): return {"action": "visualization_created", "charts": []}
-    async def _skill_template(self, target): return {"action": "template_generated", "files": []}
-    async def _skill_integrate(self, target): return {"action": "integration_woven", "connections": []}
+    async def _skill_nl_to_code(self, target): return _not_implemented("nl_to_code", target)
+    async def _skill_ui_gen(self, target): return _not_implemented("ui_generation", target)
+    async def _skill_rapid_proto(self, target): return _not_implemented("rapid_prototype", target)
+    async def _skill_api_scaffold(self, target): return _not_implemented("api_scaffold", target)
+    async def _skill_dashboard(self, target): return _not_implemented("dashboard_builder", target)
+    async def _skill_workflow(self, target): return _not_implemented("workflow_designer", target)
+    async def _skill_creative_solve(self, target): return _not_implemented("creative_solve", target)
+    async def _skill_code_remix(self, target): return _not_implemented("code_remix", target)
+    async def _skill_prompt_eng(self, target): return _not_implemented("prompt_engineering", target)
+    async def _skill_data_viz(self, target): return _not_implemented("data_visualization", target)
+    async def _skill_template(self, target): return _not_implemented("template_factory", target)
+    async def _skill_integrate(self, target): return _not_implemented("integration_weaver", target)
 
     def status(self):
         return {
             "agent_id": self.agent_id, "mode": self.mode.value,
-            "active_projects": len(self.projects),
+            "active_projects": sum(project.status == "running" for project in self.projects.values()),
+            "projects_recorded": len(self.projects),
             "metrics": self.metrics,
             "skills": list(self.SKILLS.keys()),
             "tools": list(self.TOOLS.keys()),

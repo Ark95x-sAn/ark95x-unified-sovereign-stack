@@ -10,8 +10,10 @@ import sys
 import time
 from typing import List
 
-from unified_crew import UnifiedCrew, CrewTask, AgentRole, get_crew
-from dispatcher import Dispatcher, DispatchRequest, get_dispatcher
+if __package__:
+    from .dispatcher import Dispatcher, DispatchRequest
+else:
+    from dispatcher import Dispatcher, DispatchRequest
 
 BANNER = """
 ██████╗ █████╗ ██╗  ██╗ █████╗ ██╗ ██╗  ███╗  ██╗ ██████╗ ██╗  ██╗
@@ -64,41 +66,49 @@ QUICK_MISSION: List[DispatchRequest] = [
 
 # ── Main runner
 def run(fury: bool = True, mode: str = "full", verbose: bool = True):
-    print(BANNER)
-    print(f"[ARK95X] Booting — mode={mode} fury={fury}")
-    print(f"[ARK95X] Initializing unified crew...")
+    if mode not in {"full", "quick"}:
+        raise ValueError(f"Unknown mission preset: {mode}")
+    if verbose:
+        print(BANNER)
+        print(f"[ARK95X] Prototype run — mode={mode} fury={fury}")
 
     dispatcher = Dispatcher(fury=fury)
 
-    if fury:
-        print("[ARK95X] *** FURY MODE ENGAGED — ALL AGENTS UNLEASHED ***")
-        print("[ARK95X] *** MULTIPLEX ACTIVE — 3x PARALLEL STREAMS ***")
-
     mission = FULL_MISSION if mode == "full" else QUICK_MISSION
-    print(f"[ARK95X] Dispatching {len(mission)} tasks across crew...\n")
+    if verbose:
+        print(f"[ARK95X] Checking {len(mission)} task outcomes sequentially...\n")
 
     t0 = time.time()
     results = dispatcher.batch_route(mission)
     elapsed = time.time() - t0
 
-    print(f"\n[ARK95X] All tasks complete in {elapsed:.2f}s")
-    print("[ARK95X] === CREW STATUS REPORT ===")
+    if verbose:
+        print(f"\n[ARK95X] Prototype run finished in {elapsed:.2f}s")
+        print("[ARK95X] === CREW OUTCOME REPORT ===")
     summary = dispatcher.summary()
     summary["elapsed_s"]    = round(elapsed, 2)
     summary["mode"]         = mode
     summary["crew_history"] = dispatcher.crew.memory.history(5)
+    summary["execution_status"] = "unverified"
     print(json.dumps(summary, indent=2, default=str))
-    print("[ARK95X] === MISSION COMPLETE — ARK95X SOVEREIGN STACK LIVE ===")
+    if verbose:
+        print("[ARK95X] No verified mission result; inspect each blocked or reported outcome.")
     return results
 
 # ── CLI
-if __name__ == "__main__":
+def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="ARK95X Command Center Runner")
     parser.add_argument("--fury",   action="store_true", default=True,
                         help="Enable fury mode (default: on)")
     parser.add_argument("--mode",   choices=["full", "quick"], default="full",
                         help="Mission preset (default: full)")
     parser.add_argument("--quiet",  action="store_true", help="Suppress banner")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     run(fury=args.fury, mode=args.mode, verbose=not args.quiet)
+    # No executor/verification adapter is bound to these mission presets.
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())
