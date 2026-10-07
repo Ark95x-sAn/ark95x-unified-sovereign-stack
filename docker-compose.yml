@@ -16,14 +16,14 @@ services:
       dockerfile: Dockerfile
     container_name: ark95x-core
     restart: unless-stopped
-    ports:
     env_file: .env
+    ports:
       - "8000:8000"
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_PORT=8000
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - POSTGRES_URL=postgresql://ark95x:${POSTGRES_PASSWORD:-ark95x_pass}@postgres:5432/sovereign
+      - POSTGRES_URL=postgresql://ark95x:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/sovereign
       - MONGODB_URL=mongodb://mongodb:27017/ark95x
       - REDIS_URL=redis://redis:6379
       - QDRANT_URL=http://qdrant:6333
@@ -174,10 +174,10 @@ services:
     container_name: ark95x-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_USER: ark95x
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ark95x_pass}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: sovereign
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -256,7 +256,7 @@ services:
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=n8n
       - DB_POSTGRESDB_USER=ark95x
-      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-ark95x_pass}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       - N8N_ENCRYPTION_KEY=${N8N_API_KEY:-ark95x_n8n_encryption_key_32ch}
     volumes:
       - n8n-data:/home/node/.n8n
