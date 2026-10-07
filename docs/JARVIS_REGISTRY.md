@@ -120,3 +120,15 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Validation:** guarded file-SHA writes, unique delta headings, catalogue marker and prior provenance preservation, exact source pins, then read-back of both files. A skipped workflow is not a pass.
 - **Write execution control:** documentation commits use [skip ci]; no workflow or repository settings changed.
 - **Next move:** after C1–C3, run R05-A in a disposable network-denied fixture and S5-A on a v2.3-only loopback transport. Require explicit failure receipts, later-request usability, no ambient file reads or orphan process/stream, and no submitted Core mission.
+
+## 2026-10-07 — PostgreSQL startup review branch
+
+- **Crew:** Codex root; no independent reviewer in this increment.
+- **Repository/layer:** existing unified stack, Data/database and configuration.
+- **Action:** corrected Core Compose ports/env_file structure; removed PostgreSQL password fallback at all three references; limited PostgreSQL host binding to loopback. Prepared isolated acceptance plan.
+- **Files changed:** docker-compose.yml, docs/N95_POSTGRES_ACCEPTANCE.md, docs/JARVIS_REGISTRY.md.
+- **Risk:** Yellow review-branch preparation. Applying configuration changes affects networking/credentials; no live host configuration or database was changed here.
+- **Review result:** original YAML parses but Core ports was null and env_file contained port text. Corrected fields, three required-password references and loopback binding passed local Python/PyYAML assertions. Not an independent review or Docker validation.
+- **Test command:** local Python/PyYAML structure assertions; docker compose config --quiet remains NOT_RUN because Docker is unavailable here. PostgreSQL runtime likewise unavailable.
+- **Execution control:** review branch only; commits use [skip ci], no workflow settings changed. Skipped checks are not passes.
+- **Next move:** quiet Compose validation, existing Core transaction/identity mapping and isolated PostgreSQL write/read, rollback/replay/role-denial, restart and separate-database restore evidence. Runtime and physical gates unchanged.
