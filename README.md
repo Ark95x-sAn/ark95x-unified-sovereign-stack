@@ -1,5 +1,14 @@
 # ARK95X Unified Sovereign Stack
 
+## Command outcome repair — 2026-10-07
+
+The [command prototype](command/README_CREW.md) now distinguishes unavailable
+adapters, blocked requests, failed calls and unverified worker reports. It
+retains per-task batch outcomes and no longer turns canned output or an agent
+card into completed work or delivery. The local regression command and CLI
+exit behavior are documented there. These changes do not bind a physical worker;
+the existing Core integration sequence below remains in place.
+
 ## Verified integration increment — 2026-09-06
 
 The new [native receipt bridge](n95_native/README.md) adds signed technical

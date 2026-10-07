@@ -1,10 +1,11 @@
 # unified_crew.py — ARK95X Unified Sovereign Stack
-# CrewAI-style orchestration: Manus + ZenCode + VibeCoder
-# Shared context, compound memory, fury multiplexing
+# Synchronous command prototype: Manus + ZenCode + VibeCoder.
+# Catalogued tools are not bound executors; local reports are unverified.
 
 from __future__ import annotations
 import time
 import json
+from copy import deepcopy
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field
 from enum import Enum
@@ -40,12 +41,14 @@ class SharedMemory:
 class CrewTask:
     task_id:     str
     description: str
-    assigned_to: AgentRole
+    assigned_to: Optional[AgentRole]
     priority:    int = 5
     fury:        bool = False
     result:      Optional[str] = None
     status:      str = "pending"
     metadata:    dict = field(default_factory=dict)
+    executed:    Optional[bool] = False
+    verified:    bool = False
 
 # ── Base agent
 class BaseAgent:
@@ -58,10 +61,23 @@ class BaseAgent:
     def execute(self, task: CrewTask) -> str:
         raise NotImplementedError
 
-    def _store_result(self, task: CrewTask, result: str):
+    def _store_result(self, task: CrewTask, result: str, *,
+                      status: str = "reported", executed: Optional[bool] = None):
+        """Record a local report, never a verified mission completion."""
         task.result = result
-        task.status = "done"
-        self.memory.write(self.role.value, task.task_id, result)
+        task.status = status
+        task.executed = executed
+        task.verified = False
+        self.memory.write(self.role.value, task.task_id, {
+            "status": status, "executed": executed, "verified": False,
+            "result": result,
+        })
+
+    def _not_implemented(self, task: CrewTask) -> str:
+        result = (f"[NOT_IMPLEMENTED] {self.role.value.upper()} >> "
+                  f"Task '{task.task_id}': no execution adapter is bound.")
+        self._store_result(task, result, status="not_implemented", executed=False)
+        return result
 
 # ── Manus Agent — Research & Data
 class ManusAgent(BaseAgent):
@@ -72,16 +88,7 @@ class ManusAgent(BaseAgent):
                        "financial_analysis", "pattern_recognition"]
 
     def execute(self, task: CrewTask) -> str:
-        prefix = "[FURY] " if task.fury else ""
-        result = (
-            f"{prefix}MANUS >> Task '{task.task_id}': "
-            f"Research pipeline complete. "
-            f"Tools used: {', '.join(self.tools[:3])}. "
-            f"Skills applied: {', '.join(self.skills[:2])}. "
-            f"Context depth: {len(self.memory.context_snapshot())} keys."
-        )
-        self._store_result(task, result)
-        return result
+        return self._not_implemented(task)
 
 # ── ZenCode Agent — Architecture & Code
 class ZenCodeAgent(BaseAgent):
@@ -93,16 +100,7 @@ class ZenCodeAgent(BaseAgent):
                        "database_schema", "cloud_deploy", "docker", "github_actions"]
 
     def execute(self, task: CrewTask) -> str:
-        prefix = "[FURY] " if task.fury else ""
-        ctx = self.memory.context_snapshot()
-        result = (
-            f"{prefix}ZENCODE >> Task '{task.task_id}': "
-            f"Architecture + code complete. "
-            f"Built with: {', '.join(self.skills[:3])}. "
-            f"Integrated {len(ctx)} memory keys from crew context."
-        )
-        self._store_result(task, result)
-        return result
+        return self._not_implemented(task)
 
 # ── VibeCoder Agent — UX, UI & Creative Systems
 class VibeCoderAgent(BaseAgent):
@@ -114,15 +112,7 @@ class VibeCoderAgent(BaseAgent):
                        "data_visualization", "command_center_ui", "real_time_feed"]
 
     def execute(self, task: CrewTask) -> str:
-        prefix = "[FURY] " if task.fury else ""
-        result = (
-            f"{prefix}VIBECODER >> Task '{task.task_id}': "
-            f"UI/UX + creative systems complete. "
-            f"Skills: {', '.join(self.skills[:3])}. "
-            f"Dashboard layers: command_center, real_time_feed, agent_status."
-        )
-        self._store_result(task, result)
-        return result
+        return self._not_implemented(task)
 
 # ── Conductor — Orchestrator
 class Conductor(BaseAgent):
@@ -138,15 +128,44 @@ class Conductor(BaseAgent):
     def engage_fury(self):
         self.fury_mode = True
         self.memory.write("conductor", "fury_mode", True)
-        print("[ARK95X] *** FURY MODE ENGAGED — ALL AGENTS UNLEASHED ***")
 
     def dispatch(self, task: CrewTask) -> str:
+        task.result = None
+        task.status = "running"
+        task.executed = None
+        task.verified = False
         agent = self.roster.get(task.assigned_to)
         if not agent:
-            return f"[ERROR] No agent for role {task.assigned_to}"
+            result = f"[BLOCKED] No agent for role {task.assigned_to}"
+            self._store_result(task, result, status="blocked", executed=False)
+            return result
         if self.fury_mode:
             task.fury = True
-        return agent.execute(task)
+        try:
+            # Worker mutations are local reports; retain the admitted input identity.
+            worker_task = deepcopy(task)
+            result = agent.execute(worker_task)
+            if not isinstance(result, str) or not result.strip():
+                raise ValueError("Worker returned no valid text outcome")
+            task.status = (worker_task.status if worker_task.status in {
+                "not_implemented", "blocked", "failed"
+            } else "reported")
+            task.executed = (False if task.status in {"not_implemented", "blocked"}
+                             and worker_task.executed is False else None)
+            task.result = result
+            task.verified = False
+        except Exception as exc:
+            result = f"[FAILED] {type(exc).__name__}: {exc}"
+            task.status = "failed"
+            task.result = result
+            task.executed = None
+            task.verified = False
+        # Record the normalized result even if a custom worker claims verification.
+        self.memory.write(agent.role.value, task.task_id, {
+            "status": task.status, "executed": task.executed,
+            "verified": False, "result": result,
+        })
+        return result
 
     def multiplex_run(self, tasks: List[CrewTask]) -> List[str]:
         results = []
@@ -155,7 +174,7 @@ class Conductor(BaseAgent):
             for task in batch:
                 result = self.dispatch(task)
                 results.append(result)
-                print(f"  ✓ {result}")
+                print(f"  [{task.status.upper()}] {result}")
         return results
 
     def execute(self, task: CrewTask) -> str:
@@ -200,6 +219,8 @@ class UnifiedCrew:
 
     def status_report(self) -> dict:
         return {
+            "mode":      "prototype",
+            "verified_tasks": 0,
             "fury":      self.conductor.fury_mode,
             "multiplex": self.conductor.multiplex,
             "agents":    [r.value for r in self.agents],
@@ -220,5 +241,5 @@ def get_crew(fury: bool = True) -> UnifiedCrew:
 if __name__ == "__main__":
     crew = get_crew(fury=True)
     results = crew.kickoff()
-    print("\n[ARK95X] === MISSION COMPLETE ===")
+    print("\n[ARK95X] === PROTOTYPE OUTCOMES; NO VERIFIED MISSION RESULT ===")
     print(json.dumps(crew.status_report(), indent=2))

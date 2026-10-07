@@ -5,12 +5,12 @@ deployments, and system modifications with full autonomy.
 Part of ARK95X Command Center | Network-95 LLC
 """
 import asyncio
-import json
 import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
+from . import _blocked, _invoke_handler, _not_implemented
 
 logger = logging.getLogger("ark95x.manus")
 
@@ -83,34 +83,57 @@ class ManusAgent:
         self.task_queue = []
         self.completed = []
         self.active_tasks = {}
-        self.metrics = {"tasks_completed": 0, "tasks_failed": 0, "uptime_start": datetime.utcnow().isoformat()}
+        self.metrics = {"tasks_completed": 0, "tasks_failed": 0, "tasks_reported": 0,
+                        "tasks_blocked": 0, "uptime_start": datetime.utcnow().isoformat()}
         logger.info(f"ManusAgent initialized | mode={mode.value} | id={self.agent_id}")
 
     async def execute(self, task):
-        logger.info(f"Executing {task.task_id}: {task.action} on {task.target}")
+        if not isinstance(task, ManusTask):
+            return _blocked("Expected a ManusTask.")
+        task_id = task.task_id
+        for key in ("task_id", "action", "target"):
+            value = getattr(task, key)
+            if not isinstance(value, str) or not value.strip():
+                task.status = "blocked"
+                task.error = f"{key} must be a nonempty string."
+                return {**_blocked(task.error), "task_id": task_id}
+        if not isinstance(task.params, dict):
+            task.status = "blocked"
+            task.error = "Task params must be a dictionary."
+            return {**_blocked(task.error), "task_id": task_id}
+        skill = self.SKILLS.get(task.action)
+        if not skill:
+            task.status = "blocked"
+            task.error = f"Unknown skill: {task.action}"
+            self.metrics["tasks_blocked"] += 1
+            return {**_blocked(task.error), "task_id": task_id}
+        if task_id in self.active_tasks:
+            return {**_blocked("A task with this id is already running."), "task_id": task_id}
+        logger.info(f"Dispatching {task_id}: {task.action} on {task.target}")
         task.status = "running"
-        self.active_tasks[task.task_id] = task
+        task.error = None
+        self.active_tasks[task_id] = task
         try:
-            skill = self.SKILLS.get(task.action)
-            if not skill:
-                raise ValueError(f"Unknown skill: {task.action}")
             handler = getattr(self, skill.handler, self._default_handler)
-            result = await handler(task)
-            task.status = "completed"
-            task.result = result
-            self.metrics["tasks_completed"] += 1
-            self.completed.append(task)
-            return {"status": "success", "task_id": task.task_id, "result": result}
-        except Exception as e:
-            task.retries += 1
-            if task.retries < task.max_retries:
-                return await self.execute(task)
-            task.status = "failed"
-            task.error = str(e)
-            self.metrics["tasks_failed"] += 1
-            return {"status": "failed", "task_id": task.task_id, "error": str(e)}
+            outcome = await _invoke_handler(handler, task)
+            task.status = outcome["status"]
+            task.result = outcome.get("result")
+            task.error = outcome.get("error")
+            if task.status == "reported":
+                self.metrics["tasks_reported"] += 1
+            elif task.status == "failed":
+                self.metrics["tasks_failed"] += 1
+            elif task.status in {"blocked", "not_implemented"}:
+                self.metrics["tasks_blocked"] += 1
+            # There is no receipt validator here, so reported work is never
+            # added to the completed list or the completed counter.
+            return {**outcome, "task_id": task_id}
+        except asyncio.CancelledError:
+            task.status = "cancelled"
+            task.error = "CancelledError"
+            raise
         finally:
-            self.active_tasks.pop(task.task_id, None)
+            self.active_tasks.pop(task_id, None)
 
     async def fury_mode(self, tasks):
         self.mode = ManusMode.FURY
@@ -124,22 +147,23 @@ class ManusAgent:
             results[name] = [await self.execute(t) for t in tasks]
         return results
 
-    async def _skill_code_gen(self, task): return {"action": "code_generated", "language": task.params.get("language", "python")}
-    async def _skill_repo_mgmt(self, task): return {"action": "repo_managed", "repo": task.target}
-    async def _skill_docker_deploy(self, task): return {"action": "deployed", "service": task.params.get("service_name")}
-    async def _skill_api_integrate(self, task): return {"action": "integrated", "api": task.target}
-    async def _skill_db_ops(self, task): return {"action": "db_op_complete", "target": task.params.get("db_target")}
-    async def _skill_audit(self, task): return {"action": "audit_complete", "score": 100}
-    async def _skill_workflow_build(self, task): return {"action": "workflow_built", "spec": task.params.get("workflow_spec")}
-    async def _skill_file_ops(self, task): return {"action": "file_op_complete", "path": task.params.get("path")}
-    async def _skill_test_suite(self, task): return {"action": "tests_generated", "module": task.params.get("target_module")}
-    async def _skill_docs(self, task): return {"action": "docs_generated", "scope": task.params.get("scope")}
-    async def _default_handler(self, task): return {"action": task.action, "status": "handled"}
+    async def _skill_code_gen(self, task): return _not_implemented(task.action, task.target)
+    async def _skill_repo_mgmt(self, task): return _not_implemented(task.action, task.target)
+    async def _skill_docker_deploy(self, task): return _not_implemented(task.action, task.target)
+    async def _skill_api_integrate(self, task): return _not_implemented(task.action, task.target)
+    async def _skill_db_ops(self, task): return _not_implemented(task.action, task.target)
+    async def _skill_audit(self, task): return _not_implemented(task.action, task.target)
+    async def _skill_workflow_build(self, task): return _not_implemented(task.action, task.target)
+    async def _skill_file_ops(self, task): return _not_implemented(task.action, task.target)
+    async def _skill_test_suite(self, task): return _not_implemented(task.action, task.target)
+    async def _skill_docs(self, task): return _not_implemented(task.action, task.target)
+    async def _default_handler(self, task): return _not_implemented(task.action, task.target)
 
     def status(self):
         return {
             "agent_id": self.agent_id, "mode": self.mode.value,
             "queued": len(self.task_queue), "active": len(self.active_tasks),
             "completed": self.metrics["tasks_completed"], "failed": self.metrics["tasks_failed"],
+            "reported": self.metrics["tasks_reported"], "blocked": self.metrics["tasks_blocked"],
             "skills": list(self.SKILLS.keys()), "protocols": list(self.PROTOCOLS.keys()),
         }

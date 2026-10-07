@@ -5,13 +5,15 @@
 from __future__ import annotations
 import uuid
 import time
+from copy import deepcopy
 from typing import Optional, List, Dict, Callable, Any
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 
-from unified_crew import (
-    UnifiedCrew, CrewTask, AgentRole, get_crew
-)
+if __package__:
+    from .unified_crew import UnifiedCrew, CrewTask, AgentRole, get_crew
+else:
+    from unified_crew import UnifiedCrew, CrewTask, AgentRole, get_crew
 
 # ── Task categories map to agents
 TASK_ROUTING: Dict[str, AgentRole] = {
@@ -64,55 +66,72 @@ class Dispatcher:
         self._hooks.append(fn)
 
     def route(self, req: DispatchRequest) -> str:
-        agent_role = TASK_ROUTING.get(req.category.lower(), AgentRole.MANUS)
+        req = deepcopy(req)
+        agent_role = TASK_ROUTING.get(req.category.lower())
         task = CrewTask(
             task_id=req.task_id,
             description=req.description,
             assigned_to=agent_role,
             priority=req.priority,
             fury=req.fury_override or self.crew.conductor.fury_mode,
-            metadata=req.metadata,
+            metadata=deepcopy(req.metadata),
         )
-        result = self.crew.conductor.dispatch(task)
-        self._record(req, task, result)
-        for hook in self._hooks:
-            hook(task, result)
+        if agent_role is None:
+            result = f"[BLOCKED] Unknown task category: {req.category!r}"
+            self.crew.conductor._store_result(
+                task, result, status="blocked", executed=False
+            )
+        else:
+            result = self.crew.conductor.dispatch(task)
+        entry = self._record(req, task, result)
+        for index, hook in enumerate(tuple(self._hooks)):
+            try:
+                hook(deepcopy(task), result)
+            except Exception as exc:
+                # A callback failure does not undo or retry an attempted task.
+                entry["hook_errors"].append({
+                    "hook_index": index, "error_type": type(exc).__name__,
+                    "error": str(exc),
+                })
         return result
 
     def batch_route(self, requests: List[DispatchRequest]) -> List[str]:
-        tasks = []
-        for req in requests:
-            agent_role = TASK_ROUTING.get(req.category.lower(), AgentRole.MANUS)
-            tasks.append(CrewTask(
-                task_id=req.task_id,
-                description=req.description,
-                assigned_to=agent_role,
-                priority=req.priority,
-                fury=req.fury_override or self.crew.conductor.fury_mode,
-                metadata=req.metadata,
-            ))
-        # Sort by priority descending
-        tasks.sort(key=lambda t: t.priority, reverse=True)
-        return self.crew.conductor.multiplex_run(tasks)
+        # Preserve the existing stable priority order and the single-task audit path.
+        # This prototype is sequential; batch size does not establish concurrency.
+        return [self.route(req) for req in sorted(
+            requests, key=lambda req: req.priority, reverse=True
+        )]
 
     def _record(self, req: DispatchRequest, task: CrewTask, result: str):
-        self.history.append({
+        entry = {
             "ts":       time.time(),
             "task_id":  req.task_id,
             "category": req.category,
-            "agent":    task.assigned_to.value,
+            "agent":    task.assigned_to.value if task.assigned_to else None,
             "priority": req.priority,
             "status":   task.status,
-            "result":   result[:80],
-        })
+            "executed": task.executed,
+            "verified": task.verified,
+            "result":   result,
+            "input":    asdict(req),
+            "hook_errors": [],
+        }
+        self.history.append(entry)
+        return entry
 
     def summary(self) -> dict:
         by_agent: Dict[str, int] = {}
+        by_status: Dict[str, int] = {}
         for h in self.history:
-            by_agent[h["agent"]] = by_agent.get(h["agent"], 0) + 1
+            agent = h["agent"] or "unassigned"
+            by_agent[agent] = by_agent.get(agent, 0) + 1
+            by_status[h["status"]] = by_status.get(h["status"], 0) + 1
         return {
             "total_dispatched": len(self.history),
             "by_agent":         by_agent,
+            "by_status":        by_status,
+            "verified_tasks":   sum(h["verified"] is True for h in self.history),
+            "hook_errors":      sum(len(h["hook_errors"]) for h in self.history),
             "fury":             self.crew.conductor.fury_mode,
             "memory_keys":      len(self.crew.memory.context_snapshot()),
         }
