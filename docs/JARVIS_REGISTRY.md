@@ -120,3 +120,18 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Validation:** guarded file-SHA writes, unique delta headings, catalogue marker and prior provenance preservation, exact source pins, then read-back of both files. A skipped workflow is not a pass.
 - **Write execution control:** documentation commits use [skip ci]; no workflow or repository settings changed.
 - **Next move:** after C1–C3, run R05-A in a disposable network-denied fixture and S5-A on a v2.3-only loopback transport. Require explicit failure receipts, later-request usability, no ambient file reads or orphan process/stream, and no submitted Core mission.
+
+## 2026-10-12 — GitHub harvest delta
+
+- **Crew / role:** Black; discover, verify, read, reserve/reject. Independent White did not run.
+- **Repository / baseline:** existing unified stack c153e0a66329673bb44c5203c0b54911c9905fe3; five governed files read first, then README, root deployment blueprint and n95_native/core_handoff.py.
+- **Named unmet need:** C4/C5 folder-to-source-linked-brief extraction must exclude non-presented/inert content while retaining visible-context evidence exactly once, including DOCX table textboxes and wrapped/table footnotes.
+- **Layers / decisions:** C08/C07/C05/C09 R05 refined against docling-project/docling v2.138.0 at a76ae4b6acfbb7e9a63b9f8592f05d555e8c3a27. R05-B reserves format-specific presented/invisible handling for HTML/PPTX/ODP; R05-C reserves DOCX textbox placement and non-plain footnote completeness. PostgreSQL, Repomix, MCP post-tag work and Ollama produced no new reserve.
+- **Existing mapping:** no parser worker exists; n95_native/core_handoff.py::prepare remains only a digest-bound draft envelope. GM700 retains the sole Core/PostgreSQL mission authority and a future C4 parser after C1–C3; RTX remains bounded and unnecessary for these slim parser paths; Surface remains C5 review.
+- **Files changed:** docs/N95_TOP25_GITHUB.md and docs/JARVIS_REGISTRY.md; the existing catalogue remains the sole decision ledger and prior provenance is preserved.
+- **Risk / scope:** Yellow documentation write only. No install, runtime execution, model pull, deployment, workflow dispatch, device action, cleanup, account/permission change, message or private-data publication. Physical free space remained UNKNOWN, so every target stayed STOP/RETURN.
+- **Dependency boundary:** docling-slim 2.138.0 requires Python >=3.10,<4 and docling-core >=2.98,<3; selected format extras are python-docx, python-pptx/pylatexenc, odfdo and beautifulsoup4 within recorded ranges. PDF/docling-parse, OCR, VLM and model extras remain separate and unadmitted; transitive terms remain open. MCP remains released v2.3.0 only; post-tag code is excluded.
+- **Review result:** STATIC_COMPARISON_COMPLETE_WITH_GAPS. Exact release commits, backend code, tests, manifests and licenses were read. R05-B/R05-C, Core binding, worker implementation, dependency closure, page/source locator behavior and White evidence remain NOT_RUN/UNKNOWN.
+- **Validation:** guarded file-SHA writes, unique headings, catalogue marker and prior-content preservation, immutable source pins, then read-back of both files. A skipped workflow is not a pass.
+- **Write execution control:** documentation commits use [skip ci]; no workflow or repository settings changed.
+- **Next move:** after C1–C3 and authorization, run R05-B in a disposable network-denied HTML/PPTX/ODP fixture and R05-C against one bounded DOCX fixture. Require exact visible/invisible semantics, exactly-once order, digest/format receipts, UNKNOWN page provenance when absent, no ambient reads or unselected extras, and no submitted Core mission.
