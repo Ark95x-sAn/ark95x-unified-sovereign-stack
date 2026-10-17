@@ -125,7 +125,13 @@ function Setup-Environment {
     }
 
     # Cryptographically secure generator (Get-Random is not a CSPRNG)
-    function New-Secret([int]$bytes = 32) { -join ([System.Security.Cryptography.RandomNumberGenerator]::GetBytes($bytes) | ForEach-Object { $_.ToString('x2') }) }
+    function New-Secret([int]$bytes = 32) {
+        # Windows PowerShell 5.1 (.NET Framework) has no static GetBytes(Int32); fill a buffer instead
+        $buf = New-Object byte[] $bytes
+        $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+        try { $rng.GetBytes($buf) } finally { $rng.Dispose() }
+        -join ($buf | ForEach-Object { $_.ToString('x2') })
+    }
     # Keep an existing n8n encryption key: regenerating it makes stored n8n credentials unreadable.
     $n8nEncKey = $null
     if (Test-Path $envFile) {
