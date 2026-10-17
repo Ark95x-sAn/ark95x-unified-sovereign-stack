@@ -6,6 +6,7 @@ import os
 import time
 import json
 import hashlib
+import hmac
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,7 +18,11 @@ import httpx
 
 # === CONFIG ===
 FLAMEGATE_PORT = int(os.getenv("FLAMEGATE_PORT", 8443))
-ADMIN_TOKEN = os.getenv("FLAMEGATE_ADMIN_TOKEN", "ark95x-sovereign-flame-token")
+_admin_token = os.environ.get("FLAMEGATE_ADMIN_TOKEN", "")
+if len(_admin_token) < 32:
+    # Fail closed: never fall back to a built-in token.
+    raise RuntimeError("FLAMEGATE_ADMIN_TOKEN must be set (>= 32 chars) in the environment / .env")
+ADMIN_TOKEN = _admin_token
 AUDIT_DB = os.getenv("FLAMEGATE_AUDIT_DB", "flamegate_audit.db")
 CORE_API = os.getenv("CORE_API_URL", "http://localhost:8000")
 COMET_ROUTER = os.getenv("COMET_ROUTER_URL", "http://localhost:8100")
@@ -92,7 +97,7 @@ init_audit_db()
 # === AUTH ===
 async def verify_token(request: Request):
     token = request.headers.get("X-Flamegate-Token", "")
-    if token != ADMIN_TOKEN:
+    if not hmac.compare_digest(token.encode(), ADMIN_TOKEN.encode()):
         log_audit("unknown", "auth_failed", ip=request.client.host if request.client else "unknown")
         raise HTTPException(status_code=403, detail="Invalid Flamegate token")
     return token

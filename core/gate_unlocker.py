@@ -14,7 +14,11 @@ from loguru import logger
 
 # === CONFIG ===
 UNLOCKER_PORT = int(os.getenv("GATE_UNLOCKER_PORT", 8200))
-ADMIN_TOKEN = os.getenv("FLAMEGATE_ADMIN_TOKEN", "ark95x-sovereign-flame-token")
+_admin_token = os.environ.get("FLAMEGATE_ADMIN_TOKEN", "")
+if len(_admin_token) < 32:
+    # Fail closed: never fall back to a built-in token.
+    raise RuntimeError("FLAMEGATE_ADMIN_TOKEN must be set (>= 32 chars) in the environment / .env")
+ADMIN_TOKEN = _admin_token
 GATE_DB = os.getenv("GATE_STATE_DB", "gate_states.db")
 
 # === GATE STATE DATABASE ===
