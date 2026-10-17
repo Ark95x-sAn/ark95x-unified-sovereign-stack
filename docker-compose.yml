@@ -63,6 +63,7 @@ services:
       - FLAMEGATE_URL=http://flamegate:8443
       - COMET_ROUTER_URL=http://comet-router:8100
       - GATE_UNLOCKER_URL=http://gate-unlocker:8200
+      - FLAMEGATE_ADMIN_TOKEN=${FLAMEGATE_ADMIN_TOKEN:?FLAMEGATE_ADMIN_TOKEN must be set in .env}
     command: python -m command.dashboard
     depends_on:
       - core
@@ -139,6 +140,7 @@ services:
       - OLLAMA_HOST=http://host.docker.internal:11434
       - COUNCIL_MODEL=${COUNCIL_MODEL:-llama3}
       - GATE_UNLOCKER_URL=http://gate-unlocker:8200
+      - FLAMEGATE_ADMIN_TOKEN=${FLAMEGATE_ADMIN_TOKEN:?FLAMEGATE_ADMIN_TOKEN must be set in .env}
     command: uvicorn flame.council:app --host 0.0.0.0 --port 8300
     depends_on:
       - gate-unlocker
