@@ -1,0 +1,36 @@
+{
+  "schema_version": "n95.control-plane.v1",
+  "status": "IMPLEMENTATION_BASELINE_LIVE_HOLD",
+  "loop": [
+    "signal",
+    "compile",
+    "authorize",
+    "route",
+    "execute",
+    "observe",
+    "verify",
+    "record",
+    "brief"
+  ],
+  "attention_gate": [
+    "money",
+    "legal",
+    "security",
+    "architecture",
+    "irreversible",
+    "intent_or_authorization"
+  ],
+  "promotion_gates": [
+    "schema_fixture",
+    "durable_persistence",
+    "authenticated_binding",
+    "bounded_execution_receipt",
+    "independent_white",
+    "failure_recovery_idempotency",
+    "hq_daily_brief",
+    "measured_pilot"
+  ],
+  "provider_neutral": true,
+  "default_unknown": "HOLD",
+  "completion_rule": "evidence_and_verifier_required"
+}
