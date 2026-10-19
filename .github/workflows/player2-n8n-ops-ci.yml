@@ -1,0 +1,28 @@
+name: Player 2 n8n Data Ops CI
+
+on:
+  pull_request:
+    paths:
+      - "player2_skill_factory/config/n8n_7_data_ops.json"
+      - "player2_skill_factory/n8n_plan.py"
+      - ".github/workflows/player2-n8n-ops-ci.yml"
+  push:
+    branches:
+      - player2-skill-factory-v4
+    paths:
+      - "player2_skill_factory/config/n8n_7_data_ops.json"
+      - "player2_skill_factory/n8n_plan.py"
+      - ".github/workflows/player2-n8n-ops-ci.yml"
+
+jobs:
+  n8n-plan-smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build n8n seven-data operations plan
+        run: python player2_skill_factory/n8n_plan.py plan
+      - name: Show first recommended workflow
+        run: python player2_skill_factory/n8n_plan.py first
