@@ -135,3 +135,19 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Validation:** guarded file-SHA writes, unique headings, catalogue marker and prior-content preservation, immutable source pins, then read-back of both files. A skipped workflow is not a pass.
 - **Write execution control:** documentation commits use [skip ci]; no workflow or repository settings changed.
 - **Next move:** after C1–C3 and authorization, run R05-B in a disposable network-denied HTML/PPTX/ODP fixture and R05-C against one bounded DOCX fixture. Require exact visible/invisible semantics, exactly-once order, digest/format receipts, UNKNOWN page provenance when absent, no ambient reads or unselected extras, and no submitted Core mission.
+
+
+## 2026-10-19 — GitHub harvest delta
+
+- **Crew / role:** Black; discover, verify, read, reserve/reject. Independent White did not run.
+- **Repository / baseline:** existing unified stack `cd1bf5ef3642a7b5bef2f8fe316acbe9864049a0`; five governed files read first, then README, root deployment blueprint and `n95_native/core_handoff.py`.
+- **Named unmet need:** C4/C5 folder-to-source-linked-brief intake must bound pathological PDF layout work and distinguish complete from fallback or timeout-partial output with explicit page/status/error receipts, while retaining non-presented OpenDocument content outside BODY.
+- **Layers / decisions:** C08/C07/C05/C09 R05 was refined against `docling-project/docling` v2.140.0 at `0e54294231b69bc2cf7a39873235495788f76b57`. R05-B now includes hidden ODT sections/nested content in INVISIBLE. R05-D reserves bounded PDF separator work plus an N95-visible page/cap/fallback/completeness receipt. PostgreSQL, Repomix, MCP post-tag work and Ollama produced no new reserve.
+- **Existing mapping:** no parser or MCP worker exists; `n95_native/core_handoff.py::prepare` remains only a digest-bound draft envelope. GM700 retains the sole Core/PostgreSQL mission authority and a future C4 parser after C1–C3; RTX remains bounded at C3 and requires separate model/license admission; Surface remains C5 review.
+- **Files changed:** `docs/N95_TOP25_GITHUB.md` and `docs/JARVIS_REGISTRY.md`; the existing catalogue remains the sole decision ledger and prior provenance is preserved.
+- **Risk / scope:** Yellow documentation write only. No install, runtime execution, model pull, deployment, workflow dispatch, device action, cleanup, account/permission change, message or private-data publication. Physical free space remained UNKNOWN, so every target stayed STOP/RETURN.
+- **Dependency boundary:** docling-slim 2.140.0 requires Python >=3.10,<4 and docling-core >=2.98,<3. ODT uses odfdo >=3.22,<4. The PDF path requires convert-core plus pypdfium2 >=4.30.0, !=4.30.1, <6 and docling-parse >=7.22.1,<8. OCR, VLM, local/remote models, torch and model-license review remain separate and unadmitted; transitive terms remain open. MCP remains released v2.3.0 only.
+- **Review result:** STATIC_COMPARISON_COMPLETE_WITH_GAPS. Exact release commit, implementation, tests, manifest and license were read. The >5,000 separator-candidate fallback is warning-only; an N95 structured affected-page/cap receipt is missing. R05-B/R05-D, Core binding, worker implementation, dependency closure, locator behavior and White evidence remain NOT_RUN/UNKNOWN.
+- **Validation:** guarded file-SHA writes, unique headings, catalogue marker and prior-content preservation, immutable source pins, then read-back of both files. A skipped workflow is not a pass.
+- **Write execution control:** documentation commits use [skip ci]; no workflow or repository settings changed.
+- **Next move:** after C1–C3 and authorization, run the expanded R05-B ODT fixture and R05-D dense-PDF fixture in disposable network-denied folders. Require exact visible/invisible semantics, explicit cap/fallback/timeout/completeness receipts, digest/page/item locators, no ambient reads or unselected extras, and no submitted Core mission.
