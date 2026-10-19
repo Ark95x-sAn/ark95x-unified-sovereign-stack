@@ -15,6 +15,7 @@ CORE_API = os.getenv("CORE_API_URL", "http://localhost:8000")
 FLAMEGATE_URL = os.getenv("FLAMEGATE_URL", "https://localhost:8443")
 COMET_ROUTER_URL = os.getenv("COMET_ROUTER_URL", "http://localhost:8100")
 GATE_UNLOCKER_URL = os.getenv("GATE_UNLOCKER_URL", "http://localhost:8200")
+ADMIN_TOKEN = os.getenv("FLAMEGATE_ADMIN_TOKEN", "")  # sent as X-Flamegate-Token on /unlock
 DASHBOARD_PORT = int(os.getenv("DASHBOARD_PORT", 8050))
 
 # TLS verification toggle: defaults to True (secure). Set to "false" in
@@ -189,6 +190,7 @@ def unlock_gate(n, gate_id, audit):
         r = httpx.post(
             f"{GATE_UNLOCKER_URL}/unlock",
             json={"gate_id": gate_id, "actor": "command_base", "timestamp": ts},
+            headers={"X-Flamegate-Token": ADMIN_TOKEN},
             timeout=10.0,
             verify=VERIFY_TLS,
         )
