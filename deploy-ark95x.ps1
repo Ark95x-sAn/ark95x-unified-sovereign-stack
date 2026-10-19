@@ -108,6 +108,16 @@ function Initialize-Environment {
     $envFile = Join-Path $InstallDir ".env"
     if (Test-Path $envFile) { $r = Read-Host "Overwrite .env? (y/N)"; if ($r -ne 'y') { return } }
     $postgresPassword = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 32 | ForEach-Object {[char]$_})
+    # CSPRNG hex secrets (same lengths as install.ps1); works on Windows PowerShell 5.1
+    function New-Secret([int]$bytes = 32) {
+        $buf = New-Object byte[] $bytes
+        $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+        try { $rng.GetBytes($buf) } finally { $rng.Dispose() }
+        -join ($buf | ForEach-Object { $_.ToString('x2') })
+    }
+    $n8nEncKey = New-Secret 32
+    $flameToken = New-Secret 32
+    $grafanaPass = New-Secret 24
     $envContent = @"
 OPENAI_API_KEY=sk-your-key-here
 OLLAMA_HOST=http://host.docker.internal:11434
@@ -118,6 +128,9 @@ REDIS_URL=redis://redis:6379
 QDRANT_URL=http://qdrant:6333
 SEARXNG_URL=http://searxng:8080
 N8N_URL=http://n8n:5678
+N8N_ENCRYPTION_KEY=$n8nEncKey
+FLAMEGATE_ADMIN_TOKEN=$flameToken
+GRAFANA_PASSWORD=$grafanaPass
 TRADING_MODE=paper
 APP_ENV=development
 APP_PORT=8000
