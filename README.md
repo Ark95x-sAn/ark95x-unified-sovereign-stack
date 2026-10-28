@@ -1,5 +1,17 @@
 # ARK95X Unified Sovereign Stack
 
+## Work-brief evaluation candidate — 2026-09-06
+
+The first runnable $100 service candidate is a [local work brief](n95_workflow/README.md)
+from explicit text-note tasks. It includes source references, conflict reporting,
+repeat-output verification and a [Windows handoff](docs/N95_WORK_BRIEF_RUNBOOK.md).
+It performs deterministic extraction with no model inference.
+
+The [offer](docs/N95_WORK_BRIEF_OFFER.md) remains on hold for measured customer value.
+Use the [nine-evaluator protocol](docs/N95_NINE_EVALUATOR_PROTOCOL.md) and
+[value observation template](docs/N95_VALUE_OBSERVATIONS_TEMPLATE.json) to challenge
+it. Passing software tests is not proof that a customer gets more than $100 of value.
+
 ## Verified integration increment — 2026-09-06
 
 The new [native receipt bridge](n95_native/README.md) adds signed technical
