@@ -124,8 +124,25 @@ function Setup-Environment {
         Log "Backed up existing .env to $backup"
     }
 
-    $pgPass = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 25 | ForEach-Object {[char]$_})
-    $n8nKey = -join ((48..57) + (97..102) | Get-Random -Count 64 | ForEach-Object {[char]$_})
+    # Cryptographically secure generator (Get-Random is not a CSPRNG)
+    function New-Secret([int]$bytes = 32) {
+        # Windows PowerShell 5.1 (.NET Framework) has no static GetBytes(Int32); fill a buffer instead
+        $buf = New-Object byte[] $bytes
+        $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+        try { $rng.GetBytes($buf) } finally { $rng.Dispose() }
+        -join ($buf | ForEach-Object { $_.ToString('x2') })
+    }
+    # Keep an existing n8n encryption key: regenerating it makes stored n8n credentials unreadable.
+    $n8nEncKey = $null
+    if (Test-Path $envFile) {
+        $m = Select-String -Path $envFile -Pattern '^N8N_ENCRYPTION_KEY=(.+)$' | Select-Object -First 1
+        if (-not $m) { $m = Select-String -Path $envFile -Pattern '^N8N_API_KEY=(.+)$' | Select-Object -First 1 }  # legacy location
+        if ($m) { $n8nEncKey = $m.Matches[0].Groups[1].Value.Trim() }
+    }
+    if (-not $n8nEncKey) { $n8nEncKey = New-Secret 32 }
+    $pgPass = New-Secret 32
+    $flameToken = New-Secret 32
+    $grafanaPass = New-Secret 24
 
     @"
 APP_ENV=production
@@ -134,8 +151,10 @@ LOG_LEVEL=INFO
 POSTGRES_PASSWORD=$pgPass
 OPENAI_API_KEY=
 DEEPSEEK_API_KEY=
-N8N_API_KEY=$n8nKey
-GRAFANA_PASSWORD=ark95x_admin
+N8N_API_KEY=
+N8N_ENCRYPTION_KEY=$n8nEncKey
+FLAMEGATE_ADMIN_TOKEN=$flameToken
+GRAFANA_PASSWORD=$grafanaPass
 "@ | Out-File -Encoding utf8 $envFile
 
     Log '.env configured (edit to add API keys)'
@@ -211,7 +230,7 @@ function Show-Dashboard {
      Qdrant       : http://localhost:6333
      SearXNG      : http://localhost:8080
      Prometheus   : http://localhost:9090
-     Grafana      : http://localhost:3000 (admin/ark95x_admin)
+     Grafana      : http://localhost:3000 (admin / GRAFANA_PASSWORD in .env)
      Ollama       : http://localhost:11434
 
      Install Dir  : $INSTALL_DIR

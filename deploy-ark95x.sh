@@ -115,6 +115,8 @@ gen_env() {
   [[ -f .env ]] && cp .env ".env.bak.$(date +%s)"
   local pgp; pgp=$(openssl rand -base64 32 | tr -d '=+/' | cut -c1-25)
   local n8k; n8k=$(openssl rand -hex 32)
+  local flt; flt=$(openssl rand -hex 32)
+  local gfp; gfp=$(openssl rand -hex 24)
   cat > .env <<-ENV
 OPENAI_API_KEY=${OPENAI_API_KEY:-sk-your-key-here}
 OLLAMA_HOST=http://localhost:11434
@@ -125,6 +127,9 @@ REDIS_URL=redis://redis:6379
 QDRANT_URL=http://qdrant:6333
 N8N_URL=http://n8n:5678
 N8N_API_KEY=${n8k}
+N8N_ENCRYPTION_KEY=${n8k}
+FLAMEGATE_ADMIN_TOKEN=${flt}
+GRAFANA_PASSWORD=${gfp}
 TRADING_MODE=paper
 APP_ENV=production
 APP_PORT=8000

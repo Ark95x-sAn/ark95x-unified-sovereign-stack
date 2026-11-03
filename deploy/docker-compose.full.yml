@@ -31,13 +31,14 @@ services:
       - "7474:7474"
       - "7687:7687"
     environment:
-      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASS:-ark95x}
+      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASS:?NEO4J_PASS must be set in .env}
+      - HC_NEO4J_PASSWORD=${NEO4J_PASS:?NEO4J_PASS must be set in .env}
       - NEO4J_PLUGINS=["apoc"]
     volumes:
       - neo4j_data:/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "ark95x", "RETURN 1"]
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p \"$$HC_NEO4J_PASSWORD\" 'RETURN 1'"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -50,7 +51,7 @@ services:
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
-      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASS:-ark95x}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASS:?N8N_PASS must be set in .env}
     volumes:
       - n8n_data:/home/node/.n8n
     restart: unless-stopped
@@ -70,7 +71,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASS:-ark95x}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASS:?GRAFANA_PASS must be set in .env}
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana-dashboards:/etc/grafana/provisioning/dashboards
