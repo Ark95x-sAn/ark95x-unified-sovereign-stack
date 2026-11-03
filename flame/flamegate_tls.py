@@ -131,8 +131,10 @@ async def proxy_request(payload: ProxyPayload, token: str = Depends(verify_token
     url = resolve_target(payload.target, payload.path)
     payload_hash = hashlib.sha256(json.dumps(payload.body, sort_keys=True).encode()).hexdigest()[:16]
     logger.info(f"[FLAMEGATE] {payload.actor} -> {payload.target}{payload.path} [{payload.method}]")
+    # Forward the verified admin token only to gate-unlocker (its /unlock endpoints require it).
+    fwd_headers = {"X-Flamegate-Token": token} if TARGET_MAP.get(payload.target, payload.target) == GATE_UNLOCKER else {}
     try:
-        async with httpx.AsyncClient(timeout=30.0, verify=VERIFY_TLS) as client:
+        async with httpx.AsyncClient(timeout=30.0, verify=VERIFY_TLS, headers=fwd_headers) as client:
             if payload.method.upper() == "GET":
                 r = await client.get(url)
             elif payload.method.upper() == "POST":

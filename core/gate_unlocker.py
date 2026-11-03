@@ -2,19 +2,24 @@
 Zero-trust gate state management. Controls lock/unlock state for all system gates.
 Council validation required for sensitive gates. Full audit trail.
 """
+import hmac
 import os
 import time
 import json
 import sqlite3
 from datetime import datetime, timezone
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from loguru import logger
 
 # === CONFIG ===
 UNLOCKER_PORT = int(os.getenv("GATE_UNLOCKER_PORT", 8200))
-ADMIN_TOKEN = os.getenv("FLAMEGATE_ADMIN_TOKEN", "ark95x-sovereign-flame-token")
+_admin_token = os.environ.get("FLAMEGATE_ADMIN_TOKEN", "")
+if len(_admin_token) < 32:
+    # Fail closed: never fall back to a built-in token.
+    raise RuntimeError("FLAMEGATE_ADMIN_TOKEN must be set (>= 32 chars) in the environment / .env")
+ADMIN_TOKEN = _admin_token
 GATE_DB = os.getenv("GATE_STATE_DB", "gate_states.db")
 
 # === GATE STATE DATABASE ===
@@ -97,6 +102,14 @@ def journal_entry(gate_id, action, actor, prev_state, new_state, council=False):
     db.commit()
     db.close()
 
+# === AUTH ===
+def require_admin_token(x_flamegate_token: str = Header(default="")):
+    """Reject the request with 401 unless X-Flamegate-Token matches FLAMEGATE_ADMIN_TOKEN (constant-time)."""
+    if not x_flamegate_token or not hmac.compare_digest(x_flamegate_token.encode(), ADMIN_TOKEN.encode()):
+        raise HTTPException(status_code=401, detail="Missing or invalid admin token",
+                            headers={"WWW-Authenticate": "X-Flamegate-Token"})
+    return True
+
 # === ENDPOINTS ===
 @app.get("/health")
 async def health():
@@ -130,7 +143,7 @@ async def get_gate(gate_id: str):
         raise HTTPException(404, f"Gate not found: {gate_id}")
     return dict(row)
 
-@app.post("/unlock")
+@app.post("/unlock", dependencies=[Depends(require_admin_token)])
 async def unlock_gate(req: UnlockRequest):
     db = get_db()
     row = db.execute("SELECT * FROM gate_states WHERE gate_id = ?", (req.gate_id,)).fetchone()
@@ -194,7 +207,7 @@ async def get_journal(limit: int = 50):
     db.close()
     return {"journal": [dict(r) for r in rows]}
 
-@app.post("/unlock-all")
+@app.post("/unlock-all", dependencies=[Depends(require_admin_token)])
 async def unlock_all(actor: str = "command_base"):
     db = get_db()
     ts = datetime.now(timezone.utc).isoformat()
@@ -204,9 +217,12 @@ async def unlock_all(actor: str = "command_base"):
             "UPDATE gate_states SET state = 'unlocked', last_actor = ?, last_changed = ?, unlock_count = unlock_count + 1 WHERE gate_id = ?",
             (actor, ts, g["gate_id"]),
         )
-        journal_entry(g["gate_id"], "unlock_all", actor, "locked", "unlocked")
     db.commit()
     db.close()
+    # Journal after commit: journal_entry opens its own connection, which deadlocked
+    # ("database is locked") while this transaction was still open.
+    for g in non_council:
+        journal_entry(g["gate_id"], "unlock_all", actor, "locked", "unlocked")
     return {"status": "bulk_unlocked", "count": len(non_council), "skipped_council_gates": True}
 
 if __name__ == "__main__":
