@@ -1,5 +1,17 @@
 # Jarvis Registry
 
+## 2026-09-29 UTC — Native receipt process-crash verification
+
+- **Crew:** Codex builder and local verifier; no independent reviewer or physical node participated.
+- **Repository/tool:** existing native receipt bridge; Python standard-library subprocess and SQLite.
+- **Jarvis layer:** verification, data persistence.
+- **Action taken:** added two synthetic regression tests using separate Python processes with abrupt exit. One verifies that a committed receipt survives and a retry remains a duplicate; the other verifies rollback of an interrupted, uncommitted mutation.
+- **Files changed:** `tests/test_native_crash.py`, `docs/JARVIS_REGISTRY.md`.
+- **Risk label:** Yellow, local isolated tests with temporary state; no device access, external message, spending, model call or service deployment.
+- **Review result:** 16 existing native bridge tests and 2 new process-crash tests passed on Linux. This establishes neither power-loss durability nor task-worker recovery, Windows behavior, physical identity, remote deployment or business delivery.
+- **Test command:** `python -m unittest discover -s tests -p test_native_bridge.py -v`; `python -m unittest discover -s tests -p test_native_crash.py -v`.
+- **Next move:** preserve this increment on a review branch; obtain authenticated target preflight and bind the selected Core revision before live execution. No production authority or capability was expanded.
+
 ## 2026-09-06 — N95 native integration increment
 
 - **Crew:** source reviewers (AI/data and operations), native bridge builder, legacy mesh fixer, independent security reviewer, Windows preflight builder; one root synthesis owner.
