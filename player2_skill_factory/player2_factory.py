@@ -296,17 +296,25 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "init":
-        init_db(); ingest_config()
+        init_db()
+        ingest_config()
     elif args.command == "generate-skills":
-        init_db(); ingest_config(); generate_skills()
+        init_db()
+        ingest_config()
+        generate_skills()
     elif args.command == "score":
-        init_db(); ingest_config(); generate_skills(); score_tasks(args.intent)
+        init_db()
+        ingest_config()
+        generate_skills()
+        score_tasks(args.intent)
     elif args.command == "trading-map":
         trading_map()
     elif args.command == "proof":
-        init_db(); proof()
+        init_db()
+        proof()
     elif args.command == "report":
-        init_db(); report()
+        init_db()
+        report()
 
 
 if __name__ == "__main__":
