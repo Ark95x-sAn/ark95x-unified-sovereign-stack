@@ -15,6 +15,7 @@ from typing import Optional
 COUNCIL_PORT = int(os.getenv("COUNCIL_PORT", 8300))
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 COUNCIL_MODEL = os.getenv("COUNCIL_MODEL", "llama3")
+ADMIN_TOKEN = os.getenv("FLAMEGATE_ADMIN_TOKEN", "")  # sent as X-Flamegate-Token on /unlock
 
 # === MODELS ===
 class CouncilRequest(BaseModel):
@@ -173,6 +174,7 @@ async def gate_vote(gate_id: str, actor: str = "command_base"):
                 r = await client.post(
                     f"{gate_unlocker_url}/unlock",
                     json={"gate_id": gate_id, "actor": f"council_{actor}", "council_override": True},
+                    headers={"X-Flamegate-Token": ADMIN_TOKEN},
                 )
                 unlock_result = r.json()
         except Exception as e:
