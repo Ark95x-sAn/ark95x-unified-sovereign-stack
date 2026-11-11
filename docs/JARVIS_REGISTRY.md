@@ -135,3 +135,16 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Validation:** guarded file-SHA writes, unique headings, catalogue marker and prior-content preservation, immutable source pins, then read-back of both files. A skipped workflow is not a pass.
 - **Write execution control:** documentation commits use [skip ci]; no workflow or repository settings changed.
 - **Next move:** after C1–C3 and authorization, run R05-B in a disposable network-denied HTML/PPTX/ODP fixture and R05-C against one bounded DOCX fixture. Require exact visible/invisible semantics, exactly-once order, digest/format receipts, UNKNOWN page provenance when absent, no ambient reads or unselected extras, and no submitted Core mission.
+
+## 2026-11-11 — Gate unlock operator authentication
+
+- **Date:** 2026-11-11
+- **Crew:** Crew Three — Review and Safety; Crew Four — Builder; logged by Crew Five — Registry Logger
+- **Repository or tool:** this stack, `core/gate_unlocker.py`, command dashboard, flame council, flamegate proxy
+- **Jarvis layer:** Security / configuration review
+- **Action taken:** Replaced relayed admin-token authorization on `/unlock` and `/unlock-all` with operator credentials read from `GATE_OPERATOR_ID` and `GATE_OPERATOR_SECRET`. The service refuses to start when those values are missing or malformed, and there is no built-in default. A presented `X-Flamegate-Token` does not unlock a gate. Missing, malformed, and rejected attempts return 401 and are written to the application log and `gate_journal` without the submitted secret. Dashboard and council no longer hold or forward an unlock credential; council records a vote and does not call the unlocker. Flamegate refuses to proxy `/unlock` and `/unlock-all` and no longer forwards its admin token. Compose requires the operator pair on gate-unlocker only and no longer injects a fallback admin token. The core service port list was restored so the compose file parses. Bulk and single unlock journal rows commit on the same connection as the state change.
+- **Files changed:** `core/gate_unlocker.py`, `command/dashboard.py`, `flame/council.py`, `flame/flamegate_tls.py`, `docker-compose.yml`, `.env.example`, `tests/test_gate_unlocker_auth.py`, `docs/JARVIS_REGISTRY.md`
+- **Risk label:** Red. This changes the security status of gate unlock. The operator requested the change on PR #47 (Fix 4). No deployment, token rotation, history purge, or live unlock was performed.
+- **Review result:** Forwarded-token unlock is rejected. Valid operator credentials unlock. Absent and malformed credentials fail closed and are logged. Callers that previously attached the admin token no longer do. The previously published fallback token is not reintroduced. Production deployments must generate a new operator secret and a new Flamegate token; the historical default remains compromised until rotated outside this change.
+- **Test command:** `python -m pytest tests/test_gate_unlocker_auth.py -v`
+- **Next move:** Codex security review on this branch head. Separately rotate `FLAMEGATE_ADMIN_TOKEN` and set `GATE_OPERATOR_ID` / `GATE_OPERATOR_SECRET` in each deployment. Do not copy either secret into the dashboard or council services.

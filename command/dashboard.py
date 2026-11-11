@@ -15,7 +15,6 @@ CORE_API = os.getenv("CORE_API_URL", "http://localhost:8000")
 FLAMEGATE_URL = os.getenv("FLAMEGATE_URL", "https://localhost:8443")
 COMET_ROUTER_URL = os.getenv("COMET_ROUTER_URL", "http://localhost:8100")
 GATE_UNLOCKER_URL = os.getenv("GATE_UNLOCKER_URL", "http://localhost:8200")
-ADMIN_TOKEN = os.getenv("FLAMEGATE_ADMIN_TOKEN", "")  # sent as X-Flamegate-Token on /unlock
 DASHBOARD_PORT = int(os.getenv("DASHBOARD_PORT", 8050))
 
 # TLS verification toggle: defaults to True (secure). Set to "false" in
@@ -100,6 +99,10 @@ def build_layout():
                     dbc.Button("UNLOCK GATE", id="unlock-btn", color="warning", n_clicks=0),
                     dbc.Button("LOCK ALL", id="lock-all-btn", color="danger", n_clicks=0),
                 ]),
+                html.P(
+                    "This console cannot unlock gates. The gate unlocker checks operator credentials itself.",
+                    className="text-muted small mt-2 mb-0",
+                ),
                 html.Div(id="unlock-result", className="mt-2"),
             ]),
         ], className="mb-3"),
@@ -183,25 +186,17 @@ def update_council(states):
     prevent_initial_call=True,
 )
 def unlock_gate(n, gate_id, audit):
-    if not gate_id:
-        return dbc.Alert("Select a gate first", color="warning"), audit
+    # The dashboard must not mint, relay, or replay an unlock. It holds no
+    # operator secret and does not call the gate unlocker for this action.
     ts = datetime.now(timezone.utc).isoformat()
-    try:
-        r = httpx.post(
-            f"{GATE_UNLOCKER_URL}/unlock",
-            json={"gate_id": gate_id, "actor": "command_base", "timestamp": ts},
-            headers={"X-Flamegate-Token": ADMIN_TOKEN},
-            timeout=10.0,
-            verify=VERIFY_TLS,
-        )
-        result = r.json()
-        entry = f"[{ts}] UNLOCK {gate_id} -> {result.get('status', 'unknown')}"
-        audit.insert(0, entry)
-        return dbc.Alert(f"Gate {gate_id}: {result.get('status', 'done')}", color="success"), audit
-    except Exception as e:
-        entry = f"[{ts}] UNLOCK {gate_id} -> FAILED: {e}"
-        audit.insert(0, entry)
-        return dbc.Alert(f"Unlock failed: {e}", color="danger"), audit
+    target = gate_id or "(none)"
+    entry = f"[{ts}] UNLOCK {target} -> REFUSED: dashboard cannot relay an unlock"
+    audit = list(audit or [])
+    audit.insert(0, entry)
+    return dbc.Alert(
+        "Unlock refused. This dashboard cannot mint, relay, or replay a gate unlock.",
+        color="danger",
+    ), audit
 
 
 @callback(

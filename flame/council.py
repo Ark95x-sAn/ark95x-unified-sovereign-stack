@@ -2,20 +2,22 @@
 Planner, Research, Analysis, and Synthesis agents for sovereign decision-making.
 Uses CrewAI for orchestration with Ollama local models.
 """
+import asyncio
 import os
 import time
 from datetime import datetime, timezone
-from fastapi import FastAPI, HTTPException
+
+import httpx
+import uvicorn
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from loguru import logger
-from typing import Optional
+from pydantic import BaseModel
 
 # === CONFIG ===
 COUNCIL_PORT = int(os.getenv("COUNCIL_PORT", 8300))
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 COUNCIL_MODEL = os.getenv("COUNCIL_MODEL", "llama3")
-ADMIN_TOKEN = os.getenv("FLAMEGATE_ADMIN_TOKEN", "")  # sent as X-Flamegate-Token on /unlock
 
 # === MODELS ===
 class CouncilRequest(BaseModel):
@@ -72,7 +74,6 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 
 # === AGENT CALL ===
 async def call_agent(agent_id: str, query: str, context: str = "") -> AgentVote:
-    import httpx
     agent = AGENTS[agent_id]
     prompt = f"COUNCIL VOTE REQUEST:\n{query}"
     if context:
@@ -122,7 +123,6 @@ async def health():
 
 @app.post("/vote", response_model=CouncilResponse)
 async def council_vote(req: CouncilRequest):
-    import asyncio
     start = time.time()
 
     tasks = [call_agent(aid, req.query, req.context) for aid in AGENTS]
@@ -162,32 +162,25 @@ async def council_vote(req: CouncilRequest):
 
 @app.post("/gate-vote")
 async def gate_vote(gate_id: str, actor: str = "command_base"):
-    import httpx
+    # Council may record a vote. It must not mint, relay, or replay an unlock.
     query = f"Should gate '{gate_id}' be unlocked? Actor requesting: {actor}. Evaluate security implications."
     req = CouncilRequest(query=query, gate_id=gate_id, require_consensus=True)
     result = await council_vote(req)
 
     if result.decision == "approved":
-        try:
-            gate_unlocker_url = os.getenv("GATE_UNLOCKER_URL", "http://localhost:8200")
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                r = await client.post(
-                    f"{gate_unlocker_url}/unlock",
-                    json={"gate_id": gate_id, "actor": f"council_{actor}", "council_override": True},
-                    headers={"X-Flamegate-Token": ADMIN_TOKEN},
-                )
-                unlock_result = r.json()
-        except Exception as e:
-            unlock_result = {"error": str(e)}
+        gate_action = {
+            "status": "not_executed",
+            "reason": "council_cannot_unlock",
+            "message": "Council approval does not unlock a gate. An operator must authenticate to the gate unlocker.",
+        }
     else:
-        unlock_result = {"status": "denied_by_council"}
+        gate_action = {"status": "denied_by_council"}
 
-    return {"council_decision": result.dict(), "gate_action": unlock_result}
+    return {"council_decision": result.dict(), "gate_action": gate_action}
 
 @app.get("/agents")
 async def list_agents():
     return {"agents": {k: {"role": v["role"], "goal": v["goal"]} for k, v in AGENTS.items()}}
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run("council:app", host="0.0.0.0", port=COUNCIL_PORT, reload=True)

@@ -2,22 +2,30 @@
 Secure transit layer for all gate communications. TLS termination, audit logging,
 payload routing, and zero-trust enforcement.
 """
+import hashlib
+import hmac
 import os
 import time
 import json
-import hashlib
 import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
-from fastapi import FastAPI, Request, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from loguru import logger
+
 import httpx
+import uvicorn
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
+from pydantic import BaseModel
 
 # === CONFIG ===
 FLAMEGATE_PORT = int(os.getenv("FLAMEGATE_PORT", 8443))
-ADMIN_TOKEN = os.getenv("FLAMEGATE_ADMIN_TOKEN", "ark95x-sovereign-flame-token")
+_admin_token = os.environ.get("FLAMEGATE_ADMIN_TOKEN", "")
+if len(_admin_token) < 32 or any(ch.isspace() for ch in _admin_token):
+    logger.error("[FLAMEGATE] refusing to start: FLAMEGATE_ADMIN_TOKEN missing or malformed")
+    raise RuntimeError(
+        "FLAMEGATE_ADMIN_TOKEN must be set (>= 32 chars, no whitespace) in the environment / .env"
+    )
+ADMIN_TOKEN = _admin_token
 AUDIT_DB = os.getenv("FLAMEGATE_AUDIT_DB", "flamegate_audit.db")
 CORE_API = os.getenv("CORE_API_URL", "http://localhost:8000")
 COMET_ROUTER = os.getenv("COMET_ROUTER_URL", "http://localhost:8100")
@@ -90,9 +98,20 @@ init_audit_db()
 
 
 # === AUTH ===
+def _digest(value: str) -> bytes:
+    return hashlib.sha256(value.encode("utf-8")).digest()
+
+
+def _is_unlock_path(path: str) -> bool:
+    bare = path.split("?", 1)[0]
+    if len(bare) > 1:
+        bare = bare.rstrip("/")
+    return bare in {"/unlock", "/unlock-all"}
+
+
 async def verify_token(request: Request):
     token = request.headers.get("X-Flamegate-Token", "")
-    if token != ADMIN_TOKEN:
+    if not token or not hmac.compare_digest(_digest(token), _digest(ADMIN_TOKEN)):
         log_audit("unknown", "auth_failed", ip=request.client.host if request.client else "unknown")
         raise HTTPException(status_code=403, detail="Invalid Flamegate token")
     return token
@@ -126,15 +145,24 @@ async def health():
 
 
 @app.post("/flamegate/proxy")
-async def proxy_request(payload: ProxyPayload, token: str = Depends(verify_token)):
+async def proxy_request(payload: ProxyPayload, request: Request, _verified: str = Depends(verify_token)):
     start = time.time()
+    # Never mint or replay a gate unlock. The admin token stays on this hop.
+    if _is_unlock_path(payload.path):
+        ip = request.client.host if request.client else "unknown"
+        log_audit(payload.actor, "unlock_relay_blocked", payload.target, status="denied", ip=ip)
+        logger.warning(
+            "[FLAMEGATE] refused to relay unlock target={} path={} source={}",
+            payload.target,
+            payload.path,
+            ip,
+        )
+        raise HTTPException(status_code=403, detail="Gate unlock cannot be relayed")
     url = resolve_target(payload.target, payload.path)
     payload_hash = hashlib.sha256(json.dumps(payload.body, sort_keys=True).encode()).hexdigest()[:16]
     logger.info(f"[FLAMEGATE] {payload.actor} -> {payload.target}{payload.path} [{payload.method}]")
-    # Forward the verified admin token only to gate-unlocker (its /unlock endpoints require it).
-    fwd_headers = {"X-Flamegate-Token": token} if TARGET_MAP.get(payload.target, payload.target) == GATE_UNLOCKER else {}
     try:
-        async with httpx.AsyncClient(timeout=30.0, verify=VERIFY_TLS, headers=fwd_headers) as client:
+        async with httpx.AsyncClient(timeout=30.0, verify=VERIFY_TLS) as client:
             if payload.method.upper() == "GET":
                 r = await client.get(url)
             elif payload.method.upper() == "POST":
@@ -195,5 +223,4 @@ async def get_stats(token: str = Depends(verify_token)):
 
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run("flamegate_tls:app", host="0.0.0.0", port=FLAMEGATE_PORT, reload=True)
