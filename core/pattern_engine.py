@@ -70,7 +70,7 @@ class StorageBackend(str, Enum):
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "")
-PGVECTOR_URL = os.getenv("POSTGRES_URL", "postgresql://ark95x:password@localhost:5432/sovereign")
+PGVECTOR_URL = os.getenv("POSTGRES_URL", "")  # no credential-bearing default; set POSTGRES_URL in .env
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 
 
