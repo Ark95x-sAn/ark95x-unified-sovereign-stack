@@ -1,0 +1,132 @@
+{
+  "version": "1.0",
+  "name": "Web Intelligence 9-Angle Skill Pack",
+  "purpose": "Convert current web-source intelligence into operational skills for Player 2, n8n, shell ops, proof, and deployment.",
+  "source_strategy": {
+    "primary_sources_first": true,
+    "preferred_source_types": [
+      "official docs",
+      "standards/specifications",
+      "security frameworks",
+      "academic research",
+      "project docs",
+      "vendor docs"
+    ],
+    "proof_rule": "Every extracted skill must link to a source, a target operation, a safe mode, a test, and an evidence artifact.",
+    "extraction_loop": [
+      "discover",
+      "verify",
+      "extract",
+      "normalize",
+      "score",
+      "generate_skill",
+      "test",
+      "attest",
+      "feed_back"
+    ]
+  },
+  "nine_angles": [
+    {
+      "id": "mcp_tool_data_layer",
+      "angle": 1,
+      "source_pattern": "Model Context Protocol for connecting agents to tools, APIs, resources, files, databases, and workflows.",
+      "skill_to_add": "mcp_connector_skill_generator",
+      "operation_use": "Expose approved local tools and data to agents through typed tool/resource contracts.",
+      "target_lane": "mcp",
+      "safe_mode": "allowlist_tools_only",
+      "proof_artifact": "mcp_tool_registry.json"
+    },
+    {
+      "id": "a2a_agent_syndication",
+      "angle": 2,
+      "source_pattern": "Agent2Agent for communication and delegation between agents built with different frameworks.",
+      "skill_to_add": "a2a_agent_card_generator",
+      "operation_use": "Generate Agent Cards for Player 2, Codex Builder, Claude Auditor, n8n Courier, and Proof Sentinel.",
+      "target_lane": "a2a",
+      "safe_mode": "agent_card_no_secret_disclosure",
+      "proof_artifact": "agent_cards/*.json"
+    },
+    {
+      "id": "openai_agent_runtime",
+      "angle": 3,
+      "source_pattern": "Agents SDK style loop: agents, tools, handoffs, guardrails, sessions, tracing, human-in-the-loop, sandbox workspaces.",
+      "skill_to_add": "managed_agent_loop_skill",
+      "operation_use": "Run multi-step work where the runtime tracks tool calls, handoffs, memory, and trace output.",
+      "target_lane": "python_runtime",
+      "safe_mode": "sandbox_workspace_human_gate",
+      "proof_artifact": "agent_trace_manifest.json"
+    },
+    {
+      "id": "n8n_workflow_transport",
+      "angle": 4,
+      "source_pattern": "n8n workflows, nodes, triggers, credentials, execution logs, source control, and data transformation.",
+      "skill_to_add": "n8n_workflow_blueprint_generator",
+      "operation_use": "Turn approved data lanes into repeatable workflow plans with human review gates before external writes.",
+      "target_lane": "n8n",
+      "safe_mode": "credential_vault_no_secrets_in_repo",
+      "proof_artifact": "n8n_workflow_plan.json"
+    },
+    {
+      "id": "stateful_long_running_agents",
+      "angle": 5,
+      "source_pattern": "LangGraph/CrewAI-style durable, stateful, long-running orchestration and agent teams.",
+      "skill_to_add": "stateful_runtime_graph_skill",
+      "operation_use": "Define long-running processes with persistence, human review, checkpoints, and agent crews.",
+      "target_lane": "orchestration",
+      "safe_mode": "checkpoint_before_action",
+      "proof_artifact": "runtime_graph_state.json"
+    },
+    {
+      "id": "observability_proof_signals",
+      "angle": 6,
+      "source_pattern": "OpenTelemetry traces, metrics, logs, baggage, and profiles as proof signals.",
+      "skill_to_add": "otel_signal_mapper_skill",
+      "operation_use": "Map every shell/agent/n8n/GitHub run into trace, metric, and log records.",
+      "target_lane": "observability",
+      "safe_mode": "no_sensitive_payloads_in_logs",
+      "proof_artifact": "otel_signal_map.json"
+    },
+    {
+      "id": "supply_chain_attestation",
+      "angle": 7,
+      "source_pattern": "GitHub artifact attestations and SLSA-style provenance for source-to-artifact trust.",
+      "skill_to_add": "attestation_gate_skill",
+      "operation_use": "Attach provenance to generated packages, scripts, and deployment outputs.",
+      "target_lane": "github_actions",
+      "safe_mode": "least_privilege_ci_permissions",
+      "proof_artifact": "artifact_attestation_manifest.json"
+    },
+    {
+      "id": "agentic_security_gate",
+      "angle": 8,
+      "source_pattern": "OWASP GenAI risks: prompt injection, sensitive data disclosure, supply chain, excessive agency, output handling, unbounded consumption.",
+      "skill_to_add": "agentic_security_gate_skill",
+      "operation_use": "Block unsafe prompt-to-shell and prompt-to-agent paths before execution.",
+      "target_lane": "sentinel",
+      "safe_mode": "default_deny_external_writes",
+      "proof_artifact": "security_gate_decisions.json"
+    },
+    {
+      "id": "data_banking_and_skill_fitness",
+      "angle": 9,
+      "source_pattern": "Data banking loop: source proof, normalized memory, task outcomes, skill performance, and reusable knowledge assets.",
+      "skill_to_add": "skill_fitness_bank_skill",
+      "operation_use": "Score skills by reuse, successful runs, risk avoided, time saved, money/opportunity impact, and proof quality.",
+      "target_lane": "sqlite_backend",
+      "safe_mode": "local_first_private_by_default",
+      "proof_artifact": "skill_fitness_ledger.json"
+    }
+  ],
+  "compound_formula": "compound_leverage = (source_quality * extraction_rate * reusable_skill_count * proof_quality * deployment_velocity) - (risk_drag + context_switch_cost + failed_run_penalty)",
+  "deployment_order": [
+    "agentic_security_gate_skill",
+    "mcp_connector_skill_generator",
+    "n8n_workflow_blueprint_generator",
+    "otel_signal_mapper_skill",
+    "attestation_gate_skill",
+    "skill_fitness_bank_skill",
+    "a2a_agent_card_generator",
+    "managed_agent_loop_skill",
+    "stateful_runtime_graph_skill"
+  ]
+}
