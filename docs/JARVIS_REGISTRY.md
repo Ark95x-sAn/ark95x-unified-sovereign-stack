@@ -1,5 +1,19 @@
 # Jarvis Registry
 
+## 2026-09-06 — Work brief proof candidate
+
+- **Crew:** root coordinator/value calculator, workflow builder, threat reviewer, independent held-out/provenance auditor, Windows operator reviewer, economic skeptic, evaluator protocol reviewer; seven actual agent instances in one Work environment. These are not nine independent AI providers.
+- **Repository/tool:** this existing repository; original Python standard-library component, no new runtime package/service dependencies. MIT source under the existing license.
+- **Layers:** approved tools, workflow automation, source/provenance data, validation and service acceptance.
+- **Action:** built one finite flat-folder note-to-brief workflow, portable Windows runner, value calculator and neutral nine-evaluator protocol. Prepared a $100 installed-service candidate; no commercial release or physical deployment.
+- **Files:** `n95_workflow/`, two workflow/value test modules, `tools/N95-Work-Brief.ps1`, `tools/n95_value_check.py`, `examples/work_brief_notes/`, work-brief CI, related offer/runbook/evaluation documents and README.
+- **Risk:** Yellow: original code and local generated artifacts. No source task execution, outbound data submission, model inference, customer payment, personal-health processing, service installation or canonical mission-ledger mutation. Private ledger-derived fixture/output stay outside the public repository.
+- **Review result:** resolved cross-file no-ID identity merging, unflagged same-ID text conflict, FIFO-swap blocking risk, output overlap and resource amplification; resolved missing customer overhead and ambiguous value-calculator display. Directory replacement by an actor controlling ancestors remains outside the stable private-directory boundary.
+- **Verification:** 20 workflow and 9 value tests passed locally. The independent frozen holdout passed 13 cases after retaining two initial failures; exact source references and unchanged originals were checked. Hosted Windows/Linux verification belongs to the draft PR run and does not prove customer installation.
+- **Test commands:** `python -m unittest discover -s tests -p "test_workflow*.py" -v`; `python -m unittest discover -s tests -p "test_value_check.py" -v`.
+- **Hosted first-run correction:** Windows unit checks and PowerShell parsing passed; the Windows test harness selected multiple installed Python paths and failed argument binding. The harness now selects the exact setup-python path. Existing lint also required formatting corrections in the new value tests. No extractor or calculator behavior changed. Hosted rerun pending.
+- **Next move:** obtain nine separate external evaluator responses for the same frozen evidence; then a bounded no-charge customer pilot with matched baseline/time/quality records. Customer-value and sales gate remains HOLD.
+
 ## 2026-09-06 — N95 native integration increment
 
 - **Crew:** source reviewers (AI/data and operations), native bridge builder, legacy mesh fixer, independent security reviewer, Windows preflight builder; one root synthesis owner.
