@@ -176,3 +176,16 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Write execution control:** documentation commits use `[skip ci]`; no workflow or repository settings changed.
 - **Next move:** after C1–C3 and target/dependency authorization, run the bounded R05-B hidden-DOCX fixture and R05-G adversarial mixed-ZIP fixture in disposable network-denied folders. Require exact source-linked omission/member receipts, byte/count bounds, cleanup, UNKNOWN page provenance where absent, no ambient reads or unselected extras, and no submitted Core mission.
 
+
+## 2026-11-21 — Four-seat stack awareness (CLI-5)
+
+- **Date:** 2026-11-21
+- **Crew:** Crew Four (Builder) with Crew Three safety review
+- **Repository/tool:** this repo; X plugin (read-only verify); SpaceXAI/X official docs (read-only)
+- **Jarvis layer:** Brain / orchestration + Tools / interfaces
+- **Action taken:** Reframed per Ben: no new hub. Built one canonical stack manifest for The X Subscription (Grok + Cursor + X + Grok Bot), made Cursor aware via an always-apply rule, and prepared paste packs for Grok and Grok Bot. Verified X read from this Cursor seat as @ark95x (PremiumPlus). Documented Grok Bot's X Connector enablement (Grok Bot app, Marketplace / Settings → Plugins, official X for Grok Bot plugin) and subscription unification as Ben-only: unification is permanent, goes through checkout, needs Premium+ for Grok Bot — not executed.
+- **Files changed:** `docs/STACK_MANIFEST.md`, `docs/FOUR_PROGRAM_AWARENESS.md`, `docs/stack-paste/` (4 files), `.cursor/rules/stack-awareness.mdc`, `scripts/check_stack_awareness.py`, `.env.example`, `docs/JARVIS_REGISTRY.md`
+- **Risk label:** Yellow (creates local docs/config; read-only external checks). No post, send, publish, payment, subscription change, or delete.
+- **Review result:** PASS with honest gaps. Cursor awareness LIVE; X read LIVE; Grok seat PREPARED (Ben pastes); Grok Bot X Connector and unification BEN-ONLY with exact clicks documented.
+- **Test command:** `python3 scripts/check_stack_awareness.py` → STACK AWARENESS: OK
+- **Next move:** Ben pastes Grok pack and tests the four-seat question, enables Grok Bot X Connector as @ark95x, then decides on unification at cursor.com/unify (Premium+, permanent).
