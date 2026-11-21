@@ -176,3 +176,16 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Write execution control:** documentation commits use `[skip ci]`; no workflow or repository settings changed.
 - **Next move:** after C1–C3 and target/dependency authorization, run the bounded R05-B hidden-DOCX fixture and R05-G adversarial mixed-ZIP fixture in disposable network-denied folders. Require exact source-linked omission/member receipts, byte/count bounds, cleanup, UNKNOWN page provenance where absent, no ambient reads or unselected extras, and no submitted Core mission.
 
+
+## 2026-11-21 — Next.js DM voice/video calling demo
+
+- **Date:** 2026-11-21
+- **Crew:** Crew Four — Builder (Crew Two classification, Crew Three review applied before build)
+- **Repository or tool:** new `apps/dm-calling/` Next.js 14 app in this repo (no prior Next.js app existed); React 18, TypeScript, `getUserMedia`, `RTCPeerConnection`, `BroadcastChannel`
+- **Jarvis layer:** Tools / approved integrations + Dashboard / observability
+- **Action taken:** built X-modeled DM flow — conversation list, thread, local-state composer, phone icon in thread header opening voice/video chooser; voice screen (mic level, mute, timer, calling/connected/ended) and video screen (camera PiP, mute, camera toggle); two-tab real WebRTC peer via BroadcastChannel signaling with 8s fallback to a clearly labeled simulated peer; mock contacts/messages labeled sample data; `GET /api/health`
+- **Files changed:** `apps/dm-calling/` (package.json, tsconfig, app routes, components, hook, lib, README approach note), `docs/JARVIS_REGISTRY.md`
+- **Risk label:** Yellow — creates local files and a local dev service; no X credentials, no external sends/posts, no secrets
+- **Review result:** honest-peer check passed in code — simulated peer is amber-labeled "no person is connected" everywhere; two-tab path is real WebRTC; no simulated call presented as real
+- **Test command:** `cd apps/dm-calling && npm install && npm run build` (passed) and `npm run dev` + `curl localhost:3100/api/health` (200, ok:true)
+- **Next move:** human browser check of two-tab call and mic/camera permissions; production would need WebSocket signaling, TURN, auth — see `apps/dm-calling/README.md`
