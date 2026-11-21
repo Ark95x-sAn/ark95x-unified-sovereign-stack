@@ -1,0 +1,2 @@
+date,job,tier,model,cost_or_not-shown,wall_reason,checker
+2026-11-21,example,local,ollama,not-shown,none,checker-name

@@ -176,3 +176,15 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Write execution control:** documentation commits use `[skip ci]`; no workflow or repository settings changed.
 - **Next move:** after C1–C3 and target/dependency authorization, run the bounded R05-B hidden-DOCX fixture and R05-G adversarial mixed-ZIP fixture in disposable network-denied folders. Require exact source-linked omission/member receipts, byte/count bounds, cleanup, UNKNOWN page provenance where absent, no ambient reads or unselected extras, and no submitted Core mission.
 
+
+## 2026-11-21 — Agent fleet survey
+
+- **Crew:** Four (Builder) + audit-first per Ben.
+- **Repository/tool:** repo survey, cursor-cloud MCP (run/env info), curl browser reachability, PR #48 manifest.
+- **Jarvis layer:** Brain/orchestration, Security, Tools, Dashboard.
+- **Action taken:** audit written (store internal), agent specs + plugin/limits/settings docs created; no settings changed.
+- **Files changed:** docs/AGENT_FLEET_SURVEY_AND_PLAN.md, docs/PLUGIN_AND_INTEGRATION_SETUP.md, docs/LIMITS_AND_USAGE_PLAN.md, docs/SETTINGS_ADJUSTMENTS.md, docs/cost-log-template.csv, agents/*.md (7), scripts/check_agent_fleet.py, docs/JARVIS_REGISTRY.md.
+- **Risk label:** Yellow (files only). Red items Ben-only, none done. Job 001 NO-GO.
+- **Review result:** Grok/Origin usage NOT VERIFIED (403/ambiguous); only X PremiumPlus number seen.
+- **Test command:** `python3 scripts/check_agent_fleet.py` -> see PR.
+- **Next move:** Ben decisions in SETTINGS_ADJUSTMENTS (unify, Grok paste, GrokBot connector, signed-in usage, Origin surface).
