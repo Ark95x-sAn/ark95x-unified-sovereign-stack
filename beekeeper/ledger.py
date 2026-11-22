@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import sqlite3
 import uuid
+from contextlib import closing, contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any, Iterator, Optional
 
 from beekeeper.routing import route_to
 
@@ -43,13 +44,20 @@ class HiveLedger:
         conn.execute("PRAGMA foreign_keys = ON")
         return conn
 
+    @contextmanager
+    def _connection(self) -> Iterator[sqlite3.Connection]:
+        """Open a connection that always closes; inner with handles commit/rollback."""
+        with closing(self.connect()) as conn:
+            with conn:
+                yield conn
+
     def init_db(self) -> Path:
         """Create hive.db and apply schema.sql. Returns db path."""
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         schema = SCHEMA_PATH.read_text(encoding="utf-8")
-        with self.connect() as conn:
+        # executescript issues its own COMMIT; close without nested transaction.
+        with closing(self.connect()) as conn:
             conn.executescript(schema)
-            conn.commit()
         return self.db_path
 
     def log_command(
@@ -85,7 +93,7 @@ class HiveLedger:
 
         task_id = _new_task_id()
         now = _utc_now()
-        with self.connect() as conn:
+        with self._connection() as conn:
             conn.execute(
                 """
                 INSERT INTO tasks (
@@ -103,7 +111,6 @@ class HiveLedger:
                     now,
                 ),
             )
-            conn.commit()
         return task_id
 
     def assign_task(self, task_id: str, agent: str) -> dict[str, Any]:
@@ -158,14 +165,13 @@ class HiveLedger:
         values.append(now)
         values.append(task_id)
 
-        with self.connect() as conn:
+        with self._connection() as conn:
             cur = conn.execute(
                 f"UPDATE tasks SET {', '.join(fields)} WHERE task_id = ?",
                 values,
             )
             if cur.rowcount == 0:
                 raise KeyError(f"Unknown task_id: {task_id}")
-            conn.commit()
 
         row = self.get_task(task_id)
         if row is None:
@@ -174,7 +180,7 @@ class HiveLedger:
 
     def get_task(self, task_id: str) -> Optional[dict[str, Any]]:
         """Return one task as a dict, or None."""
-        with self.connect() as conn:
+        with self._connection() as conn:
             cur = conn.execute(
                 "SELECT * FROM tasks WHERE task_id = ?",
                 (task_id,),
@@ -202,13 +208,13 @@ class HiveLedger:
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         sql = (
             f"SELECT * FROM tasks {where} "
-            f"ORDER BY created_at DESC LIMIT ?"
+            f"ORDER BY created_at DESC, rowid DESC LIMIT ?"
         )
         values.append(limit)
 
-        with self.connect() as conn:
+        with self._connection() as conn:
             cur = conn.execute(sql, values)
-            rows: Iterable[sqlite3.Row] = cur.fetchall()
+            rows = cur.fetchall()
         return [dict(r) for r in rows]
 
     def health(self) -> dict[str, Any]:
@@ -218,7 +224,7 @@ class HiveLedger:
         error: Optional[str] = None
         if ok:
             try:
-                with self.connect() as conn:
+                with self._connection() as conn:
                     cur = conn.execute("SELECT COUNT(*) FROM tasks")
                     count = int(cur.fetchone()[0])
             except sqlite3.Error as exc:

@@ -10,5 +10,6 @@ venv/
 *.db
 *.db-wal
 *.db-shm
+*.db-journal
 *.key
 .env
