@@ -3,11 +3,12 @@ Zero-trust gate state management. Controls lock/unlock state for all system gate
 Council validation required for sensitive gates. Full audit trail.
 """
 import os
+import hmac
 import time
 import json
 import sqlite3
 from datetime import datetime, timezone
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from loguru import logger
@@ -92,6 +93,16 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 
 init_gate_db()
 
+
+async def verify_token(request: Request):
+    token = request.headers.get("X-Flamegate-Token", "")
+    provided = token.encode("utf-8")
+    expected = ADMIN_TOKEN.encode("utf-8")
+    if len(provided) != len(expected) or not hmac.compare_digest(provided, expected):
+        raise HTTPException(status_code=403, detail="Invalid admin token")
+    return token
+
+
 def journal_entry(gate_id, action, actor, prev_state, new_state, council=False):
     db = sqlite3.connect(GATE_DB)
     db.execute(
@@ -119,14 +130,14 @@ async def health():
     }
 
 @app.get("/gates")
-async def list_gates():
+async def list_gates(_token: str = Depends(verify_token)):
     db = get_db()
     rows = db.execute("SELECT * FROM gate_states ORDER BY gate_id").fetchall()
     db.close()
     return {"gates": [dict(r) for r in rows]}
 
 @app.get("/gates/{gate_id}")
-async def get_gate(gate_id: str):
+async def get_gate(gate_id: str, _token: str = Depends(verify_token)):
     db = get_db()
     row = db.execute("SELECT * FROM gate_states WHERE gate_id = ?", (gate_id,)).fetchone()
     db.close()
@@ -135,7 +146,7 @@ async def get_gate(gate_id: str):
     return dict(row)
 
 @app.post("/unlock")
-async def unlock_gate(req: UnlockRequest):
+async def unlock_gate(req: UnlockRequest, _token: str = Depends(verify_token)):
     db = get_db()
     row = db.execute("SELECT * FROM gate_states WHERE gate_id = ?", (req.gate_id,)).fetchone()
     if not row:
@@ -166,7 +177,7 @@ async def unlock_gate(req: UnlockRequest):
     return {"status": "unlocked", "gate_id": req.gate_id, "actor": req.actor, "timestamp": ts}
 
 @app.post("/lock")
-async def lock_gate(req: LockRequest):
+async def lock_gate(req: LockRequest, _token: str = Depends(verify_token)):
     db = get_db()
     if req.gate_id:
         row = db.execute("SELECT * FROM gate_states WHERE gate_id = ?", (req.gate_id,)).fetchone()
@@ -192,14 +203,14 @@ async def lock_gate(req: LockRequest):
         return {"status": "all_locked", "count": len(gates), "timestamp": ts}
 
 @app.get("/journal")
-async def get_journal(limit: int = 50):
+async def get_journal(limit: int = 50, _token: str = Depends(verify_token)):
     db = get_db()
     rows = db.execute("SELECT * FROM gate_journal ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
     db.close()
     return {"journal": [dict(r) for r in rows]}
 
 @app.post("/unlock-all")
-async def unlock_all(actor: str = "command_base"):
+async def unlock_all(actor: str = "command_base", _token: str = Depends(verify_token)):
     db = get_db()
     ts = datetime.now(timezone.utc).isoformat()
     non_council = db.execute("SELECT gate_id FROM gate_states WHERE requires_council = 0 AND state = 'locked'").fetchall()

@@ -176,3 +176,15 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Write execution control:** documentation commits use `[skip ci]`; no workflow or repository settings changed.
 - **Next move:** after C1–C3 and target/dependency authorization, run the bounded R05-B hidden-DOCX fixture and R05-G adversarial mixed-ZIP fixture in disposable network-denied folders. Require exact source-linked omission/member receipts, byte/count bounds, cleanup, UNKNOWN page provenance where absent, no ambient reads or unselected extras, and no submitted Core mission.
 
+## 2026-11-22 — Control-plane auth hardening
+
+- **Crew:** Five (registry) after Three (review) and Four (builder).
+- **Repository/tool:** ark95x-unified-sovereign-stack control plane.
+- **Jarvis layer:** Security / configuration review.
+- **Action taken:** Require the existing admin token on gate unlock, comet routing, and council gate-vote; restrict the flamegate proxy to named internal targets; bind datastore and workflow host ports to loopback; require Redis AUTH; disable dashboard debug.
+- **Files changed:** `core/gate_unlocker.py`, `core/comet_router.py`, `core/hlm_trinity_router.py`, `flame/flamegate_tls.py`, `flame/council.py`, `command/dashboard.py`, `docker-compose.yml`, `.env.example`, `install.ps1`, `deploy-ark95x.sh`, `tests/test_security_controls.py`.
+- **Risk label:** Yellow (local config and auth wiring). No live trading, no secret values written, no production deploy.
+- **Review result:** Token was loaded in the gate unlocker but never checked; proxy target used to accept arbitrary URLs; comet `/route` spent provider keys with no auth. Fixes keep health endpoints public.
+- **Test command:** `python -m pytest -q tests/test_security_controls.py tests/test_core.py`
+- **Next move:** Put `REDIS_PASSWORD` and `FLAMEGATE_ADMIN_TOKEN` in `.env` before `docker-compose up`; keep datastore ports on loopback unless a reverse proxy is in front.
+

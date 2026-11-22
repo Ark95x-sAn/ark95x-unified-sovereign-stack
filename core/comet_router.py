@@ -3,11 +3,12 @@ Task classification, model routing, and multi-provider AI orchestration.
 Routes to Ollama (local), OpenAI, Anthropic, or Groq based on task type and load.
 """
 import os
+import hmac
 import time
 import hashlib
 from datetime import datetime, timezone
 from enum import Enum
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from loguru import logger
@@ -19,6 +20,10 @@ OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+_admin_token = os.environ.get("FLAMEGATE_ADMIN_TOKEN", "")
+if len(_admin_token) < 32:
+    raise RuntimeError("FLAMEGATE_ADMIN_TOKEN must be set (>= 32 chars) in the environment / .env")
+ADMIN_TOKEN = _admin_token
 
 # === TASK CLASSIFICATION ===
 class TaskType(str, Enum):
@@ -80,6 +85,16 @@ app = FastAPI(
     version="1.0.0",
 )
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+
+async def verify_token(request: Request):
+    token = request.headers.get("X-Flamegate-Token", "")
+    provided = token.encode("utf-8")
+    expected = ADMIN_TOKEN.encode("utf-8")
+    if len(provided) != len(expected) or not hmac.compare_digest(provided, expected):
+        raise HTTPException(status_code=403, detail="Invalid admin token")
+    return token
+
 
 # === TASK CLASSIFIER ===
 TASK_KEYWORDS = {
@@ -191,7 +206,7 @@ async def health():
     }
 
 @app.post("/route", response_model=RouteResponse)
-async def route_request(req: RouteRequest):
+async def route_request(req: RouteRequest, _token: str = Depends(verify_token)):
     start = time.time()
     task_type = TaskType(req.task_type) if req.task_type in TaskType.__members__.values() else classify_task(req.prompt)
     provider, model = select_provider(task_type, req.provider)

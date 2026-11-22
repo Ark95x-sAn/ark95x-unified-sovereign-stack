@@ -68,7 +68,7 @@ def log_audit(actor, action, target=None, payload_hash=None, status="ok", latenc
 
 # === MODELS ===
 class ProxyPayload(BaseModel):
-    target: str  # "core", "comet_router", "gate_unlocker", or full URL
+    target: str  # allowlisted keys only: "core", "comet_router", "gate_unlocker"
     method: str = "POST"
     path: str = "/"
     body: dict = {}
@@ -112,9 +112,11 @@ TARGET_MAP = {
 
 
 def resolve_target(target: str, path: str) -> str:
-    base = TARGET_MAP.get(target, target)
-    if not base.startswith("http"):
-        base = f"http://{base}"
+    if target not in TARGET_MAP:
+        raise HTTPException(status_code=400, detail="Target is not in the allowlist")
+    if not isinstance(path, str) or not path.startswith("/") or "://" in path or "\\" in path:
+        raise HTTPException(status_code=400, detail="Invalid path")
+    base = TARGET_MAP[target]
     return f"{base}{path}"
 
 

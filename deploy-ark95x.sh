@@ -114,16 +114,18 @@ gen_env() {
   cd "$INSTALL_DIR"
   [[ -f .env ]] && cp .env ".env.bak.$(date +%s)"
   local pgp; pgp=$(openssl rand -base64 32 | tr -d '=+/' | cut -c1-25)
+  local rdp; rdp=$(openssl rand -hex 32)
   local n8k; n8k=$(openssl rand -hex 32)
   local flt; flt=$(openssl rand -hex 32)
   local gfp; gfp=$(openssl rand -hex 24)
   cat > .env <<-ENV
-OPENAI_API_KEY=${OPENAI_API_KEY:-sk-your-key-here}
+OPENAI_API_KEY=${OPENAI_API_KEY:-}
 OLLAMA_HOST=http://localhost:11434
 POSTGRES_PASSWORD=${pgp}
 POSTGRES_URL=postgresql://ark95x:${pgp}@postgres:5432/sovereign
 MONGODB_URL=mongodb://mongodb:27017/ark95x
-REDIS_URL=redis://redis:6379
+REDIS_PASSWORD=${rdp}
+REDIS_URL=redis://:${rdp}@redis:6379
 QDRANT_URL=http://qdrant:6333
 N8N_URL=http://n8n:5678
 N8N_API_KEY=${n8k}
