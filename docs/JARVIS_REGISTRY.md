@@ -176,3 +176,16 @@ Reject when the component is redundant, unclear, unsafe, unmaintained, or outsid
 - **Write execution control:** documentation commits use `[skip ci]`; no workflow or repository settings changed.
 - **Next move:** after C1–C3 and target/dependency authorization, run the bounded R05-B hidden-DOCX fixture and R05-G adversarial mixed-ZIP fixture in disposable network-denied folders. Require exact source-linked omission/member receipts, byte/count bounds, cleanup, UNKNOWN page provenance where absent, no ambient reads or unselected extras, and no submitted Core mission.
 
+## 2026-11-22 — Beekeeper hive.db ledger
+
+- **Date:** 2026-11-22
+- **Crew:** Four (Builder) with Three (Review and Safety) gate; registry log by Five
+- **Repository / tool:** Beekeeper ledger (`beekeeper/`), local SQLite `hive.db`
+- **Jarvis layer:** Data / database (routing table for named agents; no orchestration runtime)
+- **Action taken:** Added SQLite tasks schema, Python write/read API (`HiveLedger`), agent routing table, CLI smoke/health commands. Hard exclusions observed: no network listeners, Alexa/camera, Sicario, printer, Polymarket, or Kelly checks.
+- **Files changed:** `beekeeper/__init__.py`, `beekeeper/__main__.py`, `beekeeper/ledger.py`, `beekeeper/routing.py`, `beekeeper/schema.sql`, `beekeeper/README.md`, `.gitignore`, `docs/JARVIS_REGISTRY.md`
+- **Risk label:** Yellow (creates local DB file and package files; no secrets; no external-facing services)
+- **Review result:** Local-first, stdlib sqlite3 only, secrets none, status CHECK constraint, known-agent validation on assign. Green for read-only health after DB exists; Yellow for init/write.
+- **Test command:** `python -m beekeeper`
+- **Next move:** Agents may adopt `HiveLedger` as the shared task store; do not attach listeners or domain modules until separately approved.
+
