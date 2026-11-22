@@ -1,5 +1,18 @@
 # Jarvis Registry
 
+## 2026-11-22 — Toast POS read-only sales/cash puller
+
+- **date:** 2026-11-22
+- **crew:** Crew Two (Tool Classifier), Crew Three (Review and Safety), Crew Four (Builder), Crew Five (Registry Logger)
+- **repository or tool:** Toast POS public API (OAuth client-credentials + orders/cashmgmt GET)
+- **Jarvis layer:** Tools / approved integrations; Data / database or event stream (baseline pull only)
+- **action taken:** Added local-first read-only package `integrations/toast/` that authenticates, pulls yesterday/today orders + cash entries/deposits, prints a structured JSON report, and exits. No inventory, order writes, bank sweeps, velocity banking, Home Assistant, Frigate, Alexa, or Beekeeper wiring.
+- **files changed:** `integrations/toast/` (`__init__.py`, `__main__.py`, `cli.py`, `client.py`, `config.py`, `report.py`, `README.md`), `tests/test_toast_puller.py`, `.env.example`, `docs/JARVIS_REGISTRY.md`
+- **risk label:** Yellow (creates package/files/docs). Runtime network pull is opt-in via explicit `pull` command; `health` is fail-closed with no network (Green when credentials absent / dry-run).
+- **review result:** Approved for baselines-only read scope. Secrets via env placeholders only. Write/mutation endpoints excluded by design.
+- **test command:** `python -m integrations.toast health` (fail-closed dry-run); `python -m pytest -q tests/test_toast_puller.py`; live: `python -m integrations.toast pull` when credentials are present.
+- **next move:** Operator supplies Toast credentials from Toast Web / integrations team; run `pull` once and archive the report. Do not connect Beekeeper or other systems from this package.
+
 ## 2026-09-06 — N95 native integration increment
 
 - **Crew:** source reviewers (AI/data and operations), native bridge builder, legacy mesh fixer, independent security reviewer, Windows preflight builder; one root synthesis owner.
