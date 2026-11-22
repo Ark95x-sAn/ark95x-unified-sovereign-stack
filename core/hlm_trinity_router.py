@@ -36,7 +36,6 @@ from pydantic import BaseModel, Field
 
 CONFIG_PATH = Path(__file__).parent / "hlm_config.yaml"
 APP_PORT = int(os.getenv("HLM_ROUTER_PORT", "8095"))
-FLAME_DEFAULT = "sovereign"
 
 # API keys from environment
 API_KEYS: dict[str, str | None] = {
@@ -155,10 +154,20 @@ OBELISK_MODEL_MAP: dict[ObeliskFunction, list[str]] = {
 # Head-tier models eligible for council consensus
 COUNCIL_MODELS = ["claude_pro", "chatgpt_pro", "grok_xai", "perplexity_comet"]
 
+def _flame_allowlist() -> set[str]:
+    """Load Flame signatures from the environment. Config-file values are public."""
+    raw = os.getenv("FLAME_SIGNATURES", "")
+    if raw.strip():
+        return {part.strip() for part in raw.split(",") if part.strip()}
+    if os.getenv("APP_ENV", "development") == "development":
+        return set(
+            CONFIG.get("flame_signatures", {}).get("allowlist", ["sovereign", "ark95x"])
+        )
+    return set()
+
+
 # Flame signature allowlist
-FLAME_ALLOWLIST: set[str] = set(
-    CONFIG.get("flame_signatures", {}).get("allowlist", ["sovereign", "ark95x"])
-)
+FLAME_ALLOWLIST: set[str] = _flame_allowlist()
 
 # Question loop templates
 QUESTION_LOOP_TEMPLATES: list[str] = CONFIG.get("question_loop", {}).get(
@@ -558,14 +567,13 @@ async def check_model_health(model_id: str) -> ModelHealthEntry:
 
 
 def validate_flame_signature(signature: str | None) -> str:
-    """Validate the Flame Signature header. Returns the validated signature."""
-    sig = signature or FLAME_DEFAULT
-    if sig not in FLAME_ALLOWLIST:
+    """Validate the Flame Signature header. Missing headers are rejected."""
+    if not signature or signature not in FLAME_ALLOWLIST:
         raise HTTPException(
             status_code=403,
-            detail=f"Invalid Flame Signature: '{sig}'. Not in allowlist.",
+            detail="Invalid Flame Signature",
         )
-    return sig
+    return signature
 
 
 # ---------------------------------------------------------------------------
@@ -861,7 +869,7 @@ async def startup_log() -> None:
     logger.info("ARK95X HLM Trinity Router starting")
     logger.info(f"  Models registered: {len(REGISTRY.models)}")
     logger.info(f"  Port: {APP_PORT}")
-    logger.info(f"  Flame signatures: {FLAME_ALLOWLIST}")
+    logger.info(f"  Flame signatures configured: {len(FLAME_ALLOWLIST)}")
     logger.info("=" * 60)
 
     for tier_name in ["head", "lateral", "motor"]:

@@ -141,6 +141,7 @@ function Setup-Environment {
     }
     if (-not $n8nEncKey) { $n8nEncKey = New-Secret 32 }
     $pgPass = New-Secret 32
+    $redisPass = New-Secret 32
     $flameToken = New-Secret 32
     $grafanaPass = New-Secret 24
 
@@ -149,6 +150,7 @@ APP_ENV=production
 APP_PORT=8000
 LOG_LEVEL=INFO
 POSTGRES_PASSWORD=$pgPass
+REDIS_PASSWORD=$redisPass
 OPENAI_API_KEY=
 DEEPSEEK_API_KEY=
 N8N_API_KEY=

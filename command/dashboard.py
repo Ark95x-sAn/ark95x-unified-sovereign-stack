@@ -16,6 +16,7 @@ FLAMEGATE_URL = os.getenv("FLAMEGATE_URL", "https://localhost:8443")
 COMET_ROUTER_URL = os.getenv("COMET_ROUTER_URL", "http://localhost:8100")
 GATE_UNLOCKER_URL = os.getenv("GATE_UNLOCKER_URL", "http://localhost:8200")
 DASHBOARD_PORT = int(os.getenv("DASHBOARD_PORT", 8050))
+FLAMEGATE_ADMIN_TOKEN = os.getenv("FLAMEGATE_ADMIN_TOKEN", "")
 
 # TLS verification toggle: defaults to True (secure). Set to "false" in
 # env only for local dev behind self-signed certs.
@@ -188,6 +189,7 @@ def unlock_gate(n, gate_id, audit):
     try:
         r = httpx.post(
             f"{GATE_UNLOCKER_URL}/unlock",
+            headers={"X-Flamegate-Token": FLAMEGATE_ADMIN_TOKEN},
             json={"gate_id": gate_id, "actor": "command_base", "timestamp": ts},
             timeout=10.0,
             verify=VERIFY_TLS,
@@ -233,4 +235,4 @@ def update_telemetry(_, states):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=DASHBOARD_PORT, debug=True)
+    app.run(host="0.0.0.0", port=DASHBOARD_PORT, debug=False)

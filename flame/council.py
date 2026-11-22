@@ -3,18 +3,22 @@ Planner, Research, Analysis, and Synthesis agents for sovereign decision-making.
 Uses CrewAI for orchestration with Ollama local models.
 """
 import os
+import asyncio
+import hmac
 import time
 from datetime import datetime, timezone
-from fastapi import FastAPI, HTTPException
+
+import httpx
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from loguru import logger
-from typing import Optional
 
 # === CONFIG ===
 COUNCIL_PORT = int(os.getenv("COUNCIL_PORT", 8300))
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 COUNCIL_MODEL = os.getenv("COUNCIL_MODEL", "llama3")
+ADMIN_TOKEN = os.environ.get("FLAMEGATE_ADMIN_TOKEN", "")
 
 # === MODELS ===
 class CouncilRequest(BaseModel):
@@ -69,9 +73,18 @@ app = FastAPI(
 )
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
+
+async def verify_token(request: Request):
+    token = request.headers.get("X-Flamegate-Token", "")
+    expected = ADMIN_TOKEN.encode("utf-8")
+    provided = token.encode("utf-8")
+    if len(expected) < 32 or len(provided) != len(expected) or not hmac.compare_digest(provided, expected):
+        raise HTTPException(status_code=403, detail="Invalid admin token")
+    return token
+
+
 # === AGENT CALL ===
 async def call_agent(agent_id: str, query: str, context: str = "") -> AgentVote:
-    import httpx
     agent = AGENTS[agent_id]
     prompt = f"COUNCIL VOTE REQUEST:\n{query}"
     if context:
@@ -121,7 +134,6 @@ async def health():
 
 @app.post("/vote", response_model=CouncilResponse)
 async def council_vote(req: CouncilRequest):
-    import asyncio
     start = time.time()
 
     tasks = [call_agent(aid, req.query, req.context) for aid in AGENTS]
@@ -160,8 +172,7 @@ async def council_vote(req: CouncilRequest):
     )
 
 @app.post("/gate-vote")
-async def gate_vote(gate_id: str, actor: str = "command_base"):
-    import httpx
+async def gate_vote(gate_id: str, actor: str = "command_base", token: str = Depends(verify_token)):
     query = f"Should gate '{gate_id}' be unlocked? Actor requesting: {actor}. Evaluate security implications."
     req = CouncilRequest(query=query, gate_id=gate_id, require_consensus=True)
     result = await council_vote(req)
@@ -172,6 +183,7 @@ async def gate_vote(gate_id: str, actor: str = "command_base"):
             async with httpx.AsyncClient(timeout=10.0) as client:
                 r = await client.post(
                     f"{gate_unlocker_url}/unlock",
+                    headers={"X-Flamegate-Token": token},
                     json={"gate_id": gate_id, "actor": f"council_{actor}", "council_override": True},
                 )
                 unlock_result = r.json()
